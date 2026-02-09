@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { eq, and, gte, lte, or, sql, desc } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
 import { InsertUser, users } from "../drizzle/schema";
 import { ENV } from './_core/env';
@@ -89,4 +89,235 @@ export async function getUserByOpenId(openId: string) {
   return result.length > 0 ? result[0] : undefined;
 }
 
-// TODO: add feature queries here as your schema grows.
+import { workers, clients, availability, demands, assignments } from "../drizzle/schema";
+
+// ============ Workers ============
+export async function getAllWorkers(statusFilter?: "active" | "inactive", searchTerm?: string) {
+  const db = await getDb();
+  if (!db) return [];
+
+  let query = db.select().from(workers);
+  const conditions = [];
+
+  if (statusFilter) {
+    conditions.push(eq(workers.status, statusFilter));
+  }
+
+  if (searchTerm) {
+    conditions.push(
+      or(
+        sql`${workers.name} LIKE ${`%${searchTerm}%`}`,
+        sql`${workers.phone} LIKE ${`%${searchTerm}%`}`,
+        sql`${workers.email} LIKE ${`%${searchTerm}%`}`
+      )
+    );
+  }
+
+  if (conditions.length > 0) {
+    query = query.where(and(...conditions)) as any;
+  }
+
+  return await query;
+}
+
+export async function getWorkerById(id: number) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db.select().from(workers).where(eq(workers.id, id)).limit(1);
+  return result[0];
+}
+
+export async function createWorker(data: { name: string; phone: string; email?: string; note?: string }) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const result = await db.insert(workers).values(data);
+  return result;
+}
+
+export async function updateWorker(id: number, data: Partial<{ name: string; phone: string; email?: string; status: "active" | "inactive"; note?: string }>) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.update(workers).set(data).where(eq(workers.id, id));
+}
+
+// ============ Clients ============
+export async function getAllClients(statusFilter?: "active" | "inactive", searchTerm?: string) {
+  const db = await getDb();
+  if (!db) return [];
+
+  let query = db.select().from(clients);
+  const conditions = [];
+
+  if (statusFilter) {
+    conditions.push(eq(clients.status, statusFilter));
+  }
+
+  if (searchTerm) {
+    conditions.push(
+      or(
+        sql`${clients.name} LIKE ${`%${searchTerm}%`}`,
+        sql`${clients.contactName} LIKE ${`%${searchTerm}%`}`,
+        sql`${clients.contactPhone} LIKE ${`%${searchTerm}%`}`
+      )
+    );
+  }
+
+  if (conditions.length > 0) {
+    query = query.where(and(...conditions)) as any;
+  }
+
+  return await query;
+}
+
+export async function getClientById(id: number) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db.select().from(clients).where(eq(clients.id, id)).limit(1);
+  return result[0];
+}
+
+export async function createClient(data: { name: string; contactName?: string; contactEmail?: string; contactPhone?: string; address?: string; billingType?: "hourly" | "fixed" | "custom"; note?: string }) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const result = await db.insert(clients).values(data);
+  return result;
+}
+
+export async function updateClient(id: number, data: Partial<{ name: string; contactName?: string; contactEmail?: string; contactPhone?: string; address?: string; billingType?: "hourly" | "fixed" | "custom"; status: "active" | "inactive"; note?: string }>) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.update(clients).set(data).where(eq(clients.id, id));
+}
+
+// ============ Availability ============
+export async function getAvailabilityByWeek(weekStartDate: Date) {
+  const db = await getDb();
+  if (!db) return [];
+  const result = await db.select().from(availability).where(eq(availability.weekStartDate, weekStartDate));
+  return result;
+}
+
+export async function getAvailabilityByWorkerAndWeek(workerId: number, weekStartDate: Date) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db.select().from(availability).where(
+    and(
+      eq(availability.workerId, workerId),
+      eq(availability.weekStartDate, weekStartDate)
+    )
+  ).limit(1);
+  return result[0];
+}
+
+export async function upsertAvailability(data: { workerId: number; weekStartDate: Date; weekEndDate: Date; timeBlocks: string; confirmedAt?: Date | null; note?: string }) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const existing = await getAvailabilityByWorkerAndWeek(data.workerId, data.weekStartDate);
+  
+  if (existing) {
+    await db.update(availability).set(data).where(eq(availability.id, existing.id));
+    return existing.id;
+  } else {
+    const result = await db.insert(availability).values(data);
+    return result;
+  }
+}
+
+// ============ Demands ============
+export async function getAllDemands(statusFilter?: string, dateFilter?: Date) {
+  const db = await getDb();
+  if (!db) return [];
+
+  let query = db.select().from(demands).orderBy(desc(demands.date));
+  const conditions = [];
+
+  if (statusFilter) {
+    conditions.push(eq(demands.status, statusFilter as any));
+  }
+
+  if (dateFilter) {
+    const startOfDay = new Date(dateFilter);
+    startOfDay.setHours(0, 0, 0, 0);
+    const endOfDay = new Date(dateFilter);
+    endOfDay.setHours(23, 59, 59, 999);
+    conditions.push(and(gte(demands.date, startOfDay), lte(demands.date, endOfDay)));
+  }
+
+  if (conditions.length > 0) {
+    query = query.where(and(...conditions)) as any;
+  }
+
+  return await query;
+}
+
+export async function getDemandById(id: number) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db.select().from(demands).where(eq(demands.id, id)).limit(1);
+  return result[0];
+}
+
+export async function createDemand(data: { clientId: number; date: Date; startTime: string; endTime: string; requiredWorkers: number; location?: string; note?: string; status?: "draft" | "confirmed" | "cancelled" | "closed" }) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const result = await db.insert(demands).values(data);
+  return result;
+}
+
+export async function updateDemand(id: number, data: Partial<{ clientId: number; date: Date; startTime: string; endTime: string; requiredWorkers: number; location?: string; note?: string; status: "draft" | "confirmed" | "cancelled" | "closed" }>) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.update(demands).set(data).where(eq(demands.id, id));
+}
+
+// ============ Assignments ============
+export async function getAssignmentsByDemand(demandId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return await db.select().from(assignments).where(eq(assignments.demandId, demandId));
+}
+
+export async function getAssignmentsByWorker(workerId: number, startDate?: Date, endDate?: Date) {
+  const db = await getDb();
+  if (!db) return [];
+
+  const conditions = [eq(assignments.workerId, workerId)];
+
+  if (startDate && endDate) {
+    conditions.push(gte(assignments.scheduledStart, startDate));
+    conditions.push(lte(assignments.scheduledEnd, endDate));
+  }
+
+  return await db.select().from(assignments).where(and(...conditions));
+}
+
+export async function getAssignmentsByDateRange(startDate: Date, endDate: Date) {
+  const db = await getDb();
+  if (!db) return [];
+  return await db.select().from(assignments).where(
+    and(
+      gte(assignments.scheduledStart, startDate),
+      lte(assignments.scheduledEnd, endDate)
+    )
+  );
+}
+
+export async function createAssignment(data: { demandId: number; workerId: number; scheduledStart: Date; scheduledEnd: Date; scheduledHours: number; note?: string }) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const result = await db.insert(assignments).values(data);
+  return result;
+}
+
+export async function updateAssignment(id: number, data: Partial<{ actualStart?: Date; actualEnd?: Date; actualHours?: number; varianceHours?: number; status: "assigned" | "completed" | "cancelled" | "disputed"; note?: string }>) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.update(assignments).set(data).where(eq(assignments.id, id));
+}
+
+export async function deleteAssignment(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.delete(assignments).where(eq(assignments.id, id));
+}
