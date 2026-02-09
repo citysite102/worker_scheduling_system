@@ -116,14 +116,25 @@ export default function Availability() {
         
         const lastWeekDay = lastWeekData?.find((a: any) => a.dayOfWeek === dayOfWeek);
         if (lastWeekDay && lastWeekDay.timeSlots.length > 0) {
-          // 沿用上週設定
-          setTimeSlots(
-            lastWeekDay.timeSlots.map((ts: any) => ({
-              startTime: ts.startTime,
-              endTime: ts.endTime,
-            }))
-          );
-          toast.info("已載入上週設定");
+          // 沿用上週設定，直接儲存到資料庫
+          const slotsToSave = lastWeekDay.timeSlots.map((ts: any) => ({
+            startTime: ts.startTime,
+            endTime: ts.endTime,
+          }));
+          
+          // 先儲存到資料庫
+          await upsertMutation.mutateAsync({
+            workerId: selectedWorker!,
+            weekStart: selectedWeek,
+            dayOfWeek: dayOfWeek,
+            timeSlots: slotsToSave,
+          });
+          
+          // 重新載入資料
+          await refetch();
+          
+          toast.success("已沿用上週設定");
+          return; // 不開啟對話框
         } else {
           // 上週也沒設定，使用預設值
           setTimeSlots([{ startTime: "09:00", endTime: "17:00" }]);
@@ -164,6 +175,7 @@ export default function Availability() {
   weekEnd.setDate(weekEnd.getDate() + 6);
 
   const isConfirmed = availabilities?.some((a) => a.confirmed);
+  const hasAnySlots = availabilities?.some((a) => a.timeSlots && a.timeSlots.length > 0);
 
   return (
     <div className="p-8">
@@ -227,7 +239,7 @@ export default function Availability() {
                     已確認
                   </Badge>
                 ) : (
-                  <Button onClick={handleConfirmWeek} disabled={confirmMutation.isPending}>
+                  <Button onClick={handleConfirmWeek} disabled={confirmMutation.isPending || !hasAnySlots}>
                     確認本週時間
                   </Button>
                 )}

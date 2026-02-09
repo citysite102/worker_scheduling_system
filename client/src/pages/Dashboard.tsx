@@ -106,12 +106,12 @@ export default function Dashboard() {
             {confirmedDemands.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground">今日無需求</div>
             ) : (
-              <div className="space-y-4">
+              <div className="space-y-3">
                 {confirmedDemands.map((demand) => {
                   const shortage = demand.requiredWorkers - demand.assignedCount;
                   return (
                     <Link key={demand.id} href={`/demands/${demand.id}`}>
-                      <div className="flex items-center justify-between p-4 border rounded-lg hover:bg-accent cursor-pointer transition-colors">
+                      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-4 border rounded-lg hover:bg-accent cursor-pointer transition-colors">
                         <div className="flex-1">
                           <div className="font-medium">{demand.client?.name}</div>
                           <div className="text-sm text-muted-foreground">
