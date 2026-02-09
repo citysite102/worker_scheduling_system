@@ -135,7 +135,7 @@ export async function calculateDemandFeasibility(
   endTime: string,
   requiredWorkers: number
 ) {
-  const allWorkers = await getAllWorkers("active");
+  const allWorkers = await getAllWorkers({ status: "active" });
 
   const scheduledStart = combineDateAndTime(demandDate, startTime);
   const scheduledEnd = combineDateAndTime(demandDate, endTime);

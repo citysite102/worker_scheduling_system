@@ -4,10 +4,22 @@ import { Badge } from "@/components/ui/badge";
 import { AlertCircle, CheckCircle2, Users, ClipboardList, Loader2, TrendingUp, ArrowRight } from "lucide-react";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
+import { useState, useMemo } from "react";
+import {
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+  LineChart, Line, PieChart, Pie, Cell, Legend,
+} from "recharts";
+
+const CHART_COLORS = ["#3b82f6", "#6366f1", "#8b5cf6", "#a855f7", "#ec4899", "#f43f5e", "#f97316", "#eab308", "#22c55e", "#14b8a6"];
 
 export default function Dashboard() {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+  const [today] = useState(() => {
+    const d = new Date();
+    d.setHours(0, 0, 0, 0);
+    return d;
+  });
+
+  const tomorrow = useMemo(() => new Date(today.getTime() + 24 * 60 * 60 * 1000), [today]);
 
   const { data: todayDemands, isLoading: demandsLoading } = trpc.demands.list.useQuery({
     date: today,
@@ -15,8 +27,24 @@ export default function Dashboard() {
 
   const { data: todayAssignments, isLoading: assignmentsLoading } = trpc.assignments.getByDateRange.useQuery({
     startDate: today,
-    endDate: new Date(today.getTime() + 24 * 60 * 60 * 1000),
+    endDate: tomorrow,
   });
+
+  // 圖表資料
+  const { data: assignmentTrend } = trpc.dashboard.dailyAssignmentTrend.useQuery({ days: 14 });
+  const { data: demandTrend } = trpc.dashboard.clientDemandTrend.useQuery({ days: 14 });
+  const { data: clientDistribution } = trpc.dashboard.clientDemandDistribution.useQuery({ days: 30 });
+
+  // 合併趨勢圖表資料 (hooks 必須在 early return 之前)
+  const trendData = useMemo(() => {
+    if (!assignmentTrend || !demandTrend) return [];
+    return assignmentTrend.map((item, i) => ({
+      date: item.date.slice(5), // MM-DD
+      fullDate: item.date,
+      派工人數: item.count,
+      需求人數: demandTrend[i]?.count || 0,
+    }));
+  }, [assignmentTrend, demandTrend]);
 
   if (demandsLoading || assignmentsLoading) {
     return (
@@ -66,8 +94,8 @@ export default function Dashboard() {
   ];
 
   return (
-    <div className="p-6 lg:p-8 max-w-7xl mx-auto">
-      <div className="mb-8">
+    <div className="p-6 lg:p-8 max-w-7xl mx-auto space-y-6">
+      <div>
         <h1 className="text-2xl font-semibold text-foreground">儀表板</h1>
         <p className="text-sm text-muted-foreground mt-1">
           {new Date().toLocaleDateString("zh-TW", { year: "numeric", month: "long", day: "numeric", weekday: "long" })}
@@ -75,7 +103,7 @@ export default function Dashboard() {
       </div>
 
       {/* 統計卡片 */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 mb-8">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {statCards.map((stat, i) => (
           <Card key={i} className="shadow-sm border-border/60 hover:shadow-md transition-shadow">
             <CardContent className="p-5">
@@ -90,6 +118,79 @@ export default function Dashboard() {
             </CardContent>
           </Card>
         ))}
+      </div>
+
+      {/* 圖表區域 */}
+      <div className="grid gap-6 lg:grid-cols-3">
+        {/* 每日派工 vs 需求趨勢 */}
+        <Card className="shadow-sm border-border/60 lg:col-span-2">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base font-medium">近兩週派工與需求趨勢</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {trendData.length > 0 ? (
+              <ResponsiveContainer width="100%" height={260}>
+                <BarChart data={trendData} margin={{ top: 5, right: 10, left: -10, bottom: 5 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                  <XAxis dataKey="date" tick={{ fontSize: 11 }} stroke="#94a3b8" />
+                  <YAxis tick={{ fontSize: 11 }} stroke="#94a3b8" allowDecimals={false} />
+                  <Tooltip
+                    contentStyle={{ fontSize: 12, borderRadius: 8, border: "1px solid #e2e8f0" }}
+                    labelFormatter={(label) => {
+                      const item = trendData.find(d => d.date === label);
+                      return item?.fullDate || label;
+                    }}
+                  />
+                  <Legend wrapperStyle={{ fontSize: 12 }} />
+                  <Bar dataKey="派工人數" fill="#3b82f6" radius={[3, 3, 0, 0]} />
+                  <Bar dataKey="需求人數" fill="#c7d2fe" radius={[3, 3, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="flex items-center justify-center h-[260px] text-sm text-muted-foreground">暫無資料</div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* 客戶需求分布 */}
+        <Card className="shadow-sm border-border/60">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base font-medium">合作單位需求分布</CardTitle>
+            <p className="text-xs text-muted-foreground">近 30 天</p>
+          </CardHeader>
+          <CardContent>
+            {clientDistribution && clientDistribution.length > 0 ? (
+              <ResponsiveContainer width="100%" height={260}>
+                <PieChart>
+                  <Pie
+                    data={clientDistribution}
+                    dataKey="totalWorkers"
+                    nameKey="clientName"
+                    cx="50%"
+                    cy="45%"
+                    outerRadius={80}
+                    innerRadius={40}
+                    paddingAngle={2}
+                    label={({ clientName, percent }: any) =>
+                      `${clientName} ${(percent * 100).toFixed(0)}%`
+                    }
+                    labelLine={{ strokeWidth: 1 }}
+                  >
+                    {clientDistribution.map((_: any, index: number) => (
+                      <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip
+                    contentStyle={{ fontSize: 12, borderRadius: 8, border: "1px solid #e2e8f0" }}
+                    formatter={(value: number) => [`${value} 人次`, "需求人數"]}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="flex items-center justify-center h-[260px] text-sm text-muted-foreground">暫無資料</div>
+            )}
+          </CardContent>
+        </Card>
       </div>
 
       {/* 需求列表 + 指派清單 */}

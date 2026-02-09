@@ -33,6 +33,9 @@ export const workers = mysqlTable("workers", {
   name: varchar("name", { length: 100 }).notNull(),
   email: varchar("email", { length: 320 }),
   phone: varchar("phone", { length: 20 }).notNull(),
+  school: varchar("school", { length: 200 }),
+  hasWorkPermit: int("hasWorkPermit").default(0).notNull(), // 0=無, 1=有工作簽證
+  hasHealthCheck: int("hasHealthCheck").default(0).notNull(), // 0=無, 1=有體檢
   status: mysqlEnum("status", ["active", "inactive"]).default("active").notNull(),
   note: text("note"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
@@ -123,3 +126,20 @@ export const assignments = mysqlTable("assignments", {
 
 export type Assignment = typeof assignments.$inferSelect;
 export type InsertAssignment = typeof assignments.$inferInsert;
+
+/**
+ * AdminInvites (管理員邀請) - 邀請碼管理
+ */
+export const adminInvites = mysqlTable("admin_invites", {
+  id: int("id").autoincrement().primaryKey(),
+  code: varchar("code", { length: 64 }).notNull().unique(),
+  createdBy: int("createdBy").notNull().references(() => users.id),
+  usedBy: int("usedBy").references(() => users.id),
+  usedAt: timestamp("usedAt"),
+  expiresAt: timestamp("expiresAt"),
+  status: mysqlEnum("status", ["active", "used", "expired", "revoked"]).default("active").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type AdminInvite = typeof adminInvites.$inferSelect;
+export type InsertAdminInvite = typeof adminInvites.$inferInsert;

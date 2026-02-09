@@ -2,9 +2,11 @@ import { COOKIE_NAME } from "@shared/const";
 import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
 import { publicProcedure, router } from "./_core/trpc";
+import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import * as db from "./db";
 import * as logic from "./businessLogic";
+import crypto from "crypto";
 
 export const appRouter = router({
   system: systemRouter,
@@ -25,9 +27,18 @@ export const appRouter = router({
       .input(z.object({
         status: z.enum(["active", "inactive"]).optional(),
         search: z.string().optional(),
+        school: z.string().optional(),
+        hasWorkPermit: z.boolean().optional(),
+        hasHealthCheck: z.boolean().optional(),
       }).optional())
       .query(async ({ input }) => {
-        const workers = await db.getAllWorkers(input?.status, input?.search);
+        const workers = await db.getAllWorkers(input ? {
+          status: input.status,
+          search: input.search,
+          school: input.school,
+          hasWorkPermit: input.hasWorkPermit,
+          hasHealthCheck: input.hasHealthCheck,
+        } : undefined);
         return workers;
       }),
 
@@ -44,10 +55,18 @@ export const appRouter = router({
         name: z.string().min(1, "姓名不可為空"),
         phone: z.string().min(1, "電話不可為空"),
         email: z.string().email("Email 格式不正確").optional(),
+        school: z.string().optional(),
+        hasWorkPermit: z.boolean().optional(),
+        hasHealthCheck: z.boolean().optional(),
         note: z.string().optional(),
       }))
       .mutation(async ({ input }) => {
-        await db.createWorker(input);
+        const { hasWorkPermit, hasHealthCheck, ...rest } = input;
+        await db.createWorker({
+          ...rest,
+          hasWorkPermit: hasWorkPermit ? 1 : 0,
+          hasHealthCheck: hasHealthCheck ? 1 : 0,
+        });
         return { success: true };
       }),
 
@@ -57,12 +76,18 @@ export const appRouter = router({
         name: z.string().min(1, "姓名不可為空").optional(),
         phone: z.string().min(1, "電話不可為空").optional(),
         email: z.string().email("Email 格式不正確").optional(),
+        school: z.string().optional(),
+        hasWorkPermit: z.boolean().optional(),
+        hasHealthCheck: z.boolean().optional(),
         status: z.enum(["active", "inactive"]).optional(),
         note: z.string().optional(),
       }))
       .mutation(async ({ input }) => {
-        const { id, ...data } = input;
-        await db.updateWorker(id, data);
+        const { id, hasWorkPermit, hasHealthCheck, ...data } = input;
+        const updateData: any = { ...data };
+        if (hasWorkPermit !== undefined) updateData.hasWorkPermit = hasWorkPermit ? 1 : 0;
+        if (hasHealthCheck !== undefined) updateData.hasHealthCheck = hasHealthCheck ? 1 : 0;
+        await db.updateWorker(id, updateData);
         return { success: true };
       }),
   }),
@@ -669,6 +694,207 @@ export const appRouter = router({
         }
         
         return records;
+      }),
+  }),
+
+  // ============ Dashboard Stats ============
+  dashboard: router({
+    // 每日派工人數趨勢（近 14 天）
+    dailyAssignmentTrend: publicProcedure
+      .input(z.object({ days: z.number().default(14) }).optional())
+      .query(async ({ input }) => {
+        const days = input?.days || 14;
+        const endDate = new Date();
+        endDate.setHours(23, 59, 59, 999);
+        const startDate = new Date();
+        startDate.setDate(startDate.getDate() - days + 1);
+        startDate.setHours(0, 0, 0, 0);
+
+        const assignments = await db.getAssignmentsByDateRange(startDate, endDate);
+        const activeAssignments = assignments.filter(a => a.status !== "cancelled");
+
+        // 按日期分組
+        const dailyMap: Record<string, number> = {};
+        for (let i = 0; i < days; i++) {
+          const d = new Date(startDate);
+          d.setDate(d.getDate() + i);
+          const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+          dailyMap[key] = 0;
+        }
+
+        for (const a of activeAssignments) {
+          const d = new Date(a.scheduledStart);
+          const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+          if (dailyMap[key] !== undefined) {
+            dailyMap[key]++;
+          }
+        }
+
+        return Object.entries(dailyMap).map(([date, count]) => ({ date, count }));
+      }),
+
+    // 合作單位需求趨勢（近 14 天）
+    clientDemandTrend: publicProcedure
+      .input(z.object({ days: z.number().default(14) }).optional())
+      .query(async ({ input }) => {
+        const days = input?.days || 14;
+        const endDate = new Date();
+        endDate.setHours(23, 59, 59, 999);
+        const startDate = new Date();
+        startDate.setDate(startDate.getDate() - days + 1);
+        startDate.setHours(0, 0, 0, 0);
+
+        const allDemands = await db.getAllDemands();
+        const filteredDemands = allDemands.filter(d => {
+          const demandDate = new Date(d.date);
+          return demandDate >= startDate && demandDate <= endDate;
+        });
+
+        // 按日期分組
+        const dailyMap: Record<string, number> = {};
+        for (let i = 0; i < days; i++) {
+          const d = new Date(startDate);
+          d.setDate(d.getDate() + i);
+          const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+          dailyMap[key] = 0;
+        }
+
+        for (const demand of filteredDemands) {
+          const d = new Date(demand.date);
+          const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+          if (dailyMap[key] !== undefined) {
+            dailyMap[key] += demand.requiredWorkers;
+          }
+        }
+
+        return Object.entries(dailyMap).map(([date, count]) => ({ date, count }));
+      }),
+
+    // 合作單位需求分布（圓餅圖）
+    clientDemandDistribution: publicProcedure
+      .input(z.object({ days: z.number().default(30) }).optional())
+      .query(async ({ input }) => {
+        const days = input?.days || 30;
+        const endDate = new Date();
+        endDate.setHours(23, 59, 59, 999);
+        const startDate = new Date();
+        startDate.setDate(startDate.getDate() - days + 1);
+        startDate.setHours(0, 0, 0, 0);
+
+        const allDemands = await db.getAllDemands();
+        const filteredDemands = allDemands.filter(d => {
+          const demandDate = new Date(d.date);
+          return demandDate >= startDate && demandDate <= endDate;
+        });
+
+        // 按客戶分組
+        const clientMap: Record<number, { name: string; count: number; workers: number }> = {};
+        for (const demand of filteredDemands) {
+          if (!clientMap[demand.clientId]) {
+            const client = await db.getClientById(demand.clientId);
+            clientMap[demand.clientId] = { name: client?.name || "未知", count: 0, workers: 0 };
+          }
+          clientMap[demand.clientId].count++;
+          clientMap[demand.clientId].workers += demand.requiredWorkers;
+        }
+
+        return Object.entries(clientMap).map(([clientId, data]) => ({
+          clientId: Number(clientId),
+          clientName: data.name,
+          demandCount: data.count,
+          totalWorkers: data.workers,
+        }));
+      }),
+  }),
+
+  // ============ Admin Invites ============
+  admin: router({
+    // 產生邀請碼
+    createInvite: publicProcedure
+      .input(z.object({
+        expiresInDays: z.number().min(1).max(30).default(7),
+      }).optional())
+      .mutation(async ({ ctx }) => {
+        if (!ctx.user) throw new TRPCError({ code: "UNAUTHORIZED", message: "請先登入" });
+        if (ctx.user.role !== "admin") throw new TRPCError({ code: "FORBIDDEN", message: "僅限管理員" });
+
+        const code = crypto.randomBytes(16).toString("hex");
+        const expiresAt = new Date();
+        expiresAt.setDate(expiresAt.getDate() + 7);
+
+        await db.createAdminInvite({
+          code,
+          createdBy: ctx.user.id,
+          expiresAt,
+        });
+
+        return { code };
+      }),
+
+    // 使用邀請碼
+    useInvite: publicProcedure
+      .input(z.object({ code: z.string().min(1) }))
+      .mutation(async ({ ctx, input }) => {
+        if (!ctx.user) throw new TRPCError({ code: "UNAUTHORIZED", message: "請先登入" });
+
+        const invite = await db.getAdminInviteByCode(input.code);
+        if (!invite) throw new TRPCError({ code: "NOT_FOUND", message: "邀請碼不存在" });
+        if (invite.status !== "active") throw new TRPCError({ code: "BAD_REQUEST", message: "邀請碼已使用或已過期" });
+        if (invite.expiresAt && new Date(invite.expiresAt) < new Date()) {
+          await db.updateAdminInvite(invite.id, { status: "expired" });
+          throw new TRPCError({ code: "BAD_REQUEST", message: "邀請碼已過期" });
+        }
+
+        // 將使用者升級為 admin
+        await db.updateUserRole(ctx.user.id, "admin");
+        await db.updateAdminInvite(invite.id, {
+          usedBy: ctx.user.id,
+          usedAt: new Date(),
+          status: "used",
+        });
+
+        return { success: true };
+      }),
+
+    // 列出所有邀請碼
+    listInvites: publicProcedure.query(async ({ ctx }) => {
+      if (!ctx.user) throw new TRPCError({ code: "UNAUTHORIZED" });
+      if (ctx.user.role !== "admin") throw new TRPCError({ code: "FORBIDDEN" });
+
+      const invites = await db.getAllAdminInvites();
+      return invites;
+    }),
+
+    // 列出所有管理員
+    listAdmins: publicProcedure.query(async ({ ctx }) => {
+      if (!ctx.user) throw new TRPCError({ code: "UNAUTHORIZED" });
+      if (ctx.user.role !== "admin") throw new TRPCError({ code: "FORBIDDEN" });
+
+      const admins = await db.getAllAdmins();
+      return admins;
+    }),
+
+    // 撤銷邀請碼
+    revokeInvite: publicProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ ctx, input }) => {
+        if (!ctx.user) throw new TRPCError({ code: "UNAUTHORIZED" });
+        if (ctx.user.role !== "admin") throw new TRPCError({ code: "FORBIDDEN" });
+
+        await db.updateAdminInvite(input.id, { status: "revoked" });
+        return { success: true };
+      }),
+
+    // 移除管理員權限
+    removeAdmin: publicProcedure
+      .input(z.object({ userId: z.number() }))
+      .mutation(async ({ ctx, input }) => {
+        if (!ctx.user) throw new TRPCError({ code: "UNAUTHORIZED" });
+        if (ctx.user.role !== "admin") throw new TRPCError({ code: "FORBIDDEN" });
+        if (ctx.user.id === input.userId) throw new TRPCError({ code: "BAD_REQUEST", message: "不可移除自己的管理員權限" });
+
+        await db.updateUserRole(input.userId, "user");
+        return { success: true };
       }),
   }),
 });

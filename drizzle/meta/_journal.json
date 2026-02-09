@@ -15,6 +15,13 @@
       "when": 1770651842376,
       "tag": "0001_vengeful_blackheart",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1770657947179,
+      "tag": "0002_chief_ozymandias",
+      "breakpoints": true
     }
   ]
 }

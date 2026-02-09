@@ -89,28 +89,47 @@ export async function getUserByOpenId(openId: string) {
   return result.length > 0 ? result[0] : undefined;
 }
 
-import { workers, clients, availability, demands, assignments } from "../drizzle/schema";
+import { workers, clients, availability, demands, assignments, adminInvites } from "../drizzle/schema";
 
 // ============ Workers ============
-export async function getAllWorkers(statusFilter?: "active" | "inactive", searchTerm?: string) {
+export async function getAllWorkers(filters?: {
+  status?: "active" | "inactive";
+  search?: string;
+  school?: string;
+  hasWorkPermit?: boolean;
+  hasHealthCheck?: boolean;
+}) {
   const db = await getDb();
   if (!db) return [];
 
   let query = db.select().from(workers);
   const conditions = [];
 
-  if (statusFilter) {
-    conditions.push(eq(workers.status, statusFilter));
+  if (filters?.status) {
+    conditions.push(eq(workers.status, filters.status));
   }
 
-  if (searchTerm) {
+  if (filters?.search) {
     conditions.push(
       or(
-        sql`${workers.name} LIKE ${`%${searchTerm}%`}`,
-        sql`${workers.phone} LIKE ${`%${searchTerm}%`}`,
-        sql`${workers.email} LIKE ${`%${searchTerm}%`}`
+        sql`${workers.name} LIKE ${`%${filters.search}%`}`,
+        sql`${workers.phone} LIKE ${`%${filters.search}%`}`,
+        sql`${workers.email} LIKE ${`%${filters.search}%`}`,
+        sql`${workers.school} LIKE ${`%${filters.search}%`}`
       )
     );
+  }
+
+  if (filters?.school) {
+    conditions.push(sql`${workers.school} LIKE ${`%${filters.school}%`}`);
+  }
+
+  if (filters?.hasWorkPermit !== undefined) {
+    conditions.push(eq(workers.hasWorkPermit, filters.hasWorkPermit ? 1 : 0));
+  }
+
+  if (filters?.hasHealthCheck !== undefined) {
+    conditions.push(eq(workers.hasHealthCheck, filters.hasHealthCheck ? 1 : 0));
   }
 
   if (conditions.length > 0) {
@@ -127,14 +146,14 @@ export async function getWorkerById(id: number) {
   return result[0];
 }
 
-export async function createWorker(data: { name: string; phone: string; email?: string; note?: string }) {
+export async function createWorker(data: { name: string; phone: string; email?: string; school?: string; hasWorkPermit?: number; hasHealthCheck?: number; note?: string }) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   const result = await db.insert(workers).values(data);
   return result;
 }
 
-export async function updateWorker(id: number, data: Partial<{ name: string; phone: string; email?: string; status: "active" | "inactive"; note?: string }>) {
+export async function updateWorker(id: number, data: Partial<{ name: string; phone: string; email?: string; school?: string; hasWorkPermit?: number; hasHealthCheck?: number; status: "active" | "inactive"; note?: string }>) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   await db.update(workers).set(data).where(eq(workers.id, id));
@@ -335,4 +354,42 @@ export async function deleteAssignment(id: number) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   await db.delete(assignments).where(eq(assignments.id, id));
+}
+
+// ============ Admin Invites ============
+export async function createAdminInvite(data: { code: string; createdBy: number; expiresAt?: Date }) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.insert(adminInvites).values(data);
+}
+
+export async function getAdminInviteByCode(code: string) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db.select().from(adminInvites).where(eq(adminInvites.code, code)).limit(1);
+  return result[0];
+}
+
+export async function getAllAdminInvites() {
+  const db = await getDb();
+  if (!db) return [];
+  return await db.select().from(adminInvites).orderBy(desc(adminInvites.createdAt));
+}
+
+export async function updateAdminInvite(id: number, data: Partial<{ usedBy: number; usedAt: Date; status: "active" | "used" | "expired" | "revoked" }>) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.update(adminInvites).set(data).where(eq(adminInvites.id, id));
+}
+
+export async function getAllAdmins() {
+  const db = await getDb();
+  if (!db) return [];
+  return await db.select().from(users).where(eq(users.role, "admin"));
+}
+
+export async function updateUserRole(userId: number, role: "admin" | "user") {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.update(users).set({ role }).where(eq(users.id, userId));
 }
