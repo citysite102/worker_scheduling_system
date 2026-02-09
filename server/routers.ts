@@ -126,25 +126,30 @@ export const appRouter = router({
     getByWeek: publicProcedure
       .input(z.object({ workerId: z.number(), weekStart: z.date() }))
       .query(async ({ input }) => {
-        const availabilities = await db.getAvailabilityByWeek(input.weekStart);
-        const filtered = availabilities.filter((a) => a.workerId === input.workerId);
+        const avail = await db.getAvailabilityByWorkerAndWeek(input.workerId, input.weekStart);
+        if (!avail) return [];
         
         // 解析 timeBlocks JSON 為 dayOfWeek 與 timeSlots 結構
-        const result = filtered.map((avail) => {
-          const blocks = JSON.parse(avail.timeBlocks || "[]");
-          return blocks.map((block: any) => ({
+        const blocks = JSON.parse(avail.timeBlocks || "[]");
+        const result = blocks.map((block: any) => {
+          // 相容處理：舊格式的 timeBlocks 可能沒有 timeSlots 包裝
+          let timeSlots = block.timeSlots;
+          if (!timeSlots && block.startTime && block.endTime) {
+            timeSlots = [{ startTime: block.startTime, endTime: block.endTime }];
+          }
+          return {
             id: avail.id,
             workerId: avail.workerId,
             weekStartDate: avail.weekStartDate,
             weekEndDate: avail.weekEndDate,
             dayOfWeek: block.dayOfWeek,
-            timeSlots: block.timeSlots,
+            timeSlots: timeSlots || [],
             confirmed: !!avail.confirmedAt,
             confirmedAt: avail.confirmedAt,
             createdAt: avail.createdAt,
             updatedAt: avail.updatedAt,
-          }));
-        }).flat();
+          };
+        });
         
         return result;
       }),
@@ -160,15 +165,19 @@ export const appRouter = router({
         })),
       }))
       .mutation(async ({ input }) => {
-        const { workerId, weekStart, dayOfWeek, timeSlots } = input;
+        const { workerId, weekStart: rawWeekStart, dayOfWeek, timeSlots } = input;
+        
+        // 標準化 weekStart 為週一 00:00:00
+        const weekStart = new Date(rawWeekStart);
+        weekStart.setHours(0, 0, 0, 0);
         
         // 計算 weekEnd
         const weekEnd = new Date(weekStart);
         weekEnd.setDate(weekEnd.getDate() + 6);
+        weekEnd.setHours(23, 59, 59, 0);
         
-        // 查詢現有記錄
-        const existing = await db.getAvailabilityByWeek(weekStart);
-        const existingRecord = existing.find((a) => a.workerId === workerId);
+        // 查詢現有記錄（使用 workerId + weekStart 查詢）
+        const existingRecord = await db.getAvailabilityByWorkerAndWeek(workerId, weekStart);
         
         let blocks = [];
         if (existingRecord) {
@@ -200,12 +209,17 @@ export const appRouter = router({
         weekStart: z.date(),
       }))
       .mutation(async ({ input }) => {
-        const { workerId, weekStart } = input;
+        const { workerId, weekStart: rawWeekStart } = input;
+        
+        // 標準化 weekStart
+        const weekStart = new Date(rawWeekStart);
+        weekStart.setHours(0, 0, 0, 0);
+        
         const weekEnd = new Date(weekStart);
         weekEnd.setDate(weekEnd.getDate() + 6);
+        weekEnd.setHours(23, 59, 59, 0);
         
-        const existing = await db.getAvailabilityByWeek(weekStart);
-        const existingRecord = existing.find((a) => a.workerId === workerId);
+        const existingRecord = await db.getAvailabilityByWorkerAndWeek(workerId, weekStart);
         
         if (!existingRecord) {
           throw new Error("尚未設定排班時間設置");

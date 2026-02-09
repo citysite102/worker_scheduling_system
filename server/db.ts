@@ -1,4 +1,4 @@
-import { eq, and, gte, lte, or, sql, desc } from "drizzle-orm";
+import { eq, and, gte, lte, lt, or, sql, desc } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
 import { InsertUser, users } from "../drizzle/schema";
 import { ENV } from './_core/env';
@@ -200,10 +200,18 @@ export async function getAvailabilityByWeek(weekStartDate: Date) {
 export async function getAvailabilityByWorkerAndWeek(workerId: number, weekStartDate: Date) {
   const db = await getDb();
   if (!db) return undefined;
+  
+  // 使用日期範圍查詢避免時區問題：匹配 weekStartDate 在同一天內的記錄
+  const dayStart = new Date(weekStartDate);
+  dayStart.setHours(0, 0, 0, 0);
+  const dayEnd = new Date(dayStart);
+  dayEnd.setDate(dayEnd.getDate() + 1);
+  
   const result = await db.select().from(availability).where(
     and(
       eq(availability.workerId, workerId),
-      eq(availability.weekStartDate, weekStartDate)
+      gte(availability.weekStartDate, dayStart),
+      lt(availability.weekStartDate, dayEnd)
     )
   ).limit(1);
   return result[0];

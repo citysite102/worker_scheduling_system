@@ -106,31 +106,31 @@ export default function Dashboard() {
             {confirmedDemands.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground">今日無需求</div>
             ) : (
-              <div className="space-y-3">
+              <div className="flex flex-col gap-3">
                 {confirmedDemands.map((demand) => {
                   const shortage = demand.requiredWorkers - demand.assignedCount;
                   return (
                     <Link key={demand.id} href={`/demands/${demand.id}`}>
-                      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-4 border rounded-lg hover:bg-accent cursor-pointer transition-colors">
-                        <div className="flex-1">
-                          <div className="font-medium">{demand.client?.name}</div>
-                          <div className="text-sm text-muted-foreground">
+                      <div className="flex items-center justify-between p-4 border rounded-lg bg-card hover:bg-muted/50 cursor-pointer transition-colors">
+                        <div className="min-w-0 flex-1 mr-4">
+                          <div className="font-medium truncate">{demand.client?.name}</div>
+                          <div className="text-sm text-muted-foreground truncate">
                             {demand.startTime} - {demand.endTime}
                             {demand.location && ` · ${demand.location}`}
                           </div>
                         </div>
-                        <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-3 shrink-0">
                           <div className="text-sm">
                             <span className="font-medium">{demand.assignedCount}</span>
                             <span className="text-muted-foreground"> / {demand.requiredWorkers}</span>
                           </div>
                           {shortage > 0 ? (
-                            <Badge variant="destructive" className="gap-1">
+                            <Badge variant="destructive" className="gap-1 whitespace-nowrap">
                               <AlertCircle className="h-3 w-3" />
                               缺 {shortage} 人
                             </Badge>
                           ) : (
-                            <Badge variant="default" className="gap-1">
+                            <Badge variant="default" className="gap-1 whitespace-nowrap">
                               <CheckCircle2 className="h-3 w-3" />
                               已滿
                             </Badge>
@@ -154,16 +154,16 @@ export default function Dashboard() {
             {!todayAssignments || todayAssignments.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground">今日無排班</div>
             ) : (
-              <div className="space-y-3">
+              <div className="flex flex-col gap-3">
                 {todayAssignments.slice(0, 10).map((assignment) => (
                   <div key={assignment.id} className="flex items-center justify-between p-3 border rounded-lg">
-                    <div className="flex-1">
-                      <div className="font-medium">{assignment.worker?.name}</div>
-                      <div className="text-sm text-muted-foreground">
+                    <div className="min-w-0 flex-1 mr-3">
+                      <div className="font-medium truncate">{assignment.worker?.name}</div>
+                      <div className="text-sm text-muted-foreground truncate">
                         {assignment.demand?.client?.name || "未知客戶"} · {new Date(assignment.scheduledStart).toLocaleTimeString("zh-TW", { hour: "2-digit", minute: "2-digit" })} - {new Date(assignment.scheduledEnd).toLocaleTimeString("zh-TW", { hour: "2-digit", minute: "2-digit" })}
                       </div>
                     </div>
-                    <Badge variant={assignment.status === "assigned" ? "outline" : "default"}>
+                    <Badge variant={assignment.status === "assigned" ? "outline" : "default"} className="shrink-0">
                       {assignment.status === "assigned" && "已指派"}
                       {assignment.status === "completed" && "已完成"}
                       {assignment.status === "cancelled" && "已取消"}

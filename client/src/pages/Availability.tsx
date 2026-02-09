@@ -6,39 +6,51 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { ChevronLeft, ChevronRight, Plus, Trash2, Check, X } from "lucide-react";
-import { useState } from "react";
+import { ChevronLeft, ChevronRight, Plus, Trash2, Check, Loader2 } from "lucide-react";
+import { useState, useMemo } from "react";
 import { toast } from "sonner";
 
 const WEEKDAYS = ["週一", "週二", "週三", "週四", "週五", "週六", "週日"];
 
+/**
+ * 取得指定日期所在週的週一，時間設為 UTC 00:00:00
+ * 這確保前後端使用一致的 weekStartDate
+ */
+function getWeekStart(date: Date): Date {
+  const d = new Date(date);
+  const day = d.getDay();
+  const diff = d.getDate() - day + (day === 0 ? -6 : 1);
+  d.setDate(diff);
+  d.setHours(0, 0, 0, 0);
+  return d;
+}
+
 export default function Availability() {
-  const [selectedWeek, setSelectedWeek] = useState(new Date());
+  const [selectedWeek, setSelectedWeek] = useState(() => getWeekStart(new Date()));
   const [selectedWorker, setSelectedWorker] = useState<number | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [timeSlots, setTimeSlots] = useState<{ startTime: string; endTime: string }[]>([
     { startTime: "09:00", endTime: "17:00" },
   ]);
   const [selectedDayOfWeek, setSelectedDayOfWeek] = useState<number | null>(null);
+  const [isLoadingLastWeek, setIsLoadingLastWeek] = useState(false);
 
   const { data: workers } = trpc.workers.list.useQuery({ status: "active" });
 
+  // 穩定化 query input 避免無限重新查詢
+  const weekQueryInput = useMemo(() => ({
+    workerId: selectedWorker!,
+    weekStart: selectedWeek,
+  }), [selectedWorker, selectedWeek]);
+
   const { data: availabilities, refetch } = trpc.availability.getByWeek.useQuery(
-    {
-      workerId: selectedWorker!,
-      weekStart: selectedWeek,
-    },
+    weekQueryInput,
     {
       enabled: !!selectedWorker,
     }
   );
 
   const upsertMutation = trpc.availability.upsert.useMutation({
-    onSuccess: () => {
-      toast.success("排班時間設置已儲存");
-      setIsDialogOpen(false);
-      refetch();
-    },
     onError: (error) => {
       toast.error(`儲存失敗：${error.message}`);
     },
@@ -53,13 +65,6 @@ export default function Availability() {
       toast.error(`確認失敗：${error.message}`);
     },
   });
-
-  const getWeekStart = (date: Date) => {
-    const d = new Date(date);
-    const day = d.getDay();
-    const diff = d.getDate() - day + (day === 0 ? -6 : 1);
-    return new Date(d.setDate(diff));
-  };
 
   const formatDate = (date: Date) => {
     return date.toLocaleDateString("zh-TW", { year: "numeric", month: "2-digit", day: "2-digit" });
@@ -92,66 +97,69 @@ export default function Availability() {
   };
 
   const utils = trpc.useUtils();
-  
+
   const handleOpenDialog = async (dayOfWeek: number) => {
     const existing = availabilities?.find((a: any) => a.dayOfWeek === dayOfWeek);
-    if (existing) {
-      // 已有設定，直接載入
+    if (existing && existing.timeSlots && existing.timeSlots.length > 0) {
+      // 已有設定，直接載入到編輯對話框
       setTimeSlots(
         existing.timeSlots.map((ts: any) => ({
           startTime: ts.startTime,
           endTime: ts.endTime,
         }))
       );
-    } else {
-      // 尚未設定，嘗試載入上週設定
-      const lastWeek = new Date(selectedWeek);
-      lastWeek.setDate(lastWeek.getDate() - 7);
-      
-      try {
-        const lastWeekData = await utils.availability.getByWeek.fetch({
-          workerId: selectedWorker!,
-          weekStart: lastWeek,
-        });
-        
-        const lastWeekDay = lastWeekData?.find((a: any) => a.dayOfWeek === dayOfWeek);
-        if (lastWeekDay && lastWeekDay.timeSlots.length > 0) {
-          // 沿用上週設定，直接儲存到資料庫
-          const slotsToSave = lastWeekDay.timeSlots.map((ts: any) => ({
-            startTime: ts.startTime,
-            endTime: ts.endTime,
-          }));
-          
-          // 先儲存到資料庫
-          await upsertMutation.mutateAsync({
-            workerId: selectedWorker!,
-            weekStart: selectedWeek,
-            dayOfWeek: dayOfWeek,
-            timeSlots: slotsToSave,
-          });
-          
-          // 重新載入資料
-          await refetch();
-          
-          toast.success("已沿用上週設定");
-          return; // 不開啟對話框
-        } else {
-          // 上週也沒設定，使用預設值
-          setTimeSlots([{ startTime: "09:00", endTime: "17:00" }]);
-        }
-      } catch (error) {
-        // 查詢失敗，使用預設值
-        setTimeSlots([{ startTime: "09:00", endTime: "17:00" }]);
-      }
+      setSelectedDayOfWeek(dayOfWeek);
+      setIsDialogOpen(true);
+      return;
     }
+
+    // 尚未設定，嘗試載入上週設定
+    setIsLoadingLastWeek(true);
+    const lastWeek = new Date(selectedWeek);
+    lastWeek.setDate(lastWeek.getDate() - 7);
+    const lastWeekStart = getWeekStart(lastWeek);
+
+    try {
+      const lastWeekData = await utils.availability.getByWeek.fetch({
+        workerId: selectedWorker!,
+        weekStart: lastWeekStart,
+      });
+
+      const lastWeekDay = lastWeekData?.find((a: any) => a.dayOfWeek === dayOfWeek);
+      if (lastWeekDay && lastWeekDay.timeSlots && lastWeekDay.timeSlots.length > 0) {
+        // 沿用上週設定，直接儲存到資料庫
+        const slotsToSave = lastWeekDay.timeSlots.map((ts: any) => ({
+          startTime: ts.startTime,
+          endTime: ts.endTime,
+        }));
+
+        await upsertMutation.mutateAsync({
+          workerId: selectedWorker!,
+          weekStart: selectedWeek,
+          dayOfWeek: dayOfWeek,
+          timeSlots: slotsToSave,
+        });
+
+        await refetch();
+        toast.success(`已沿用上週${WEEKDAYS[dayOfWeek - 1]}的設定`);
+        setIsLoadingLastWeek(false);
+        return;
+      }
+    } catch (error) {
+      // 查詢失敗，忽略
+    }
+
+    setIsLoadingLastWeek(false);
+    // 上週也沒設定或查詢失敗，開啟對話框使用預設值
+    setTimeSlots([{ startTime: "09:00", endTime: "17:00" }]);
     setSelectedDayOfWeek(dayOfWeek);
     setIsDialogOpen(true);
   };
 
-  const handleSaveTimeSlots = () => {
+  const handleSaveTimeSlots = async () => {
     if (!selectedWorker || selectedDayOfWeek === null) return;
 
-    upsertMutation.mutate({
+    await upsertMutation.mutateAsync({
       workerId: selectedWorker,
       weekStart: selectedWeek,
       dayOfWeek: selectedDayOfWeek,
@@ -160,6 +168,10 @@ export default function Availability() {
         endTime: ts.endTime,
       })),
     });
+
+    toast.success("排班時間設置已儲存");
+    setIsDialogOpen(false);
+    await refetch();
   };
 
   const handleConfirmWeek = () => {
@@ -174,8 +186,8 @@ export default function Availability() {
   const weekEnd = new Date(weekStart);
   weekEnd.setDate(weekEnd.getDate() + 6);
 
-  const isConfirmed = availabilities?.some((a) => a.confirmed);
-  const hasAnySlots = availabilities?.some((a) => a.timeSlots && a.timeSlots.length > 0);
+  const isConfirmed = availabilities?.some((a: any) => a.confirmed);
+  const hasAnySlots = availabilities?.some((a: any) => a.timeSlots && a.timeSlots.length > 0);
 
   return (
     <div className="p-8">
@@ -249,11 +261,11 @@ export default function Availability() {
               <div className="grid grid-cols-7 gap-3">
                 {WEEKDAYS.map((day, index) => {
                   const dayOfWeek = index + 1;
-                  const availability = availabilities?.find((a) => a.dayOfWeek === dayOfWeek);
-                  const hasSlots = availability && availability.timeSlots.length > 0;
+                  const availability = availabilities?.find((a: any) => a.dayOfWeek === dayOfWeek);
+                  const hasSlots = availability && availability.timeSlots && availability.timeSlots.length > 0;
 
                   return (
-                    <div key={index} className="border rounded-lg p-3 hover:bg-accent transition-colors">
+                    <div key={index} className="border rounded-lg p-3 hover:bg-muted/50 transition-colors">
                       <div className="text-sm font-medium mb-2 text-center">{day}</div>
                       {hasSlots ? (
                         <div className="space-y-1">
@@ -271,8 +283,13 @@ export default function Availability() {
                         size="sm"
                         className="w-full mt-2"
                         onClick={() => handleOpenDialog(dayOfWeek)}
+                        disabled={isLoadingLastWeek || upsertMutation.isPending}
                       >
-                        {hasSlots ? "編輯" : "設定"}
+                        {(isLoadingLastWeek || upsertMutation.isPending) ? (
+                          <Loader2 className="h-3 w-3 animate-spin" />
+                        ) : (
+                          hasSlots ? "編輯" : "設定"
+                        )}
                       </Button>
                     </div>
                   );
