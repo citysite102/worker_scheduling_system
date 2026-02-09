@@ -7,7 +7,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Search, Edit, Building2 } from "lucide-react";
+import { Plus, Search, Edit, Building2, Loader2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -77,7 +77,7 @@ export default function Clients() {
     return (
       <div className="p-8">
         <h1 className="text-3xl font-bold mb-6">客戶管理</h1>
-        <div className="text-muted-foreground">載入中...</div>
+        <div className="flex items-center justify-center py-12"><Loader2 className="h-8 w-8 animate-spin text-muted-foreground" /></div>
       </div>
     );
   }

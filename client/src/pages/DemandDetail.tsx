@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { AlertCircle, CheckCircle2, ChevronDown, ChevronUp, ArrowLeft } from "lucide-react";
+import { AlertCircle, CheckCircle2, ChevronDown, ChevronUp, ArrowLeft, Loader2 } from "lucide-react";
 import { useParams, useLocation } from "wouter";
 import { useState, useMemo } from "react";
 import { toast } from "sonner";
@@ -105,7 +105,7 @@ export default function DemandDetail() {
   if (isLoading || feasibilityLoading) {
     return (
       <div className="p-8">
-        <div className="text-muted-foreground">載入中...</div>
+        <div className="flex items-center justify-center py-12"><Loader2 className="h-8 w-8 animate-spin text-muted-foreground" /></div>
       </div>
     );
   }

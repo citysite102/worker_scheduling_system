@@ -1,7 +1,7 @@
 import { trpc } from "@/lib/trpc";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { AlertCircle, CheckCircle2, Users, ClipboardList } from "lucide-react";
+import { AlertCircle, CheckCircle2, Users, ClipboardList, Loader2 } from "lucide-react";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 
@@ -22,7 +22,7 @@ export default function Dashboard() {
     return (
       <div className="p-8">
         <h1 className="text-3xl font-bold mb-6">儀表板</h1>
-        <div className="text-muted-foreground">載入中...</div>
+        <div className="flex items-center justify-center py-12"><Loader2 className="h-8 w-8 animate-spin text-muted-foreground" /></div>
       </div>
     );
   }

@@ -8,7 +8,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Search, Edit, UserX, UserCheck } from "lucide-react";
+import { Plus, Search, Edit, UserX, UserCheck, Loader2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -40,12 +40,13 @@ export default function Workers() {
       if (variables.status) {
         toast.success(variables.status === "inactive" ? "已停用員工" : "已啟用員工");
         setConfirmToggleWorker(null);
+        refetch(); // 僅刷新列表
       } else {
         toast.success("員工資料更新成功");
         setIsDialogOpen(false);
         setEditingWorker(null);
+        refetch();
       }
-      refetch();
     },
     onError: (error) => {
       toast.error(`更新失敗：${error.message}`);
@@ -83,7 +84,7 @@ export default function Workers() {
     return (
       <div className="p-8">
         <h1 className="text-3xl font-bold mb-6">員工管理</h1>
-        <div className="text-muted-foreground">載入中...</div>
+        <div className="flex items-center justify-center py-12"><Loader2 className="h-8 w-8 animate-spin text-muted-foreground" /></div>
       </div>
     );
   }
@@ -266,6 +267,7 @@ export default function Workers() {
           <AlertDialogFooter>
             <AlertDialogCancel disabled={updateMutation.isPending}>取消</AlertDialogCancel>
             <AlertDialogAction onClick={handleConfirmToggle} disabled={updateMutation.isPending}>
+              {updateMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               {updateMutation.isPending ? "處理中..." : "確認"}
             </AlertDialogAction>
           </AlertDialogFooter>

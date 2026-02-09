@@ -146,14 +146,14 @@ export default function Availability() {
             <CardDescription>選擇員工後，設定該週的可排班時段</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="flex items-center gap-4">
-              <div className="flex-1">
-                <Label>員工</Label>
+            <div className="grid gap-6">
+              <div>
+                <Label className="text-base font-medium">員工</Label>
                 <Select
                   value={selectedWorker?.toString() || ""}
                   onValueChange={(value) => setSelectedWorker(parseInt(value))}
                 >
-                  <SelectTrigger>
+                  <SelectTrigger className="mt-2">
                     <SelectValue placeholder="請選擇員工" />
                   </SelectTrigger>
                   <SelectContent>
@@ -165,13 +165,13 @@ export default function Availability() {
                   </SelectContent>
                 </Select>
               </div>
-              <div className="flex-1">
-                <Label>週次</Label>
-                <div className="flex items-center gap-2">
+              <div>
+                <Label className="text-base font-medium">週次</Label>
+                <div className="flex items-center gap-3 mt-2">
                   <Button variant="outline" size="icon" onClick={handlePrevWeek}>
                     <ChevronLeft className="h-4 w-4" />
                   </Button>
-                  <div className="flex-1 text-center font-medium">
+                  <div className="flex-1 text-center font-medium text-lg">
                     {formatDate(weekStart)} - {formatDate(weekEnd)}
                   </div>
                   <Button variant="outline" size="icon" onClick={handleNextWeek}>

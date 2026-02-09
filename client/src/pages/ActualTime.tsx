@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Calendar, Clock, User, AlertCircle } from "lucide-react";
+import { Calendar, Clock, User, AlertCircle, Loader2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -62,7 +62,7 @@ export default function ActualTime() {
     return (
       <div className="p-8">
         <h1 className="text-3xl font-bold mb-6">實際工時回填</h1>
-        <div className="text-muted-foreground">載入中...</div>
+        <div className="flex items-center justify-center py-12"><Loader2 className="h-8 w-8 animate-spin text-muted-foreground" /></div>
       </div>
     );
   }
