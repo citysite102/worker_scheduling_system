@@ -52,7 +52,7 @@ export default function Dashboard() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{todayAssignments?.length || 0}</div>
-            <p className="text-xs text-muted-foreground">已指派的移工人次</p>
+            <p className="text-xs text-muted-foreground">已指派的員工人次</p>
           </CardContent>
         </Card>
 
@@ -65,7 +65,7 @@ export default function Dashboard() {
             <div className="text-2xl font-bold">
               {confirmedDemands.reduce((sum, d) => sum + d.requiredWorkers, 0)}
             </div>
-            <p className="text-xs text-muted-foreground">今日所需移工總數</p>
+            <p className="text-xs text-muted-foreground">今日所需員工總數</p>
           </CardContent>
         </Card>
 
@@ -160,7 +160,7 @@ export default function Dashboard() {
                     <div className="flex-1">
                       <div className="font-medium">{assignment.worker?.name}</div>
                       <div className="text-sm text-muted-foreground">
-                        {assignment.client?.name} · {new Date(assignment.scheduledStart).toLocaleTimeString("zh-TW", { hour: "2-digit", minute: "2-digit" })} - {new Date(assignment.scheduledEnd).toLocaleTimeString("zh-TW", { hour: "2-digit", minute: "2-digit" })}
+                        {assignment.demand?.client?.name || "未知客戶"} · {new Date(assignment.scheduledStart).toLocaleTimeString("zh-TW", { hour: "2-digit", minute: "2-digit" })} - {new Date(assignment.scheduledEnd).toLocaleTimeString("zh-TW", { hour: "2-digit", minute: "2-digit" })}
                       </div>
                     </div>
                     <Badge variant={assignment.status === "assigned" ? "outline" : "default"}>

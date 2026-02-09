@@ -14,7 +14,7 @@ export function isTimeOverlap(
 }
 
 /**
- * 檢查移工在指定時段是否有排班衝突
+ * 檢查員工在指定時段是否有排班衝突
  * @returns 衝突的排班記錄陣列
  */
 export async function checkWorkerConflicts(
@@ -49,8 +49,8 @@ export async function checkWorkerConflicts(
 }
 
 /**
- * 檢查移工是否在可排班時段內
- * @param workerId 移工 ID
+ * 檢查員工是否在可排班時段內
+ * @param workerId 員工 ID
  * @param demandDate 需求日期
  * @param startTime 開始時間 (HH:mm)
  * @param endTime 結束時間 (HH:mm)
@@ -65,7 +65,7 @@ export async function checkWorkerAvailability(
   // 取得該週的週一日期
   const weekStartDate = getWeekStart(demandDate);
 
-  // 查詢該移工在該週的可排班時間
+  // 查詢該員工在該週的可排班時間
   const availability = await getAvailabilityByWorkerAndWeek(workerId, weekStartDate);
 
   if (!availability) {

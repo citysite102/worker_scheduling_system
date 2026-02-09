@@ -35,7 +35,7 @@ export const appRouter = router({
       .input(z.object({ id: z.number() }))
       .query(async ({ input }) => {
         const worker = await db.getWorkerById(input.id);
-        if (!worker) throw new Error("移工不存在");
+        if (!worker) throw new Error("員工不存在");
         return worker;
       }),
 
@@ -124,20 +124,27 @@ export const appRouter = router({
   // ============ Availability ============
   availability: router({
     getByWeek: publicProcedure
-      .input(z.object({ weekStartDate: z.date() }))
+      .input(z.object({ workerId: z.number(), weekStart: z.date() }))
       .query(async ({ input }) => {
-        const availabilities = await db.getAvailabilityByWeek(input.weekStartDate);
+        const availabilities = await db.getAvailabilityByWeek(input.weekStart);
+        const filtered = availabilities.filter((a) => a.workerId === input.workerId);
         
-        // 附加移工資訊
-        const result = await Promise.all(
-          availabilities.map(async (avail) => {
-            const worker = await db.getWorkerById(avail.workerId);
-            return {
-              ...avail,
-              worker,
-            };
-          })
-        );
+        // 解析 timeBlocks JSON 為 dayOfWeek 與 timeSlots 結構
+        const result = filtered.map((avail) => {
+          const blocks = JSON.parse(avail.timeBlocks || "[]");
+          return blocks.map((block: any) => ({
+            id: avail.id,
+            workerId: avail.workerId,
+            weekStartDate: avail.weekStartDate,
+            weekEndDate: avail.weekEndDate,
+            dayOfWeek: block.dayOfWeek,
+            timeSlots: block.timeSlots,
+            confirmed: !!avail.confirmedAt,
+            confirmedAt: avail.confirmedAt,
+            createdAt: avail.createdAt,
+            updatedAt: avail.updatedAt,
+          }));
+        }).flat();
         
         return result;
       }),
@@ -145,14 +152,73 @@ export const appRouter = router({
     upsert: publicProcedure
       .input(z.object({
         workerId: z.number(),
-        weekStartDate: z.date(),
-        weekEndDate: z.date(),
-        timeBlocks: z.string(), // JSON string
-        confirmedAt: z.date().nullable().optional(),
-        note: z.string().optional(),
+        weekStart: z.date(),
+        dayOfWeek: z.number().min(1).max(7),
+        timeSlots: z.array(z.object({
+          startTime: z.string(),
+          endTime: z.string(),
+        })),
       }))
       .mutation(async ({ input }) => {
-        await db.upsertAvailability(input);
+        const { workerId, weekStart, dayOfWeek, timeSlots } = input;
+        
+        // 計算 weekEnd
+        const weekEnd = new Date(weekStart);
+        weekEnd.setDate(weekEnd.getDate() + 6);
+        
+        // 查詢現有記錄
+        const existing = await db.getAvailabilityByWeek(weekStart);
+        const existingRecord = existing.find((a) => a.workerId === workerId);
+        
+        let blocks = [];
+        if (existingRecord) {
+          blocks = JSON.parse(existingRecord.timeBlocks || "[]");
+        }
+        
+        // 更新或新增該日的時段
+        const dayIndex = blocks.findIndex((b: any) => b.dayOfWeek === dayOfWeek);
+        if (dayIndex >= 0) {
+          blocks[dayIndex] = { dayOfWeek, timeSlots };
+        } else {
+          blocks.push({ dayOfWeek, timeSlots });
+        }
+        
+        await db.upsertAvailability({
+          workerId,
+          weekStartDate: weekStart,
+          weekEndDate: weekEnd,
+          timeBlocks: JSON.stringify(blocks),
+          confirmedAt: existingRecord?.confirmedAt || null,
+        });
+        
+        return { success: true };
+      }),
+
+    confirm: publicProcedure
+      .input(z.object({
+        workerId: z.number(),
+        weekStart: z.date(),
+      }))
+      .mutation(async ({ input }) => {
+        const { workerId, weekStart } = input;
+        const weekEnd = new Date(weekStart);
+        weekEnd.setDate(weekEnd.getDate() + 6);
+        
+        const existing = await db.getAvailabilityByWeek(weekStart);
+        const existingRecord = existing.find((a) => a.workerId === workerId);
+        
+        if (!existingRecord) {
+          throw new Error("尚未設定可排班時間");
+        }
+        
+        await db.upsertAvailability({
+          workerId,
+          weekStartDate: weekStart,
+          weekEndDate: weekEnd,
+          timeBlocks: existingRecord.timeBlocks,
+          confirmedAt: new Date(),
+        });
+        
         return { success: true };
       }),
   }),
@@ -264,7 +330,7 @@ export const appRouter = router({
       .query(async ({ input }) => {
         const assignments = await db.getAssignmentsByDemand(input.demandId);
         
-        // 附加移工資訊
+        // 附加員工資訊
         const result = await Promise.all(
           assignments.map(async (assignment) => {
             const worker = await db.getWorkerById(assignment.workerId);
@@ -286,7 +352,7 @@ export const appRouter = router({
       .query(async ({ input }) => {
         const assignments = await db.getAssignmentsByDateRange(input.startDate, input.endDate);
         
-        // 附加移工與需求單資訊
+        // 附加員工與需求單資訊
         const result = await Promise.all(
           assignments.map(async (assignment) => {
             const worker = await db.getWorkerById(assignment.workerId);
@@ -296,13 +362,91 @@ export const appRouter = router({
             return {
               ...assignment,
               worker,
-              demand,
-              client,
+              demand: {
+                ...demand,
+                client,
+              },
             };
           })
         );
         
         return result;
+      }),
+
+    listByDate: publicProcedure
+      .input(z.object({ date: z.date() }))
+      .query(async ({ input }) => {
+        const startOfDay = new Date(input.date);
+        startOfDay.setHours(0, 0, 0, 0);
+        const endOfDay = new Date(input.date);
+        endOfDay.setHours(23, 59, 59, 999);
+        
+        const assignments = await db.getAssignmentsByDateRange(startOfDay, endOfDay);
+        
+        const result = await Promise.all(
+          assignments.map(async (assignment) => {
+            const worker = await db.getWorkerById(assignment.workerId);
+            const demand = await db.getDemandById(assignment.demandId);
+            const client = demand ? await db.getClientById(demand.clientId) : null;
+            
+            return {
+              ...assignment,
+              worker,
+              demand: {
+                ...demand,
+                client,
+              },
+            };
+          })
+        );
+        
+        return result;
+      }),
+
+    fillActualTime: publicProcedure
+      .input(z.object({
+        assignmentId: z.number(),
+        actualStartTime: z.string().regex(/^\d{2}:\d{2}$/, "時間格式應為 HH:mm"),
+        actualEndTime: z.string().regex(/^\d{2}:\d{2}$/, "時間格式應為 HH:mm"),
+      }))
+      .mutation(async ({ input }) => {
+        const assignment = await db.getAssignmentById(input.assignmentId);
+        if (!assignment) throw new Error("排班記錄不存在");
+        
+        const demand = await db.getDemandById(assignment.demandId);
+        if (!demand) throw new Error("需求單不存在");
+        
+        // 計算實際工時
+        const actualStart = new Date(demand.date);
+        const [startHour, startMin] = input.actualStartTime.split(":").map(Number);
+        actualStart.setHours(startHour, startMin, 0, 0);
+        
+        const actualEnd = new Date(demand.date);
+        const [endHour, endMin] = input.actualEndTime.split(":").map(Number);
+        actualEnd.setHours(endHour, endMin, 0, 0);
+        
+        const actualHours = logic.calculateMinutesBetween(actualStart, actualEnd);
+        const varianceHours = actualHours - assignment.scheduledHours;
+        
+        // 檢查實際時間是否與其他排班衝突
+        const conflicts = await logic.checkWorkerConflicts(
+          assignment.workerId,
+          actualStart,
+          actualEnd,
+          assignment.id
+        );
+        
+        const status = conflicts.length > 0 ? "disputed" : "completed";
+        
+        await db.updateAssignment(input.assignmentId, {
+          actualStartTime: input.actualStartTime,
+          actualEndTime: input.actualEndTime,
+          actualHours,
+          varianceHours,
+          status,
+        });
+        
+        return { success: true, status };
       }),
 
     create: publicProcedure
@@ -323,7 +467,7 @@ export const appRouter = router({
         
         if (conflicts.length > 0) {
           const worker = await db.getWorkerById(input.workerId);
-          throw new Error(`無法完成指派。移工「${worker?.name}」的時段已被指派於其他任務，請重新整理頁面或選擇其他移工。`);
+          throw new Error(`無法完成指派。員工「${worker?.name}」的時段已被指派於其他任務，請重新整理頁面或選擇其他員工。`);
         }
         
         const scheduledHours = logic.calculateMinutesBetween(input.scheduledStart, input.scheduledEnd);
@@ -358,7 +502,7 @@ export const appRouter = router({
             
             if (conflicts.length > 0) {
               const worker = await db.getWorkerById(workerId);
-              errors.push(`移工「${worker?.name}」時段衝突`);
+              errors.push(`員工「${worker?.name}」時段衝突`);
               continue;
             }
             
@@ -375,7 +519,7 @@ export const appRouter = router({
             successCount.value++;
           } catch (error) {
             const worker = await db.getWorkerById(workerId);
-            errors.push(`移工「${worker?.name}」指派失敗`);
+            errors.push(`員工「${worker?.name}」指派失敗`);
           }
         }
         
@@ -435,7 +579,7 @@ export const appRouter = router({
 
   // ============ Reports ============
   reports: router({
-    // 移工薪資報表
+    // 員工薪資報表
     workerPayroll: publicProcedure
       .input(z.object({
         startDate: z.date(),

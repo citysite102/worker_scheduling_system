@@ -36,7 +36,7 @@ export default function DemandDetail() {
   const batchCreateMutation = trpc.assignments.batchCreate.useMutation({
     onSuccess: (result) => {
       if (result.success) {
-        toast.success(`已成功指派 ${result.successCount} 位移工`);
+        toast.success(`已成功指派 ${result.successCount} 位員工`);
         setSelectedWorkerIds([]);
         refetch();
       } else {
@@ -66,10 +66,10 @@ export default function DemandDetail() {
 
     if (availableIds.length < needed) {
       toast.warning(
-        `可用移工僅 ${feasibility.availableWorkers.length} 人，仍缺 ${feasibility.shortage} 人。建議調整時段或拆分需求單。`
+        `可用員工僅 ${feasibility.availableWorkers.length} 人，仍缺 ${feasibility.shortage} 人。建議調整時段或拆分需求單。`
       );
     } else {
-      toast.success(`已自動選取 ${availableIds.length} 位移工，請確認後送出。`);
+      toast.success(`已自動選取 ${availableIds.length} 位員工，請確認後送出。`);
     }
 
     setSelectedWorkerIds((prev) => [...prev, ...availableIds]);
@@ -82,7 +82,7 @@ export default function DemandDetail() {
 
   const handleSubmit = () => {
     if (!demand || selectedWorkerIds.length === 0) {
-      toast.error("請至少選擇一位移工");
+      toast.error("請至少選擇一位員工");
       return;
     }
 
@@ -179,7 +179,7 @@ export default function DemandDetail() {
           <CardContent>
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <span className="text-muted-foreground">可用移工：</span>
+                <span className="text-muted-foreground">可用員工：</span>
                 <span className="font-medium">{feasibility.availableWorkers.length} 人</span>
               </div>
               {feasibility.shortage > 0 && (
@@ -188,7 +188,7 @@ export default function DemandDetail() {
                   <AlertDescription>
                     <strong>缺口：{feasibility.shortage} 人</strong>
                     <br />
-                    可用移工不足，建議調整時段或拆分需求單。
+                    可用員工不足，建議調整時段或拆分需求單。
                   </AlertDescription>
                 </Alert>
               )}
@@ -232,12 +232,12 @@ export default function DemandDetail() {
               可指派 ({feasibility.availableWorkers.length})
             </CardTitle>
             <CardDescription>
-              符合可排班時間且無衝突的移工，依「本週工時少 → 近期排班少 → 姓名」排序
+              符合可排班時間且無衝突的員工，依「本週工時少 → 近期排班少 → 姓名」排序
             </CardDescription>
           </CardHeader>
           <CardContent>
             {feasibility.availableWorkers.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground">無可指派移工</div>
+              <div className="text-center py-8 text-muted-foreground">無可指派員工</div>
             ) : (
               <div className="space-y-2">
                 {feasibility.availableWorkers.map((worker) => (
@@ -274,11 +274,11 @@ export default function DemandDetail() {
               <AlertCircle className="h-5 w-5 text-orange-600" />
               不可指派 ({unavailableActiveWorkers.length})
             </CardTitle>
-            <CardDescription>因故無法指派的移工，已灰底並鎖定</CardDescription>
+            <CardDescription>因故無法指派的員工，已灰底並鎖定</CardDescription>
           </CardHeader>
           <CardContent>
             {unavailableActiveWorkers.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground">無不可指派移工</div>
+              <div className="text-center py-8 text-muted-foreground">無不可指派員工</div>
             ) : (
               <div className="space-y-2">
                 {unavailableActiveWorkers.map((uw) => (
@@ -318,7 +318,7 @@ export default function DemandDetail() {
             <CollapsibleContent>
               <CardContent>
                 {inactiveWorkers.length === 0 ? (
-                  <div className="text-center py-8 text-muted-foreground">無已停用移工</div>
+                  <div className="text-center py-8 text-muted-foreground">無已停用員工</div>
                 ) : (
                   <div className="space-y-2">
                     {inactiveWorkers.map((uw) => (

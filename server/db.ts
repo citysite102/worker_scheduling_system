@@ -310,7 +310,14 @@ export async function createAssignment(data: { demandId: number; workerId: numbe
   return result;
 }
 
-export async function updateAssignment(id: number, data: Partial<{ actualStart?: Date; actualEnd?: Date; actualHours?: number; varianceHours?: number; status: "assigned" | "completed" | "cancelled" | "disputed"; note?: string }>) {
+export async function getAssignmentById(id: number) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db.select().from(assignments).where(eq(assignments.id, id)).limit(1);
+  return result[0];
+}
+
+export async function updateAssignment(id: number, data: Partial<{ actualStart?: Date; actualEnd?: Date; actualStartTime?: string; actualEndTime?: string; actualHours?: number; varianceHours?: number; status: "assigned" | "completed" | "cancelled" | "disputed"; note?: string }>) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   await db.update(assignments).set(data).where(eq(assignments.id, id));

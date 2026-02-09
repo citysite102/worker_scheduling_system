@@ -26,7 +26,7 @@ export type User = typeof users.$inferSelect;
 export type InsertUser = typeof users.$inferInsert;
 
 /**
- * Workers (移工) - 移工基本資料
+ * Workers (員工) - 員工基本資料
  */
 export const workers = mysqlTable("workers", {
   id: int("id").autoincrement().primaryKey(),
@@ -63,7 +63,7 @@ export type Client = typeof clients.$inferSelect;
 export type InsertClient = typeof clients.$inferInsert;
 
 /**
- * Availability (可排班時間) - 移工每週可排班時段（滾動更新）
+ * Availability (可排班時間) - 員工每週可排班時段（滾動更新）
  * timeBlocks 儲存為 JSON 格式：[{dayOfWeek: 1-7, startTime: "HH:mm", endTime: "HH:mm"}]
  */
 export const availability = mysqlTable("availability", {
@@ -102,7 +102,7 @@ export type Demand = typeof demands.$inferSelect;
 export type InsertDemand = typeof demands.$inferInsert;
 
 /**
- * Assignments (排班指派) - 將移工指派至需求單
+ * Assignments (排班指派) - 將員工指派至需求單
  */
 export const assignments = mysqlTable("assignments", {
   id: int("id").autoincrement().primaryKey(),

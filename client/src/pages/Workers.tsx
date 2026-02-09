@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -16,6 +17,7 @@ export default function Workers() {
   const [statusFilter, setStatusFilter] = useState<"active" | "inactive" | undefined>(undefined);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingWorker, setEditingWorker] = useState<any>(null);
+  const [confirmToggleWorker, setConfirmToggleWorker] = useState<any>(null);
 
   const { data: workers, isLoading, refetch } = trpc.workers.list.useQuery({
     search: searchTerm,
@@ -24,7 +26,7 @@ export default function Workers() {
 
   const createMutation = trpc.workers.create.useMutation({
     onSuccess: () => {
-      toast.success("移工新增成功");
+      toast.success("員工新增成功");
       setIsDialogOpen(false);
       refetch();
     },
@@ -34,14 +36,20 @@ export default function Workers() {
   });
 
   const updateMutation = trpc.workers.update.useMutation({
-    onSuccess: () => {
-      toast.success("移工資料更新成功");
-      setIsDialogOpen(false);
-      setEditingWorker(null);
+    onSuccess: (_, variables) => {
+      if (variables.status) {
+        toast.success(variables.status === "inactive" ? "已停用員工" : "已啟用員工");
+        setConfirmToggleWorker(null);
+      } else {
+        toast.success("員工資料更新成功");
+        setIsDialogOpen(false);
+        setEditingWorker(null);
+      }
       refetch();
     },
     onError: (error) => {
       toast.error(`更新失敗：${error.message}`);
+      setConfirmToggleWorker(null);
     },
   });
 
@@ -62,10 +70,11 @@ export default function Workers() {
     }
   };
 
-  const handleStatusToggle = (worker: any) => {
-    const newStatus = worker.status === "active" ? "inactive" : "active";
+  const handleConfirmToggle = () => {
+    if (!confirmToggleWorker) return;
+    const newStatus = confirmToggleWorker.status === "active" ? "inactive" : "active";
     updateMutation.mutate({
-      id: worker.id,
+      id: confirmToggleWorker.id,
       status: newStatus,
     });
   };
@@ -73,7 +82,7 @@ export default function Workers() {
   if (isLoading) {
     return (
       <div className="p-8">
-        <h1 className="text-3xl font-bold mb-6">移工管理</h1>
+        <h1 className="text-3xl font-bold mb-6">員工管理</h1>
         <div className="text-muted-foreground">載入中...</div>
       </div>
     );
@@ -82,19 +91,19 @@ export default function Workers() {
   return (
     <div className="p-8">
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-3xl font-bold">移工管理</h1>
+        <h1 className="text-3xl font-bold">員工管理</h1>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
             <Button onClick={() => setEditingWorker(null)}>
               <Plus className="mr-2 h-4 w-4" />
-              新增移工
+              新增員工
             </Button>
           </DialogTrigger>
           <DialogContent>
             <form onSubmit={handleSubmit}>
               <DialogHeader>
-                <DialogTitle>{editingWorker ? "編輯移工" : "新增移工"}</DialogTitle>
-                <DialogDescription>填寫移工基本資料</DialogDescription>
+                <DialogTitle>{editingWorker ? "編輯員工" : "新增員工"}</DialogTitle>
+                <DialogDescription>填寫員工基本資料</DialogDescription>
               </DialogHeader>
               <div className="grid gap-4 py-4">
                 <div className="grid gap-2">
@@ -174,11 +183,11 @@ export default function Workers() {
 
       <Card>
         <CardHeader>
-          <CardTitle>移工列表 ({workers?.length || 0})</CardTitle>
+          <CardTitle>員工列表 ({workers?.length || 0})</CardTitle>
         </CardHeader>
         <CardContent>
           {!workers || workers.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">無移工資料</div>
+            <div className="text-center py-8 text-muted-foreground">無員工資料</div>
           ) : (
             <div className="space-y-3">
               {workers.map((worker) => (
@@ -215,7 +224,8 @@ export default function Workers() {
                     <Button
                       variant={worker.status === "active" ? "destructive" : "default"}
                       size="sm"
-                      onClick={() => handleStatusToggle(worker)}
+                      onClick={() => setConfirmToggleWorker(worker)}
+                      disabled={updateMutation.isPending}
                     >
                       {worker.status === "active" ? (
                         <UserX className="h-4 w-4" />
@@ -230,6 +240,37 @@ export default function Workers() {
           )}
         </CardContent>
       </Card>
+
+      <AlertDialog open={!!confirmToggleWorker} onOpenChange={(open) => !open && setConfirmToggleWorker(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {confirmToggleWorker?.status === "active" ? "確認停用員工" : "確認啟用員工"}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {confirmToggleWorker?.status === "active" ? (
+                <>
+                  您確定要停用員工 <strong>{confirmToggleWorker?.name}</strong> 嗎？
+                  <br />
+                  停用後，該員工將無法被指派至新的排班。
+                </>
+              ) : (
+                <>
+                  您確定要啟用員工 <strong>{confirmToggleWorker?.name}</strong> 嗎？
+                  <br />
+                  啟用後，該員工將可以被指派至排班。
+                </>
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={updateMutation.isPending}>取消</AlertDialogCancel>
+            <AlertDialogAction onClick={handleConfirmToggle} disabled={updateMutation.isPending}>
+              {updateMutation.isPending ? "處理中..." : "確認"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
