@@ -1,7 +1,7 @@
 import { trpc } from "@/lib/trpc";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { AlertCircle, CheckCircle2, Users, ClipboardList, Loader2 } from "lucide-react";
+import { AlertCircle, CheckCircle2, Users, ClipboardList, Loader2, TrendingUp, ArrowRight } from "lucide-react";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 
@@ -20,121 +20,123 @@ export default function Dashboard() {
 
   if (demandsLoading || assignmentsLoading) {
     return (
-      <div className="p-8">
-        <h1 className="text-3xl font-bold mb-6">儀表板</h1>
-        <div className="flex items-center justify-center py-12"><Loader2 className="h-8 w-8 animate-spin text-muted-foreground" /></div>
+      <div className="p-6 lg:p-8 max-w-7xl mx-auto">
+        <h1 className="text-2xl font-semibold mb-6">儀表板</h1>
+        <div className="flex items-center justify-center py-12">
+          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        </div>
       </div>
     );
   }
 
   const confirmedDemands = todayDemands?.filter(d => d.status === "confirmed") || [];
+  const totalRequired = confirmedDemands.reduce((sum, d) => sum + d.requiredWorkers, 0);
+  const totalAssigned = todayAssignments?.length || 0;
+  const completionRate = totalRequired > 0 ? Math.round((totalAssigned / totalRequired) * 100) : 0;
+
+  const statCards = [
+    {
+      title: "今日需求",
+      value: confirmedDemands.length,
+      subtitle: "已確認的用工需求",
+      icon: ClipboardList,
+      accent: "bg-blue-50 text-blue-600",
+    },
+    {
+      title: "今日排班",
+      value: totalAssigned,
+      subtitle: "已指派的員工人次",
+      icon: Users,
+      accent: "bg-indigo-50 text-indigo-600",
+    },
+    {
+      title: "需求總人數",
+      value: totalRequired,
+      subtitle: "今日所需員工總數",
+      icon: Users,
+      accent: "bg-violet-50 text-violet-600",
+    },
+    {
+      title: "指派完成度",
+      value: `${completionRate}%`,
+      subtitle: "已指派 / 需求人數",
+      icon: TrendingUp,
+      accent: completionRate >= 80 ? "bg-emerald-50 text-emerald-600" : completionRate >= 50 ? "bg-amber-50 text-amber-600" : "bg-red-50 text-red-500",
+    },
+  ];
 
   return (
-    <div className="p-8">
-      <h1 className="text-3xl font-bold mb-6">儀表板</h1>
-
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 mb-8">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">今日需求</CardTitle>
-            <ClipboardList className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{confirmedDemands.length}</div>
-            <p className="text-xs text-muted-foreground">已確認的用工需求</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">今日排班</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{todayAssignments?.length || 0}</div>
-            <p className="text-xs text-muted-foreground">已指派的員工人次</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">需求總人數</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {confirmedDemands.reduce((sum, d) => sum + d.requiredWorkers, 0)}
-            </div>
-            <p className="text-xs text-muted-foreground">今日所需員工總數</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">指派完成度</CardTitle>
-            <CheckCircle2 className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {confirmedDemands.reduce((sum, d) => sum + d.requiredWorkers, 0) > 0
-                ? Math.round(
-                    ((todayAssignments?.length || 0) /
-                      confirmedDemands.reduce((sum, d) => sum + d.requiredWorkers, 0)) *
-                      100
-                  )
-                : 0}
-              %
-            </div>
-            <p className="text-xs text-muted-foreground">已指派 / 需求人數</p>
-          </CardContent>
-        </Card>
+    <div className="p-6 lg:p-8 max-w-7xl mx-auto">
+      <div className="mb-8">
+        <h1 className="text-2xl font-semibold text-foreground">儀表板</h1>
+        <p className="text-sm text-muted-foreground mt-1">
+          {new Date().toLocaleDateString("zh-TW", { year: "numeric", month: "long", day: "numeric", weekday: "long" })}
+        </p>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle>今日需求列表</CardTitle>
-            <CardDescription>
-              {new Date().toLocaleDateString("zh-TW", {
-                year: "numeric",
-                month: "long",
-                day: "numeric",
-              })}
-            </CardDescription>
+      {/* 統計卡片 */}
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 mb-8">
+        {statCards.map((stat, i) => (
+          <Card key={i} className="shadow-sm border-border/60 hover:shadow-md transition-shadow">
+            <CardContent className="p-5">
+              <div className="flex items-start justify-between mb-3">
+                <span className="text-sm font-medium text-muted-foreground">{stat.title}</span>
+                <div className={`h-8 w-8 rounded-lg flex items-center justify-center ${stat.accent}`}>
+                  <stat.icon className="h-4 w-4" />
+                </div>
+              </div>
+              <div className="text-3xl font-bold tracking-tight">{stat.value}</div>
+              <p className="text-xs text-muted-foreground mt-1">{stat.subtitle}</p>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      {/* 需求列表 + 指派清單 */}
+      <div className="grid gap-6 lg:grid-cols-2">
+        <Card className="shadow-sm border-border/60">
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-base font-medium">今日需求列表</CardTitle>
+              <span className="text-xs text-muted-foreground">
+                {confirmedDemands.length} 筆需求
+              </span>
+            </div>
           </CardHeader>
           <CardContent>
             {confirmedDemands.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground">今日無需求</div>
+              <div className="text-center py-10 text-muted-foreground text-sm">今日無需求</div>
             ) : (
-              <div className="flex flex-col gap-3">
+              <div className="space-y-2">
                 {confirmedDemands.map((demand) => {
                   const shortage = demand.requiredWorkers - demand.assignedCount;
                   return (
                     <Link key={demand.id} href={`/demands/${demand.id}`}>
-                      <div className="flex items-center justify-between p-4 border rounded-lg bg-card hover:bg-muted/50 cursor-pointer transition-colors">
-                        <div className="min-w-0 flex-1 mr-4">
-                          <div className="font-medium truncate">{demand.client?.name}</div>
-                          <div className="text-sm text-muted-foreground truncate">
+                      <div className="flex items-center justify-between p-3.5 rounded-lg border border-border/60 bg-card hover:bg-muted/40 cursor-pointer transition-colors group">
+                        <div className="min-w-0 flex-1 mr-3">
+                          <div className="font-medium text-sm">{demand.client?.name}</div>
+                          <div className="text-xs text-muted-foreground mt-0.5">
                             {demand.startTime} - {demand.endTime}
                             {demand.location && ` · ${demand.location}`}
                           </div>
                         </div>
-                        <div className="flex items-center gap-3 shrink-0">
-                          <div className="text-sm">
-                            <span className="font-medium">{demand.assignedCount}</span>
+                        <div className="flex items-center gap-2.5 shrink-0">
+                          <span className="text-sm tabular-nums">
+                            <span className="font-semibold">{demand.assignedCount}</span>
                             <span className="text-muted-foreground"> / {demand.requiredWorkers}</span>
-                          </div>
+                          </span>
                           {shortage > 0 ? (
-                            <Badge variant="destructive" className="gap-1 whitespace-nowrap">
+                            <Badge variant="destructive" className="gap-1 text-xs font-medium">
                               <AlertCircle className="h-3 w-3" />
                               缺 {shortage} 人
                             </Badge>
                           ) : (
-                            <Badge variant="default" className="gap-1 whitespace-nowrap">
+                            <Badge className="gap-1 text-xs font-medium bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-50">
                               <CheckCircle2 className="h-3 w-3" />
                               已滿
                             </Badge>
                           )}
+                          <ArrowRight className="h-3.5 w-3.5 text-muted-foreground/50 opacity-0 group-hover:opacity-100 transition-opacity" />
                         </div>
                       </div>
                     </Link>
@@ -145,25 +147,40 @@ export default function Dashboard() {
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>今日已指派清單</CardTitle>
-            <CardDescription>共 {todayAssignments?.length || 0} 筆排班</CardDescription>
+        <Card className="shadow-sm border-border/60">
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-base font-medium">今日已指派清單</CardTitle>
+              <span className="text-xs text-muted-foreground">
+                共 {todayAssignments?.length || 0} 筆排班
+              </span>
+            </div>
           </CardHeader>
           <CardContent>
             {!todayAssignments || todayAssignments.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground">今日無排班</div>
+              <div className="text-center py-10 text-muted-foreground text-sm">今日無排班</div>
             ) : (
-              <div className="flex flex-col gap-3">
+              <div className="space-y-2">
                 {todayAssignments.slice(0, 10).map((assignment) => (
-                  <div key={assignment.id} className="flex items-center justify-between p-3 border rounded-lg">
+                  <div key={assignment.id} className="flex items-center justify-between p-3.5 rounded-lg border border-border/60">
                     <div className="min-w-0 flex-1 mr-3">
-                      <div className="font-medium truncate">{assignment.worker?.name}</div>
-                      <div className="text-sm text-muted-foreground truncate">
+                      <div className="font-medium text-sm">{assignment.worker?.name}</div>
+                      <div className="text-xs text-muted-foreground mt-0.5">
                         {assignment.demand?.client?.name || "未知客戶"} · {new Date(assignment.scheduledStart).toLocaleTimeString("zh-TW", { hour: "2-digit", minute: "2-digit" })} - {new Date(assignment.scheduledEnd).toLocaleTimeString("zh-TW", { hour: "2-digit", minute: "2-digit" })}
                       </div>
                     </div>
-                    <Badge variant={assignment.status === "assigned" ? "outline" : "default"} className="shrink-0">
+                    <Badge
+                      variant="outline"
+                      className={`shrink-0 text-xs ${
+                        assignment.status === "completed"
+                          ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                          : assignment.status === "cancelled"
+                          ? "bg-red-50 text-red-600 border-red-200"
+                          : assignment.status === "disputed"
+                          ? "bg-amber-50 text-amber-700 border-amber-200"
+                          : "bg-blue-50 text-blue-700 border-blue-200"
+                      }`}
+                    >
                       {assignment.status === "assigned" && "已指派"}
                       {assignment.status === "completed" && "已完成"}
                       {assignment.status === "cancelled" && "已取消"}
@@ -173,7 +190,7 @@ export default function Dashboard() {
                 ))}
                 {todayAssignments.length > 10 && (
                   <div className="text-center pt-2">
-                    <Button variant="ghost" size="sm" asChild>
+                    <Button variant="ghost" size="sm" className="text-xs" asChild>
                       <Link href="/actual-time">查看全部</Link>
                     </Button>
                   </div>

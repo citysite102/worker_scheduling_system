@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, Calendar, Clock, MapPin, AlertTriangle, Loader2 } from "lucide-react";
+import { Plus, Calendar, Clock, MapPin, AlertTriangle, Loader2, ArrowRight } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { useLocation } from "wouter";
@@ -37,7 +37,6 @@ export default function Demands() {
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
-    
     const dateStr = formData.get("date") as string;
     const date = new Date(dateStr);
 
@@ -53,21 +52,33 @@ export default function Demands() {
     });
   };
 
+  const statusConfig: Record<string, { label: string; className: string }> = {
+    draft: { label: "草稿", className: "bg-gray-50 text-gray-600 border-gray-200" },
+    confirmed: { label: "已確認", className: "bg-blue-50 text-blue-700 border-blue-200" },
+    cancelled: { label: "已取消", className: "bg-red-50 text-red-600 border-red-200" },
+    closed: { label: "已結案", className: "bg-emerald-50 text-emerald-700 border-emerald-200" },
+  };
+
   if (isLoading) {
     return (
-      <div className="p-8">
-        <h1 className="text-3xl font-bold mb-6">用工需求管理</h1>
-        <div className="flex items-center justify-center py-12"><Loader2 className="h-8 w-8 animate-spin text-muted-foreground" /></div>
+      <div className="p-6 lg:p-8 max-w-6xl mx-auto">
+        <h1 className="text-2xl font-semibold mb-6">用工需求管理</h1>
+        <div className="flex items-center justify-center py-12">
+          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="p-8">
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-3xl font-bold">用工需求管理</h1>
+    <div className="p-6 lg:p-8 max-w-6xl mx-auto">
+      <div className="flex items-center justify-between mb-8">
+        <div>
+          <h1 className="text-2xl font-semibold text-foreground">用工需求管理</h1>
+          <p className="text-sm text-muted-foreground mt-1">管理客戶的用工需求單與人力指派</p>
+        </div>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <Button onClick={() => setIsDialogOpen(true)}>
+          <Button onClick={() => setIsDialogOpen(true)} size="sm">
             <Plus className="mr-2 h-4 w-4" />
             新增需求單
           </Button>
@@ -133,15 +144,16 @@ export default function Demands() {
         </Dialog>
       </div>
 
-      <Card className="mb-6">
-        <CardContent className="pt-6">
-          <div className="flex items-center gap-4">
-            <Label>狀態篩選</Label>
+      {/* 篩選 */}
+      <Card className="mb-6 shadow-sm border-border/60">
+        <CardContent className="p-4">
+          <div className="flex items-center gap-3">
+            <Label className="text-sm text-muted-foreground shrink-0">狀態篩選</Label>
             <Select
               value={statusFilter || "all"}
               onValueChange={(value) => setStatusFilter(value === "all" ? undefined : value)}
             >
-              <SelectTrigger className="w-[180px]">
+              <SelectTrigger className="w-[140px] h-9">
                 <SelectValue placeholder="全部" />
               </SelectTrigger>
               <SelectContent>
@@ -156,63 +168,64 @@ export default function Demands() {
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>需求單列表 ({demands?.length || 0})</CardTitle>
+      {/* 需求單列表 */}
+      <Card className="shadow-sm border-border/60">
+        <CardHeader className="pb-3">
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-base font-medium">需求單列表</CardTitle>
+            <span className="text-xs text-muted-foreground">{demands?.length || 0} 筆需求</span>
+          </div>
         </CardHeader>
         <CardContent>
           {!demands || demands.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">無需求單資料</div>
+            <div className="text-center py-10 text-muted-foreground text-sm">無需求單資料</div>
           ) : (
-            <div className="space-y-3">
+            <div className="space-y-2">
               {demands.map((demand: any) => {
                 const shortage = demand.requiredWorkers - (demand.assignedCount || 0);
+                const sc = statusConfig[demand.status] || statusConfig.draft;
                 return (
                   <div
                     key={demand.id}
-                    className="flex items-center justify-between p-4 border rounded-lg hover:bg-accent transition-colors cursor-pointer"
+                    className="flex items-center justify-between p-4 rounded-lg border border-border/60 hover:bg-muted/40 transition-colors cursor-pointer group"
                     onClick={() => setLocation(`/demands/${demand.id}`)}
                   >
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className="font-medium">{demand.client?.name || "未知客戶"}</span>
-                        <Badge variant={demand.status === "confirmed" ? "default" : "secondary"}>
-                          {demand.status === "draft" && "草稿"}
-                          {demand.status === "confirmed" && "已確認"}
-                          {demand.status === "cancelled" && "已取消"}
-                          {demand.status === "closed" && "已結案"}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1.5">
+                        <span className="font-medium text-sm">{demand.client?.name || "未知客戶"}</span>
+                        <Badge variant="outline" className={`text-xs ${sc.className}`}>
+                          {sc.label}
                         </Badge>
                       </div>
-                      <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                        <div className="flex items-center gap-1">
+                      <div className="flex items-center gap-3 text-xs text-muted-foreground flex-wrap">
+                        <span className="flex items-center gap-1">
                           <Calendar className="h-3 w-3" />
                           {new Date(demand.date).toLocaleDateString("zh-TW")}
-                        </div>
-                        <div className="flex items-center gap-1">
+                        </span>
+                        <span className="flex items-center gap-1">
                           <Clock className="h-3 w-3" />
                           {demand.startTime} - {demand.endTime}
-                        </div>
+                        </span>
                         {demand.location && (
-                          <div className="flex items-center gap-1">
+                          <span className="flex items-center gap-1">
                             <MapPin className="h-3 w-3" />
                             {demand.location}
-                          </div>
+                          </span>
                         )}
                       </div>
                     </div>
-                    <div className="flex items-center gap-3">
-                      <div className="text-sm">
-                        <span className="text-muted-foreground">已指派：</span>
-                        <span className="font-medium">
-                          {demand.assignedCount || 0} / {demand.requiredWorkers}
-                        </span>
-                      </div>
+                    <div className="flex items-center gap-2.5 shrink-0 ml-3">
+                      <span className="text-sm tabular-nums">
+                        <span className="font-semibold">{demand.assignedCount || 0}</span>
+                        <span className="text-muted-foreground"> / {demand.requiredWorkers}</span>
+                      </span>
                       {shortage > 0 && (
-                        <Badge variant="destructive" className="flex items-center gap-1">
+                        <Badge variant="destructive" className="gap-1 text-xs font-medium">
                           <AlertTriangle className="h-3 w-3" />
                           缺 {shortage} 人
                         </Badge>
                       )}
+                      <ArrowRight className="h-3.5 w-3.5 text-muted-foreground/50 opacity-0 group-hover:opacity-100 transition-opacity" />
                     </div>
                   </div>
                 );

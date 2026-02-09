@@ -1,5 +1,6 @@
 @import "tailwindcss";
 @import "tw-animate-css";
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
 @custom-variant dark (&:is(.dark *));
 
@@ -59,140 +60,140 @@
 }
 
 :root {
-  /* Material Design 3 色系配置 */
-  /* Primary: #1A3263 (rgb(26, 50, 99)) */
+  /* 
+   * 設計風格：乾淨、現代、專業
+   * 參考 Boltshift Dashboard 的白底 + 淺藍色調
+   * Primary 保留深藍 #1A3263，accent 改為淺藍色系
+   */
+  
+  /* Primary: 深藍 #1A3263 */
   --primary: oklch(0.25 0.08 260);
   --primary-foreground: oklch(0.98 0 0);
   
-  /* Secondary: #547792 (rgb(84, 119, 146)) */
-  --secondary: oklch(0.52 0.05 240);
-  --secondary-foreground: oklch(0.98 0 0);
+  /* Secondary: 淡灰藍 */
+  --secondary: oklch(0.95 0.01 250);
+  --secondary-foreground: oklch(0.3 0.04 260);
   
-  /* Accent: #FAB95B (rgb(250, 185, 91)) */
-  --accent: oklch(0.8 0.12 70);
-  --accent-foreground: oklch(0.2 0.05 260);
+  /* Accent: 淡藍色（替代橘色，更乾淨） */
+  --accent: oklch(0.95 0.02 250);
+  --accent-foreground: oklch(0.3 0.04 260);
   
-  /* 灰階色系 */
-  --gray-50: oklch(0.98 0 0);
-  --gray-100: oklch(0.95 0.005 260);
-  --gray-200: oklch(0.91 0.01 60);  /* #E8E2DB */
-  --gray-300: oklch(0.82 0.01 260);
-  --gray-400: oklch(0.65 0.02 260);
-  --gray-500: oklch(0.52 0.02 260);
+  /* 灰階色系 - 更冷調 */
+  --gray-50: oklch(0.985 0.002 260);
+  --gray-100: oklch(0.965 0.005 260);
+  --gray-200: oklch(0.93 0.008 260);
+  --gray-300: oklch(0.87 0.01 260);
+  --gray-400: oklch(0.7 0.015 260);
+  --gray-500: oklch(0.55 0.02 260);
   --gray-600: oklch(0.45 0.02 260);
-  --gray-700: oklch(0.35 0.03 260);
-  --gray-800: oklch(0.25 0.03 260);
-  --gray-900: oklch(0.15 0.02 260);
+  --gray-700: oklch(0.37 0.025 260);
+  --gray-800: oklch(0.27 0.025 260);
+  --gray-900: oklch(0.18 0.02 260);
   
-  /* Muted 使用灰階 */
-  --muted: var(--gray-200);
-  --muted-foreground: var(--gray-600);
+  /* Muted */
+  --muted: var(--gray-100);
+  --muted-foreground: var(--gray-500);
   
-  /* Material Design 3 圓角 */
-  --radius: 0.75rem;
+  /* 圓角 - 稍大，更現代 */
+  --radius: 0.625rem;
   
-  /* 背景與前景 */
-  --background: oklch(0.98 0 0);
-  --foreground: oklch(0.2 0.02 260);
+  /* 背景 - 極淡灰 */
+  --background: oklch(0.975 0.003 260);
+  --foreground: oklch(0.15 0.02 260);
   
-  /* 卡片 */
+  /* 卡片 - 純白 */
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.2 0.02 260);
+  --card-foreground: oklch(0.15 0.02 260);
   
   /* Popover */
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.2 0.02 260);
+  --popover-foreground: oklch(0.15 0.02 260);
   
-  /* 語意化色彩 */
-  /* 錯誤色: #FF6B6B (rgb(255, 107, 107)) */
-  --destructive: oklch(0.7 0.19 15);
+  /* 語意化色彩 - 更柔和 */
+  --destructive: oklch(0.62 0.22 20);
   --destructive-foreground: oklch(0.98 0 0);
   
-  /* 警戒色: #FFD93D (rgb(255, 217, 61)) */
-  --warning: oklch(0.88 0.15 85);
-  --warning-foreground: oklch(0.2 0.05 260);
+  --warning: oklch(0.82 0.14 80);
+  --warning-foreground: oklch(0.25 0.06 80);
   
-  /* 確認色: #6BCB77 (rgb(107, 203, 119)) */
-  --success: oklch(0.75 0.15 145);
+  --success: oklch(0.7 0.16 155);
   --success-foreground: oklch(0.98 0 0);
   
-  /* 資訊色: #4D96FF (rgb(77, 150, 255)) */
-  --info: oklch(0.65 0.18 250);
+  --info: oklch(0.62 0.18 250);
   --info-foreground: oklch(0.98 0 0);
   
-  /* 邊框與輸入 */
-  --border: var(--gray-300);
-  --input: var(--gray-300);
-  --ring: oklch(0.25 0.08 260);
+  /* 邊框 - 更淡 */
+  --border: oklch(0.92 0.005 260);
+  --input: oklch(0.92 0.005 260);
+  --ring: oklch(0.55 0.15 250);
   
-  /* 圖表色系 */
-  --chart-1: oklch(0.25 0.08 260);
-  --chart-2: oklch(0.52 0.05 240);
-  --chart-3: oklch(0.8 0.12 70);
-  --chart-4: oklch(0.91 0.01 60);
-  --chart-5: oklch(0.35 0.06 260);
+  /* 圖表色系 - 藍色漸層 */
+  --chart-1: oklch(0.55 0.18 250);
+  --chart-2: oklch(0.65 0.14 250);
+  --chart-3: oklch(0.75 0.1 250);
+  --chart-4: oklch(0.85 0.06 250);
+  --chart-5: oklch(0.4 0.12 250);
   
-  /* Sidebar */
-  --sidebar: oklch(0.25 0.08 260);
-  --sidebar-foreground: oklch(0.98 0 0);
-  --sidebar-primary: oklch(0.8 0.12 70);
-  --sidebar-primary-foreground: oklch(0.2 0.05 260);
-  --sidebar-accent: oklch(0.35 0.06 260);
+  /* Sidebar - 深藍 */
+  --sidebar: oklch(0.22 0.07 260);
+  --sidebar-foreground: oklch(0.92 0.01 260);
+  --sidebar-primary: oklch(0.6 0.15 250);
+  --sidebar-primary-foreground: oklch(0.98 0 0);
+  --sidebar-accent: oklch(0.3 0.06 260);
   --sidebar-accent-foreground: oklch(0.98 0 0);
-  --sidebar-border: oklch(0.3 0.06 260);
-  --sidebar-ring: oklch(0.8 0.12 70);
+  --sidebar-border: oklch(0.28 0.05 260);
+  --sidebar-ring: oklch(0.6 0.15 250);
 }
 
 .dark {
-  /* Dark mode 不支援，保留結構但使用相同配置 */
   --primary: oklch(0.25 0.08 260);
   --primary-foreground: oklch(0.98 0 0);
-  --secondary: oklch(0.52 0.05 240);
-  --secondary-foreground: oklch(0.98 0 0);
-  --accent: oklch(0.8 0.12 70);
-  --accent-foreground: oklch(0.2 0.05 260);
-  --gray-50: oklch(0.98 0 0);
-  --gray-100: oklch(0.95 0.005 260);
-  --gray-200: oklch(0.91 0.01 60);
-  --gray-300: oklch(0.82 0.01 260);
-  --gray-400: oklch(0.65 0.02 260);
-  --gray-500: oklch(0.52 0.02 260);
+  --secondary: oklch(0.95 0.01 250);
+  --secondary-foreground: oklch(0.3 0.04 260);
+  --accent: oklch(0.95 0.02 250);
+  --accent-foreground: oklch(0.3 0.04 260);
+  --gray-50: oklch(0.985 0.002 260);
+  --gray-100: oklch(0.965 0.005 260);
+  --gray-200: oklch(0.93 0.008 260);
+  --gray-300: oklch(0.87 0.01 260);
+  --gray-400: oklch(0.7 0.015 260);
+  --gray-500: oklch(0.55 0.02 260);
   --gray-600: oklch(0.45 0.02 260);
-  --gray-700: oklch(0.35 0.03 260);
-  --gray-800: oklch(0.25 0.03 260);
-  --gray-900: oklch(0.15 0.02 260);
-  --muted: var(--gray-200);
-  --muted-foreground: var(--gray-600);
-  --background: oklch(0.98 0 0);
-  --foreground: oklch(0.2 0.02 260);
+  --gray-700: oklch(0.37 0.025 260);
+  --gray-800: oklch(0.27 0.025 260);
+  --gray-900: oklch(0.18 0.02 260);
+  --muted: var(--gray-100);
+  --muted-foreground: var(--gray-500);
+  --background: oklch(0.975 0.003 260);
+  --foreground: oklch(0.15 0.02 260);
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.2 0.02 260);
+  --card-foreground: oklch(0.15 0.02 260);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.2 0.02 260);
-  --destructive: oklch(0.7 0.19 15);
+  --popover-foreground: oklch(0.15 0.02 260);
+  --destructive: oklch(0.62 0.22 20);
   --destructive-foreground: oklch(0.98 0 0);
-  --warning: oklch(0.88 0.15 85);
-  --warning-foreground: oklch(0.2 0.05 260);
-  --success: oklch(0.75 0.15 145);
+  --warning: oklch(0.82 0.14 80);
+  --warning-foreground: oklch(0.25 0.06 80);
+  --success: oklch(0.7 0.16 155);
   --success-foreground: oklch(0.98 0 0);
-  --info: oklch(0.65 0.18 250);
+  --info: oklch(0.62 0.18 250);
   --info-foreground: oklch(0.98 0 0);
-  --border: var(--gray-300);
-  --input: var(--gray-300);
-  --ring: oklch(0.25 0.08 260);
-  --chart-1: oklch(0.25 0.08 260);
-  --chart-2: oklch(0.52 0.05 240);
-  --chart-3: oklch(0.8 0.12 70);
-  --chart-4: oklch(0.91 0.01 60);
-  --chart-5: oklch(0.35 0.06 260);
-  --sidebar: oklch(0.25 0.08 260);
-  --sidebar-foreground: oklch(0.98 0 0);
-  --sidebar-primary: oklch(0.8 0.12 70);
-  --sidebar-primary-foreground: oklch(0.2 0.05 260);
-  --sidebar-accent: oklch(0.35 0.06 260);
+  --border: oklch(0.92 0.005 260);
+  --input: oklch(0.92 0.005 260);
+  --ring: oklch(0.55 0.15 250);
+  --chart-1: oklch(0.55 0.18 250);
+  --chart-2: oklch(0.65 0.14 250);
+  --chart-3: oklch(0.75 0.1 250);
+  --chart-4: oklch(0.85 0.06 250);
+  --chart-5: oklch(0.4 0.12 250);
+  --sidebar: oklch(0.22 0.07 260);
+  --sidebar-foreground: oklch(0.92 0.01 260);
+  --sidebar-primary: oklch(0.6 0.15 250);
+  --sidebar-primary-foreground: oklch(0.98 0 0);
+  --sidebar-accent: oklch(0.3 0.06 260);
   --sidebar-accent-foreground: oklch(0.98 0 0);
-  --sidebar-border: oklch(0.3 0.06 260);
-  --sidebar-ring: oklch(0.8 0.12 70);
+  --sidebar-border: oklch(0.28 0.05 260);
+  --sidebar-ring: oklch(0.6 0.15 250);
 }
 
 @layer base {
@@ -201,6 +202,9 @@
   }
   body {
     @apply bg-background text-foreground;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
   button:not(:disabled),
   [role="button"]:not([aria-disabled="true"]),
@@ -216,24 +220,11 @@
 }
 
 @layer components {
-  /**
-   * Custom container utility that centers content and adds responsive padding.
-   *
-   * This overrides Tailwind's default container behavior to:
-   * - Auto-center content (mx-auto)
-   * - Add responsive horizontal padding
-   * - Set max-width for large screens
-   *
-   * Usage: <div className="container">...</div>
-   *
-   * For custom widths, use max-w-* utilities directly:
-   * <div className="max-w-6xl mx-auto px-4">...</div>
-   */
   .container {
     width: 100%;
     margin-left: auto;
     margin-right: auto;
-    padding-left: 1rem; /* 16px - mobile padding */
+    padding-left: 1rem;
     padding-right: 1rem;
   }
 
@@ -244,16 +235,16 @@
 
   @media (min-width: 640px) {
     .container {
-      padding-left: 1.5rem; /* 24px - tablet padding */
+      padding-left: 1.5rem;
       padding-right: 1.5rem;
     }
   }
 
   @media (min-width: 1024px) {
     .container {
-      padding-left: 2rem; /* 32px - desktop padding */
+      padding-left: 2rem;
       padding-right: 2rem;
-      max-width: 1280px; /* Standard content width */
+      max-width: 1280px;
     }
   }
 }

@@ -7,7 +7,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Search, Edit, Building2, Loader2 } from "lucide-react";
+import { Plus, Search, Edit, Building2, Loader2, MapPin, Phone, User } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -75,20 +75,25 @@ export default function Clients() {
 
   if (isLoading) {
     return (
-      <div className="p-8">
-        <h1 className="text-3xl font-bold mb-6">客戶管理</h1>
-        <div className="flex items-center justify-center py-12"><Loader2 className="h-8 w-8 animate-spin text-muted-foreground" /></div>
+      <div className="p-6 lg:p-8 max-w-6xl mx-auto">
+        <h1 className="text-2xl font-semibold mb-6">客戶管理</h1>
+        <div className="flex items-center justify-center py-12">
+          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="p-8">
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-3xl font-bold">客戶管理</h1>
+    <div className="p-6 lg:p-8 max-w-6xl mx-auto">
+      <div className="flex items-center justify-between mb-8">
+        <div>
+          <h1 className="text-2xl font-semibold text-foreground">客戶管理</h1>
+          <p className="text-sm text-muted-foreground mt-1">管理所有客戶的基本資料與聯絡方式</p>
+        </div>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
-            <Button onClick={() => setEditingClient(null)}>
+            <Button onClick={() => setEditingClient(null)} size="sm">
               <Plus className="mr-2 h-4 w-4" />
               新增客戶
             </Button>
@@ -102,47 +107,25 @@ export default function Clients() {
               <div className="grid gap-4 py-4">
                 <div className="grid gap-2">
                   <Label htmlFor="name">客戶名稱 *</Label>
-                  <Input
-                    id="name"
-                    name="name"
-                    defaultValue={editingClient?.name}
-                    required
-                  />
+                  <Input id="name" name="name" defaultValue={editingClient?.name} required />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="grid gap-2">
                     <Label htmlFor="contactName">聯絡人</Label>
-                    <Input
-                      id="contactName"
-                      name="contactName"
-                      defaultValue={editingClient?.contactName}
-                    />
+                    <Input id="contactName" name="contactName" defaultValue={editingClient?.contactName} />
                   </div>
                   <div className="grid gap-2">
                     <Label htmlFor="contactPhone">聯絡電話</Label>
-                    <Input
-                      id="contactPhone"
-                      name="contactPhone"
-                      defaultValue={editingClient?.contactPhone}
-                    />
+                    <Input id="contactPhone" name="contactPhone" defaultValue={editingClient?.contactPhone} />
                   </div>
                 </div>
                 <div className="grid gap-2">
                   <Label htmlFor="contactEmail">聯絡 Email</Label>
-                  <Input
-                    id="contactEmail"
-                    name="contactEmail"
-                    type="email"
-                    defaultValue={editingClient?.contactEmail}
-                  />
+                  <Input id="contactEmail" name="contactEmail" type="email" defaultValue={editingClient?.contactEmail} />
                 </div>
                 <div className="grid gap-2">
                   <Label htmlFor="address">地址</Label>
-                  <Input
-                    id="address"
-                    name="address"
-                    defaultValue={editingClient?.address}
-                  />
+                  <Input id="address" name="address" defaultValue={editingClient?.address} />
                 </div>
                 <div className="grid gap-2">
                   <Label htmlFor="billingType">計費方式</Label>
@@ -159,11 +142,7 @@ export default function Clients() {
                 </div>
                 <div className="grid gap-2">
                   <Label htmlFor="note">備註</Label>
-                  <Textarea
-                    id="note"
-                    name="note"
-                    defaultValue={editingClient?.note}
-                  />
+                  <Textarea id="note" name="note" defaultValue={editingClient?.note} />
                 </div>
               </div>
               <DialogFooter>
@@ -176,23 +155,24 @@ export default function Clients() {
         </Dialog>
       </div>
 
-      <Card className="mb-6">
-        <CardContent className="pt-6">
-          <div className="flex gap-4">
+      {/* 搜尋與篩選 */}
+      <Card className="mb-6 shadow-sm border-border/60">
+        <CardContent className="p-4">
+          <div className="flex gap-3">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
                 placeholder="搜尋客戶名稱、聯絡人、電話..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
+                className="pl-10 h-9"
               />
             </div>
             <Select
               value={statusFilter || "all"}
               onValueChange={(value) => setStatusFilter(value === "all" ? undefined : value as "active" | "inactive")}
             >
-              <SelectTrigger className="w-[180px]">
+              <SelectTrigger className="w-[140px] h-9">
                 <SelectValue placeholder="狀態篩選" />
               </SelectTrigger>
               <SelectContent>
@@ -205,59 +185,89 @@ export default function Clients() {
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>客戶列表 ({clients?.length || 0})</CardTitle>
+      {/* 客戶列表 */}
+      <Card className="shadow-sm border-border/60">
+        <CardHeader className="pb-3">
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-base font-medium">客戶列表</CardTitle>
+            <span className="text-xs text-muted-foreground">{clients?.length || 0} 位客戶</span>
+          </div>
         </CardHeader>
         <CardContent>
           {!clients || clients.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">無客戶資料</div>
+            <div className="text-center py-10 text-muted-foreground text-sm">無客戶資料</div>
           ) : (
-            <div className="space-y-3">
+            <div className="space-y-2">
               {clients.map((client) => (
                 <div
                   key={client.id}
-                  className="flex items-center justify-between p-4 border rounded-lg hover:bg-accent transition-colors"
+                  className="flex items-center justify-between p-4 rounded-lg border border-border/60 hover:bg-muted/40 transition-colors"
                 >
-                  <div className="flex items-start gap-4 flex-1">
-                    <Building2 className="h-5 w-5 text-muted-foreground mt-1" />
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2">
-                        <span className="font-medium">{client.name}</span>
-                        <Badge variant={client.status === "active" ? "default" : "secondary"}>
+                  <div className="flex items-start gap-3 flex-1 min-w-0">
+                    <div className="h-9 w-9 rounded-lg bg-blue-50 flex items-center justify-center shrink-0 mt-0.5">
+                      <Building2 className="h-4 w-4 text-blue-600" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="font-medium text-sm">{client.name}</span>
+                        <Badge
+                          variant="outline"
+                          className={`text-xs ${
+                            client.status === "active"
+                              ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                              : "bg-gray-50 text-gray-500 border-gray-200"
+                          }`}
+                        >
                           {client.status === "active" ? "啟用" : "停用"}
                         </Badge>
-                        <Badge variant="outline">
+                        <Badge variant="outline" className="text-xs">
                           {client.billingType === "hourly" && "時薪制"}
                           {client.billingType === "fixed" && "固定費用"}
                           {client.billingType === "custom" && "自訂"}
                         </Badge>
                       </div>
-                      {client.contactName && (
-                        <div className="text-sm text-muted-foreground mt-1">
-                          聯絡人：{client.contactName}
-                          {client.contactPhone && ` · ${client.contactPhone}`}
-                        </div>
-                      )}
-                      {client.address && (
-                        <div className="text-sm text-muted-foreground mt-1">{client.address}</div>
-                      )}
+                      <div className="flex items-center gap-3 text-xs text-muted-foreground mt-1.5 flex-wrap">
+                        {client.contactName && (
+                          <span className="flex items-center gap-1">
+                            <User className="h-3 w-3" />
+                            {client.contactName}
+                          </span>
+                        )}
+                        {client.contactPhone && (
+                          <span className="flex items-center gap-1">
+                            <Phone className="h-3 w-3" />
+                            {client.contactPhone}
+                          </span>
+                        )}
+                        {client.address && (
+                          <span className="flex items-center gap-1">
+                            <MapPin className="h-3 w-3" />
+                            {client.address}
+                          </span>
+                        )}
+                      </div>
                     </div>
                   </div>
-                  <div className="flex gap-2">
+                  <div className="flex gap-1.5 shrink-0 ml-3">
                     <Button
-                      variant="outline"
-                      size="sm"
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 text-muted-foreground hover:text-foreground"
                       onClick={() => {
                         setEditingClient(client);
                         setIsDialogOpen(true);
                       }}
                     >
-                      <Edit className="h-4 w-4" />
+                      <Edit className="h-3.5 w-3.5" />
                     </Button>
                     <Button
-                      variant={client.status === "active" ? "destructive" : "default"}
+                      variant="ghost"
                       size="sm"
+                      className={`h-8 text-xs ${
+                        client.status === "active"
+                          ? "text-muted-foreground hover:text-destructive"
+                          : "text-muted-foreground hover:text-emerald-600"
+                      }`}
                       onClick={() => handleStatusToggle(client)}
                     >
                       {client.status === "active" ? "停用" : "啟用"}

@@ -6,16 +6,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { ChevronLeft, ChevronRight, Plus, Trash2, Check, Loader2 } from "lucide-react";
-import { useState, useMemo } from "react";
+import { ChevronLeft, ChevronRight, Plus, Trash2, Check, Loader2, Clock, AlertTriangle } from "lucide-react";
+import { useState, useMemo, useCallback } from "react";
 import { toast } from "sonner";
 
 const WEEKDAYS = ["週一", "週二", "週三", "週四", "週五", "週六", "週日"];
 
-/**
- * 取得指定日期所在週的週一，時間設為 UTC 00:00:00
- * 這確保前後端使用一致的 weekStartDate
- */
 function getWeekStart(date: Date): Date {
   const d = new Date(date);
   const day = d.getDay();
@@ -23,6 +19,35 @@ function getWeekStart(date: Date): Date {
   d.setDate(diff);
   d.setHours(0, 0, 0, 0);
   return d;
+}
+
+/** 檢查兩個時段是否重疊 */
+function timeSlotsOverlap(
+  a: { startTime: string; endTime: string },
+  b: { startTime: string; endTime: string }
+): boolean {
+  const toMin = (t: string) => {
+    const [h, m] = t.split(":").map(Number);
+    return h * 60 + m;
+  };
+  const aStart = toMin(a.startTime);
+  const aEnd = toMin(a.endTime);
+  const bStart = toMin(b.startTime);
+  const bEnd = toMin(b.endTime);
+  return aStart < bEnd && bStart < aEnd;
+}
+
+/** 驗證所有時段，回傳重疊的索引對 */
+function findOverlaps(slots: { startTime: string; endTime: string }[]): [number, number][] {
+  const overlaps: [number, number][] = [];
+  for (let i = 0; i < slots.length; i++) {
+    for (let j = i + 1; j < slots.length; j++) {
+      if (timeSlotsOverlap(slots[i], slots[j])) {
+        overlaps.push([i, j]);
+      }
+    }
+  }
+  return overlaps;
 }
 
 export default function Availability() {
@@ -33,11 +58,13 @@ export default function Availability() {
     { startTime: "09:00", endTime: "17:00" },
   ]);
   const [selectedDayOfWeek, setSelectedDayOfWeek] = useState<number | null>(null);
-  const [isLoadingLastWeek, setIsLoadingLastWeek] = useState(false);
+  // 追蹤正在載入上週設定的具體天
+  const [loadingDay, setLoadingDay] = useState<number | null>(null);
+  // 追蹤正在儲存的具體天
+  const [savingDay, setSavingDay] = useState<number | null>(null);
 
   const { data: workers } = trpc.workers.list.useQuery({ status: "active" });
 
-  // 穩定化 query input 避免無限重新查詢
   const weekQueryInput = useMemo(() => ({
     workerId: selectedWorker!,
     weekStart: selectedWeek,
@@ -45,14 +72,13 @@ export default function Availability() {
 
   const { data: availabilities, refetch } = trpc.availability.getByWeek.useQuery(
     weekQueryInput,
-    {
-      enabled: !!selectedWorker,
-    }
+    { enabled: !!selectedWorker }
   );
 
   const upsertMutation = trpc.availability.upsert.useMutation({
-    onError: (error) => {
+    onError: (error: any) => {
       toast.error(`儲存失敗：${error.message}`);
+      setSavingDay(null);
     },
   });
 
@@ -61,7 +87,7 @@ export default function Availability() {
       toast.success("已確認本週排班時間設置");
       refetch();
     },
-    onError: (error) => {
+    onError: (error: any) => {
       toast.error(`確認失敗：${error.message}`);
     },
   });
@@ -98,10 +124,9 @@ export default function Availability() {
 
   const utils = trpc.useUtils();
 
-  const handleOpenDialog = async (dayOfWeek: number) => {
+  const handleOpenDialog = useCallback(async (dayOfWeek: number) => {
     const existing = availabilities?.find((a: any) => a.dayOfWeek === dayOfWeek);
     if (existing && existing.timeSlots && existing.timeSlots.length > 0) {
-      // 已有設定，直接載入到編輯對話框
       setTimeSlots(
         existing.timeSlots.map((ts: any) => ({
           startTime: ts.startTime,
@@ -113,8 +138,8 @@ export default function Availability() {
       return;
     }
 
-    // 尚未設定，嘗試載入上週設定
-    setIsLoadingLastWeek(true);
+    // 嘗試載入上週設定
+    setLoadingDay(dayOfWeek);
     const lastWeek = new Date(selectedWeek);
     lastWeek.setDate(lastWeek.getDate() - 7);
     const lastWeekStart = getWeekStart(lastWeek);
@@ -127,12 +152,12 @@ export default function Availability() {
 
       const lastWeekDay = lastWeekData?.find((a: any) => a.dayOfWeek === dayOfWeek);
       if (lastWeekDay && lastWeekDay.timeSlots && lastWeekDay.timeSlots.length > 0) {
-        // 沿用上週設定，直接儲存到資料庫
         const slotsToSave = lastWeekDay.timeSlots.map((ts: any) => ({
           startTime: ts.startTime,
           endTime: ts.endTime,
         }));
 
+        setSavingDay(dayOfWeek);
         await upsertMutation.mutateAsync({
           workerId: selectedWorker!,
           weekStart: selectedWeek,
@@ -142,23 +167,60 @@ export default function Availability() {
 
         await refetch();
         toast.success(`已沿用上週${WEEKDAYS[dayOfWeek - 1]}的設定`);
-        setIsLoadingLastWeek(false);
+        setLoadingDay(null);
+        setSavingDay(null);
         return;
       }
     } catch (error) {
       // 查詢失敗，忽略
     }
 
-    setIsLoadingLastWeek(false);
-    // 上週也沒設定或查詢失敗，開啟對話框使用預設值
+    setLoadingDay(null);
+    setSavingDay(null);
     setTimeSlots([{ startTime: "09:00", endTime: "17:00" }]);
     setSelectedDayOfWeek(dayOfWeek);
     setIsDialogOpen(true);
-  };
+  }, [availabilities, selectedWeek, selectedWorker, utils, upsertMutation, refetch]);
+
+  // 計算重疊
+  const overlaps = useMemo(() => findOverlaps(timeSlots), [timeSlots]);
+  const hasOverlaps = overlaps.length > 0;
+  const overlapIndices = useMemo(() => {
+    const set = new Set<number>();
+    overlaps.forEach(([a, b]) => { set.add(a); set.add(b); });
+    return set;
+  }, [overlaps]);
+
+  // 驗證時間邏輯
+  const invalidSlots = useMemo(() => {
+    const set = new Set<number>();
+    timeSlots.forEach((slot, i) => {
+      const toMin = (t: string) => { const [h, m] = t.split(":").map(Number); return h * 60 + m; };
+      if (toMin(slot.startTime) >= toMin(slot.endTime)) {
+        set.add(i);
+      }
+    });
+    return set;
+  }, [timeSlots]);
+
+  const hasInvalidSlots = invalidSlots.size > 0;
 
   const handleSaveTimeSlots = async () => {
     if (!selectedWorker || selectedDayOfWeek === null) return;
 
+    // 驗證時間重疊
+    if (hasOverlaps) {
+      toast.error("有時段重疊，請調整後再儲存");
+      return;
+    }
+
+    // 驗證開始時間 < 結束時間
+    if (hasInvalidSlots) {
+      toast.error("開始時間必須早於結束時間");
+      return;
+    }
+
+    setSavingDay(selectedDayOfWeek);
     await upsertMutation.mutateAsync({
       workerId: selectedWorker,
       weekStart: selectedWeek,
@@ -171,6 +233,7 @@ export default function Availability() {
 
     toast.success("排班時間設置已儲存");
     setIsDialogOpen(false);
+    setSavingDay(null);
     await refetch();
   };
 
@@ -190,24 +253,27 @@ export default function Availability() {
   const hasAnySlots = availabilities?.some((a: any) => a.timeSlots && a.timeSlots.length > 0);
 
   return (
-    <div className="p-8">
-      <h1 className="text-3xl font-bold mb-6">排班時間設置管理</h1>
+    <div className="p-6 lg:p-8 max-w-6xl mx-auto">
+      <div className="mb-8">
+        <h1 className="text-2xl font-semibold text-foreground">排班時間設置管理</h1>
+        <p className="text-sm text-muted-foreground mt-1">管理員工每週可排班的時段</p>
+      </div>
 
       <div className="grid gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>選擇員工與週次</CardTitle>
+        <Card className="shadow-sm border-border/60">
+          <CardHeader className="pb-4">
+            <CardTitle className="text-base font-medium">選擇員工與週次</CardTitle>
             <CardDescription>選擇員工後，設定該週的可排班時段</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="grid gap-6">
+            <div className="grid gap-6 sm:grid-cols-2">
               <div>
-                <Label className="text-base font-medium">員工</Label>
+                <Label className="text-sm font-medium text-muted-foreground">員工</Label>
                 <Select
                   value={selectedWorker?.toString() || ""}
                   onValueChange={(value) => setSelectedWorker(parseInt(value))}
                 >
-                  <SelectTrigger className="mt-2">
+                  <SelectTrigger className="mt-1.5">
                     <SelectValue placeholder="請選擇員工" />
                   </SelectTrigger>
                   <SelectContent>
@@ -220,15 +286,15 @@ export default function Availability() {
                 </Select>
               </div>
               <div>
-                <Label className="text-base font-medium">週次</Label>
-                <div className="flex items-center gap-3 mt-2">
-                  <Button variant="outline" size="icon" onClick={handlePrevWeek}>
+                <Label className="text-sm font-medium text-muted-foreground">週次</Label>
+                <div className="flex items-center gap-2 mt-1.5">
+                  <Button variant="outline" size="icon" onClick={handlePrevWeek} className="h-9 w-9 shrink-0">
                     <ChevronLeft className="h-4 w-4" />
                   </Button>
-                  <div className="flex-1 text-center font-medium text-lg">
+                  <div className="flex-1 text-center font-medium text-sm">
                     {formatDate(weekStart)} - {formatDate(weekEnd)}
                   </div>
-                  <Button variant="outline" size="icon" onClick={handleNextWeek}>
+                  <Button variant="outline" size="icon" onClick={handleNextWeek} className="h-9 w-9 shrink-0">
                     <ChevronRight className="h-4 w-4" />
                   </Button>
                 </div>
@@ -238,54 +304,66 @@ export default function Availability() {
         </Card>
 
         {selectedWorker && (
-          <Card>
-            <CardHeader>
+          <Card className="shadow-sm border-border/60">
+            <CardHeader className="pb-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <CardTitle>本週可排班時段</CardTitle>
+                  <CardTitle className="text-base font-medium">本週可排班時段</CardTitle>
                   <CardDescription>點擊日期設定該日的可排班時段（可設定多個時段）</CardDescription>
                 </div>
                 {isConfirmed ? (
-                  <Badge variant="default" className="flex items-center gap-1">
+                  <Badge className="bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-50 flex items-center gap-1">
                     <Check className="h-3 w-3" />
                     已確認
                   </Badge>
                 ) : (
-                  <Button onClick={handleConfirmWeek} disabled={confirmMutation.isPending || !hasAnySlots}>
+                  <Button
+                    onClick={handleConfirmWeek}
+                    disabled={confirmMutation.isPending || !hasAnySlots}
+                    size="sm"
+                  >
                     確認本週時間
                   </Button>
                 )}
               </div>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-7 gap-3">
+              <div className="grid grid-cols-7 gap-2">
                 {WEEKDAYS.map((day, index) => {
                   const dayOfWeek = index + 1;
                   const availability = availabilities?.find((a: any) => a.dayOfWeek === dayOfWeek);
                   const hasSlots = availability && availability.timeSlots && availability.timeSlots.length > 0;
+                  const isDayLoading = loadingDay === dayOfWeek || savingDay === dayOfWeek;
 
                   return (
-                    <div key={index} className="border rounded-lg p-3 hover:bg-muted/50 transition-colors">
-                      <div className="text-sm font-medium mb-2 text-center">{day}</div>
+                    <div
+                      key={index}
+                      className={`border rounded-xl p-3 transition-all ${
+                        hasSlots
+                          ? "bg-blue-50/50 border-blue-200/60"
+                          : "bg-card border-border/60 hover:border-border"
+                      }`}
+                    >
+                      <div className="text-sm font-semibold mb-1.5 text-center">{day}</div>
                       {hasSlots ? (
-                        <div className="space-y-1">
+                        <div className="space-y-0.5 mb-2">
                           {availability.timeSlots.map((slot: any, idx: number) => (
-                            <div key={idx} className="text-xs text-muted-foreground text-center">
+                            <div key={idx} className="text-xs text-blue-700 text-center font-medium">
                               {slot.startTime} - {slot.endTime}
                             </div>
                           ))}
                         </div>
                       ) : (
-                        <div className="text-xs text-muted-foreground text-center">未設定</div>
+                        <div className="text-xs text-muted-foreground text-center mb-2">未設定</div>
                       )}
                       <Button
-                        variant="outline"
+                        variant={hasSlots ? "outline" : "ghost"}
                         size="sm"
-                        className="w-full mt-2"
+                        className={`w-full text-xs h-7 ${hasSlots ? "border-blue-200 text-blue-700 hover:bg-blue-100/50" : ""}`}
                         onClick={() => handleOpenDialog(dayOfWeek)}
-                        disabled={isLoadingLastWeek || upsertMutation.isPending}
+                        disabled={isDayLoading}
                       >
-                        {(isLoadingLastWeek || upsertMutation.isPending) ? (
+                        {isDayLoading ? (
                           <Loader2 className="h-3 w-3 animate-spin" />
                         ) : (
                           hasSlots ? "編輯" : "設定"
@@ -303,42 +381,67 @@ export default function Availability() {
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>設定可排班時段</DialogTitle>
+            <DialogTitle className="flex items-center gap-2">
+              <Clock className="h-4 w-4 text-muted-foreground" />
+              設定可排班時段
+            </DialogTitle>
             <DialogDescription>
               {selectedDayOfWeek !== null && `${WEEKDAYS[selectedDayOfWeek - 1]} 的可排班時段`}
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-4 py-4">
-            {timeSlots.map((slot, index) => (
-              <div key={index} className="flex items-center gap-2">
-                <div className="flex-1">
-                  <Label className="text-xs">開始時間</Label>
-                  <Input
-                    type="time"
-                    value={slot.startTime}
-                    onChange={(e) => handleTimeSlotChange(index, "startTime", e.target.value)}
-                  />
+          <div className="space-y-3 py-4">
+            {timeSlots.map((slot, index) => {
+              const isOverlap = overlapIndices.has(index);
+              const isInvalid = invalidSlots.has(index);
+              const hasError = isOverlap || isInvalid;
+
+              return (
+                <div key={index}>
+                  <div className={`flex items-end gap-2 p-3 rounded-lg border ${hasError ? "border-destructive/50 bg-destructive/5" : "border-border/60 bg-muted/30"}`}>
+                    <div className="flex-1">
+                      <Label className="text-xs text-muted-foreground">開始時間</Label>
+                      <Input
+                        type="time"
+                        value={slot.startTime}
+                        onChange={(e) => handleTimeSlotChange(index, "startTime", e.target.value)}
+                        className="mt-1 h-9"
+                      />
+                    </div>
+                    <div className="flex-1">
+                      <Label className="text-xs text-muted-foreground">結束時間</Label>
+                      <Input
+                        type="time"
+                        value={slot.endTime}
+                        onChange={(e) => handleTimeSlotChange(index, "endTime", e.target.value)}
+                        className="mt-1 h-9"
+                      />
+                    </div>
+                    {timeSlots.length > 1 && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-9 w-9 shrink-0 text-muted-foreground hover:text-destructive"
+                        onClick={() => handleRemoveTimeSlot(index)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    )}
+                  </div>
+                  {isOverlap && (
+                    <p className="text-xs text-destructive mt-1 flex items-center gap-1 pl-1">
+                      <AlertTriangle className="h-3 w-3" />
+                      此時段與其他時段重疊
+                    </p>
+                  )}
+                  {isInvalid && (
+                    <p className="text-xs text-destructive mt-1 flex items-center gap-1 pl-1">
+                      <AlertTriangle className="h-3 w-3" />
+                      開始時間必須早於結束時間
+                    </p>
+                  )}
                 </div>
-                <div className="flex-1">
-                  <Label className="text-xs">結束時間</Label>
-                  <Input
-                    type="time"
-                    value={slot.endTime}
-                    onChange={(e) => handleTimeSlotChange(index, "endTime", e.target.value)}
-                  />
-                </div>
-                {timeSlots.length > 1 && (
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="mt-5"
-                    onClick={() => handleRemoveTimeSlot(index)}
-                  >
-                    <Trash2 className="h-4 w-4 text-destructive" />
-                  </Button>
-                )}
-              </div>
-            ))}
+              );
+            })}
             <Button variant="outline" size="sm" className="w-full" onClick={handleAddTimeSlot}>
               <Plus className="mr-2 h-4 w-4" />
               新增時段
@@ -348,8 +451,16 @@ export default function Availability() {
             <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
               取消
             </Button>
-            <Button onClick={handleSaveTimeSlots} disabled={upsertMutation.isPending}>
-              {upsertMutation.isPending ? "儲存中..." : "儲存"}
+            <Button
+              onClick={handleSaveTimeSlots}
+              disabled={upsertMutation.isPending || hasOverlaps || hasInvalidSlots}
+            >
+              {upsertMutation.isPending ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  儲存中...
+                </>
+              ) : "儲存"}
             </Button>
           </DialogFooter>
         </DialogContent>

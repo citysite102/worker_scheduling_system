@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Calendar, Clock, User, AlertCircle, Loader2 } from "lucide-react";
+import { Clock, User, AlertCircle, Loader2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -60,42 +60,50 @@ export default function ActualTime() {
 
   if (isLoading) {
     return (
-      <div className="p-8">
-        <h1 className="text-3xl font-bold mb-6">實際工時回填</h1>
-        <div className="flex items-center justify-center py-12"><Loader2 className="h-8 w-8 animate-spin text-muted-foreground" /></div>
+      <div className="p-6 lg:p-8 max-w-6xl mx-auto">
+        <h1 className="text-2xl font-semibold mb-6">實際工時回填</h1>
+        <div className="flex items-center justify-center py-12">
+          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="p-8">
-      <h1 className="text-3xl font-bold mb-6">實際工時回填</h1>
+    <div className="p-6 lg:p-8 max-w-6xl mx-auto">
+      <div className="mb-8">
+        <h1 className="text-2xl font-semibold text-foreground">實際工時回填</h1>
+        <p className="text-sm text-muted-foreground mt-1">回填員工的實際出勤時間</p>
+      </div>
 
-      <Card className="mb-6">
-        <CardContent className="pt-6">
-          <div className="flex items-center gap-4">
-            <Label>選擇日期</Label>
+      <Card className="mb-6 shadow-sm border-border/60">
+        <CardContent className="p-4">
+          <div className="flex items-center gap-3">
+            <Label className="text-sm text-muted-foreground shrink-0">選擇日期</Label>
             <Input
               type="date"
               value={selectedDate}
               onChange={(e) => setSelectedDate(e.target.value)}
-              className="w-[200px]"
+              className="w-[180px] h-9"
             />
           </div>
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>
-            {new Date(selectedDate).toLocaleDateString("zh-TW")} 的排班記錄 ({assignments?.length || 0})
-          </CardTitle>
+      <Card className="shadow-sm border-border/60">
+        <CardHeader className="pb-3">
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-base font-medium">
+              {new Date(selectedDate).toLocaleDateString("zh-TW")} 的排班記錄
+            </CardTitle>
+            <span className="text-xs text-muted-foreground">{assignments?.length || 0} 筆記錄</span>
+          </div>
         </CardHeader>
         <CardContent>
           {!assignments || assignments.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">該日期無排班記錄</div>
+            <div className="text-center py-10 text-muted-foreground text-sm">該日期無排班記錄</div>
           ) : (
-            <div className="space-y-3">
+            <div className="space-y-2">
               {assignments.map((assignment: any) => {
                 const plannedHours = calculateHours(assignment.demand.startTime, assignment.demand.endTime);
                 const actualHours = assignment.actualStartTime && assignment.actualEndTime
@@ -106,50 +114,60 @@ export default function ActualTime() {
                 return (
                   <div
                     key={assignment.id}
-                    className="flex items-center justify-between p-4 border rounded-lg hover:bg-accent transition-colors"
+                    className="flex items-center justify-between p-4 rounded-lg border border-border/60 hover:bg-muted/40 transition-colors"
                   >
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className="font-medium">{assignment.demand.client?.name || "未知客戶"}</span>
-                        <Badge variant={assignment.status === "completed" ? "default" : "secondary"}>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1.5">
+                        <span className="font-medium text-sm">{assignment.demand.client?.name || "未知客戶"}</span>
+                        <Badge
+                          variant="outline"
+                          className={`text-xs ${
+                            assignment.status === "completed"
+                              ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                              : assignment.status === "disputed"
+                              ? "bg-amber-50 text-amber-700 border-amber-200"
+                              : "bg-blue-50 text-blue-700 border-blue-200"
+                          }`}
+                        >
                           {assignment.status === "assigned" && "已指派"}
                           {assignment.status === "completed" && "已完成"}
                           {assignment.status === "disputed" && "有爭議"}
                         </Badge>
                         {assignment.status === "disputed" && (
-                          <Badge variant="destructive" className="flex items-center gap-1">
+                          <Badge variant="destructive" className="gap-1 text-xs">
                             <AlertCircle className="h-3 w-3" />
                             時段重疊
                           </Badge>
                         )}
                       </div>
-                      <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                        <div className="flex items-center gap-1">
+                      <div className="flex items-center gap-3 text-xs text-muted-foreground flex-wrap">
+                        <span className="flex items-center gap-1">
                           <User className="h-3 w-3" />
                           {assignment.worker?.name || "未知員工"}
-                        </div>
-                        <div className="flex items-center gap-1">
+                        </span>
+                        <span className="flex items-center gap-1">
                           <Clock className="h-3 w-3" />
                           預計：{assignment.demand.startTime} - {assignment.demand.endTime} ({plannedHours}h)
-                        </div>
+                        </span>
                         {actualHours && (
                           <>
-                            <div className="flex items-center gap-1">
+                            <span className="flex items-center gap-1">
                               <Clock className="h-3 w-3" />
                               實際：{assignment.actualStartTime} - {assignment.actualEndTime} ({actualHours}h)
-                            </div>
+                            </span>
                             {variance && parseFloat(variance) !== 0 && (
-                              <div className={`flex items-center gap-1 ${parseFloat(variance) > 0 ? "text-orange-600" : "text-green-600"}`}>
+                              <span className={`font-medium ${parseFloat(variance) > 0 ? "text-amber-600" : "text-emerald-600"}`}>
                                 差異：{parseFloat(variance) > 0 ? "+" : ""}{variance}h
-                              </div>
+                              </span>
                             )}
                           </>
                         )}
                       </div>
                     </div>
                     <Button
-                      variant={assignment.status === "completed" ? "outline" : "default"}
+                      variant={assignment.status === "completed" ? "ghost" : "default"}
                       size="sm"
+                      className={`shrink-0 ml-3 text-xs ${assignment.status === "completed" ? "text-muted-foreground" : ""}`}
                       onClick={() => handleOpenDialog(assignment)}
                     >
                       {assignment.status === "completed" ? "修改工時" : "回填工時"}

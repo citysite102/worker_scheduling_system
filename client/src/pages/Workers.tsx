@@ -1,5 +1,5 @@
 import { trpc } from "@/lib/trpc";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -8,7 +8,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Search, Edit, UserX, UserCheck, Loader2 } from "lucide-react";
+import { Plus, Search, Edit, UserX, UserCheck, Loader2, Phone, Mail } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -40,7 +40,7 @@ export default function Workers() {
       if (variables.status) {
         toast.success(variables.status === "inactive" ? "已停用員工" : "已啟用員工");
         setConfirmToggleWorker(null);
-        refetch(); // 僅刷新列表
+        refetch();
       } else {
         toast.success("員工資料更新成功");
         setIsDialogOpen(false);
@@ -82,20 +82,25 @@ export default function Workers() {
 
   if (isLoading) {
     return (
-      <div className="p-8">
-        <h1 className="text-3xl font-bold mb-6">員工管理</h1>
-        <div className="flex items-center justify-center py-12"><Loader2 className="h-8 w-8 animate-spin text-muted-foreground" /></div>
+      <div className="p-6 lg:p-8 max-w-6xl mx-auto">
+        <h1 className="text-2xl font-semibold mb-6">員工管理</h1>
+        <div className="flex items-center justify-center py-12">
+          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="p-8">
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-3xl font-bold">員工管理</h1>
+    <div className="p-6 lg:p-8 max-w-6xl mx-auto">
+      <div className="flex items-center justify-between mb-8">
+        <div>
+          <h1 className="text-2xl font-semibold text-foreground">員工管理</h1>
+          <p className="text-sm text-muted-foreground mt-1">管理所有員工的基本資料與狀態</p>
+        </div>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
-            <Button onClick={() => setEditingWorker(null)}>
+            <Button onClick={() => setEditingWorker(null)} size="sm">
               <Plus className="mr-2 h-4 w-4" />
               新增員工
             </Button>
@@ -109,38 +114,19 @@ export default function Workers() {
               <div className="grid gap-4 py-4">
                 <div className="grid gap-2">
                   <Label htmlFor="name">姓名 *</Label>
-                  <Input
-                    id="name"
-                    name="name"
-                    defaultValue={editingWorker?.name}
-                    required
-                  />
+                  <Input id="name" name="name" defaultValue={editingWorker?.name} required />
                 </div>
                 <div className="grid gap-2">
                   <Label htmlFor="phone">電話 *</Label>
-                  <Input
-                    id="phone"
-                    name="phone"
-                    defaultValue={editingWorker?.phone}
-                    required
-                  />
+                  <Input id="phone" name="phone" defaultValue={editingWorker?.phone} required />
                 </div>
                 <div className="grid gap-2">
                   <Label htmlFor="email">Email</Label>
-                  <Input
-                    id="email"
-                    name="email"
-                    type="email"
-                    defaultValue={editingWorker?.email}
-                  />
+                  <Input id="email" name="email" type="email" defaultValue={editingWorker?.email} />
                 </div>
                 <div className="grid gap-2">
                   <Label htmlFor="note">備註</Label>
-                  <Textarea
-                    id="note"
-                    name="note"
-                    defaultValue={editingWorker?.note}
-                  />
+                  <Textarea id="note" name="note" defaultValue={editingWorker?.note} />
                 </div>
               </div>
               <DialogFooter>
@@ -153,23 +139,24 @@ export default function Workers() {
         </Dialog>
       </div>
 
-      <Card className="mb-6">
-        <CardContent className="pt-6">
-          <div className="flex gap-4">
+      {/* 搜尋與篩選 */}
+      <Card className="mb-6 shadow-sm border-border/60">
+        <CardContent className="p-4">
+          <div className="flex gap-3">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
                 placeholder="搜尋姓名、電話、Email..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
+                className="pl-10 h-9"
               />
             </div>
             <Select
               value={statusFilter || "all"}
               onValueChange={(value) => setStatusFilter(value === "all" ? undefined : value as "active" | "inactive")}
             >
-              <SelectTrigger className="w-[180px]">
+              <SelectTrigger className="w-[140px] h-9">
                 <SelectValue placeholder="狀態篩選" />
               </SelectTrigger>
               <SelectContent>
@@ -182,56 +169,81 @@ export default function Workers() {
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>員工列表 ({workers?.length || 0})</CardTitle>
+      {/* 員工列表 */}
+      <Card className="shadow-sm border-border/60">
+        <CardHeader className="pb-3">
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-base font-medium">員工列表</CardTitle>
+            <span className="text-xs text-muted-foreground">{workers?.length || 0} 位員工</span>
+          </div>
         </CardHeader>
         <CardContent>
           {!workers || workers.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">無員工資料</div>
+            <div className="text-center py-10 text-muted-foreground text-sm">無員工資料</div>
           ) : (
-            <div className="space-y-3">
+            <div className="space-y-2">
               {workers.map((worker) => (
                 <div
                   key={worker.id}
-                  className="flex items-center justify-between p-4 border rounded-lg hover:bg-accent transition-colors"
+                  className="flex items-center justify-between p-4 rounded-lg border border-border/60 hover:bg-muted/40 transition-colors"
                 >
-                  <div className="flex-1">
+                  <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
-                      <span className="font-medium">{worker.name}</span>
-                      <Badge variant={worker.status === "active" ? "default" : "secondary"}>
+                      <span className="font-medium text-sm">{worker.name}</span>
+                      <Badge
+                        variant="outline"
+                        className={`text-xs ${
+                          worker.status === "active"
+                            ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                            : "bg-gray-50 text-gray-500 border-gray-200"
+                        }`}
+                      >
                         {worker.status === "active" ? "啟用" : "停用"}
                       </Badge>
                     </div>
-                    <div className="text-sm text-muted-foreground mt-1">
-                      {worker.phone}
-                      {worker.email && ` · ${worker.email}`}
+                    <div className="flex items-center gap-3 text-xs text-muted-foreground mt-1.5">
+                      <span className="flex items-center gap-1">
+                        <Phone className="h-3 w-3" />
+                        {worker.phone}
+                      </span>
+                      {worker.email && (
+                        <span className="flex items-center gap-1">
+                          <Mail className="h-3 w-3" />
+                          {worker.email}
+                        </span>
+                      )}
                     </div>
                     {worker.note && (
-                      <div className="text-sm text-muted-foreground mt-1">{worker.note}</div>
+                      <div className="text-xs text-muted-foreground mt-1">{worker.note}</div>
                     )}
                   </div>
-                  <div className="flex gap-2">
+                  <div className="flex gap-1.5 shrink-0 ml-3">
                     <Button
-                      variant="outline"
-                      size="sm"
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 text-muted-foreground hover:text-foreground"
                       onClick={() => {
                         setEditingWorker(worker);
                         setIsDialogOpen(true);
                       }}
                     >
-                      <Edit className="h-4 w-4" />
+                      <Edit className="h-3.5 w-3.5" />
                     </Button>
                     <Button
-                      variant={worker.status === "active" ? "destructive" : "default"}
-                      size="sm"
+                      variant="ghost"
+                      size="icon"
+                      className={`h-8 w-8 ${
+                        worker.status === "active"
+                          ? "text-muted-foreground hover:text-destructive"
+                          : "text-muted-foreground hover:text-emerald-600"
+                      }`}
                       onClick={() => setConfirmToggleWorker(worker)}
                       disabled={updateMutation.isPending}
                     >
                       {worker.status === "active" ? (
-                        <UserX className="h-4 w-4" />
+                        <UserX className="h-3.5 w-3.5" />
                       ) : (
-                        <UserCheck className="h-4 w-4" />
+                        <UserCheck className="h-3.5 w-3.5" />
                       )}
                     </Button>
                   </div>
