@@ -615,13 +615,12 @@ export const appRouter = router({
     // 客戶工時報表
     clientHours: publicProcedure
       .input(z.object({
-        clientId: z.number(),
         startDate: z.date(),
         endDate: z.date(),
       }))
       .query(async ({ input }) => {
         const allDemands = await db.getAllDemands();
-        const clientDemands = allDemands.filter(d => d.clientId === input.clientId);
+        const clientDemands = allDemands;
         
         const records = [];
         
