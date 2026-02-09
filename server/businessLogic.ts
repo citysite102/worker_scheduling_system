@@ -65,20 +65,20 @@ export async function checkWorkerAvailability(
   // 取得該週的週一日期
   const weekStartDate = getWeekStart(demandDate);
 
-  // 查詢該員工在該週的可排班時間
+  // 查詢該員工在該週的排班時間設置
   const availability = await getAvailabilityByWorkerAndWeek(workerId, weekStartDate);
 
   if (!availability) {
     return {
       available: false,
-      reason: "本週可排班時間未設定",
+      reason: "本週排班時間設置未設定",
     };
   }
 
   if (!availability.confirmedAt) {
     return {
       available: false,
-      reason: "本週可排班時間未確認",
+      reason: "本週排班時間設置未確認",
     };
   }
 
@@ -89,7 +89,7 @@ export async function checkWorkerAvailability(
   } catch (error) {
     return {
       available: false,
-      reason: "可排班時間資料格式錯誤",
+      reason: "排班時間設置資料格式錯誤",
     };
   }
 
@@ -146,7 +146,7 @@ export async function calculateDemandFeasibility(
   for (const worker of allWorkers) {
     const reasons: string[] = [];
 
-    // 檢查可排班時間
+    // 檢查排班時間設置
     const availabilityCheck = await checkWorkerAvailability(
       worker.id,
       demandDate,

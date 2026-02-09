@@ -35,7 +35,7 @@ export default function Availability() {
 
   const upsertMutation = trpc.availability.upsert.useMutation({
     onSuccess: () => {
-      toast.success("可排班時間已儲存");
+      toast.success("排班時間設置已儲存");
       setIsDialogOpen(false);
       refetch();
     },
@@ -46,7 +46,7 @@ export default function Availability() {
 
   const confirmMutation = trpc.availability.confirm.useMutation({
     onSuccess: () => {
-      toast.success("已確認本週可排班時間");
+      toast.success("已確認本週排班時間設置");
       refetch();
     },
     onError: (error) => {
@@ -91,9 +91,12 @@ export default function Availability() {
     setTimeSlots(newSlots);
   };
 
-  const handleOpenDialog = (dayOfWeek: number) => {
-    const existing = availabilities?.find((a) => a.dayOfWeek === dayOfWeek);
+  const utils = trpc.useUtils();
+  
+  const handleOpenDialog = async (dayOfWeek: number) => {
+    const existing = availabilities?.find((a: any) => a.dayOfWeek === dayOfWeek);
     if (existing) {
+      // 已有設定，直接載入
       setTimeSlots(
         existing.timeSlots.map((ts: any) => ({
           startTime: ts.startTime,
@@ -101,7 +104,34 @@ export default function Availability() {
         }))
       );
     } else {
-      setTimeSlots([{ startTime: "09:00", endTime: "17:00" }]);
+      // 尚未設定，嘗試載入上週設定
+      const lastWeek = new Date(selectedWeek);
+      lastWeek.setDate(lastWeek.getDate() - 7);
+      
+      try {
+        const lastWeekData = await utils.availability.getByWeek.fetch({
+          workerId: selectedWorker!,
+          weekStart: lastWeek,
+        });
+        
+        const lastWeekDay = lastWeekData?.find((a: any) => a.dayOfWeek === dayOfWeek);
+        if (lastWeekDay && lastWeekDay.timeSlots.length > 0) {
+          // 沿用上週設定
+          setTimeSlots(
+            lastWeekDay.timeSlots.map((ts: any) => ({
+              startTime: ts.startTime,
+              endTime: ts.endTime,
+            }))
+          );
+          toast.info("已載入上週設定");
+        } else {
+          // 上週也沒設定，使用預設值
+          setTimeSlots([{ startTime: "09:00", endTime: "17:00" }]);
+        }
+      } catch (error) {
+        // 查詢失敗，使用預設值
+        setTimeSlots([{ startTime: "09:00", endTime: "17:00" }]);
+      }
     }
     setSelectedDayOfWeek(dayOfWeek);
     setIsDialogOpen(true);
@@ -137,7 +167,7 @@ export default function Availability() {
 
   return (
     <div className="p-8">
-      <h1 className="text-3xl font-bold mb-6">可排班時間管理</h1>
+      <h1 className="text-3xl font-bold mb-6">排班時間設置管理</h1>
 
       <div className="grid gap-6">
         <Card>

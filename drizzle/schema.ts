@@ -63,7 +63,7 @@ export type Client = typeof clients.$inferSelect;
 export type InsertClient = typeof clients.$inferInsert;
 
 /**
- * Availability (可排班時間) - 員工每週可排班時段（滾動更新）
+ * Availability (排班時間設置) - 員工每週可排班時段（滾動更新）
  * timeBlocks 儲存為 JSON 格式：[{dayOfWeek: 1-7, startTime: "HH:mm", endTime: "HH:mm"}]
  */
 export const availability = mysqlTable("availability", {

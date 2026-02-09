@@ -232,7 +232,7 @@ export default function DemandDetail() {
               可指派 ({feasibility.availableWorkers.length})
             </CardTitle>
             <CardDescription>
-              符合可排班時間且無衝突的員工，依「本週工時少 → 近期排班少 → 姓名」排序
+              符合排班時間設置且無衝突的員工，依「本週工時少 → 近期排班少 → 姓名」排序
             </CardDescription>
           </CardHeader>
           <CardContent>

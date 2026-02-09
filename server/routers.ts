@@ -208,7 +208,13 @@ export const appRouter = router({
         const existingRecord = existing.find((a) => a.workerId === workerId);
         
         if (!existingRecord) {
-          throw new Error("尚未設定可排班時間");
+          throw new Error("尚未設定排班時間設置");
+        }
+        
+        // 驗證：至少設定一天才可確認
+        const blocks = JSON.parse(existingRecord.timeBlocks || "[]");
+        if (blocks.length === 0) {
+          throw new Error("請至少設定一天的排班時間");
         }
         
         await db.upsertAvailability({

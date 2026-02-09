@@ -40,6 +40,22 @@
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-info: var(--info);
+  --color-info-foreground: var(--info-foreground);
+  --color-gray-50: var(--gray-50);
+  --color-gray-100: var(--gray-100);
+  --color-gray-200: var(--gray-200);
+  --color-gray-300: var(--gray-300);
+  --color-gray-400: var(--gray-400);
+  --color-gray-500: var(--gray-500);
+  --color-gray-600: var(--gray-600);
+  --color-gray-700: var(--gray-700);
+  --color-gray-800: var(--gray-800);
+  --color-gray-900: var(--gray-900);
 }
 
 :root {
@@ -56,9 +72,21 @@
   --accent: oklch(0.8 0.12 70);
   --accent-foreground: oklch(0.2 0.05 260);
   
-  /* Neutral: #E8E2DB (rgb(232, 226, 219)) */
-  --muted: oklch(0.91 0.01 60);
-  --muted-foreground: oklch(0.45 0.02 260);
+  /* 灰階色系 */
+  --gray-50: oklch(0.98 0 0);
+  --gray-100: oklch(0.95 0.005 260);
+  --gray-200: oklch(0.91 0.01 60);  /* #E8E2DB */
+  --gray-300: oklch(0.82 0.01 260);
+  --gray-400: oklch(0.65 0.02 260);
+  --gray-500: oklch(0.52 0.02 260);
+  --gray-600: oklch(0.45 0.02 260);
+  --gray-700: oklch(0.35 0.03 260);
+  --gray-800: oklch(0.25 0.03 260);
+  --gray-900: oklch(0.15 0.02 260);
+  
+  /* Muted 使用灰階 */
+  --muted: var(--gray-200);
+  --muted-foreground: var(--gray-600);
   
   /* Material Design 3 圓角 */
   --radius: 0.75rem;
@@ -75,13 +103,26 @@
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.2 0.02 260);
   
-  /* 毀滅性操作 */
-  --destructive: oklch(0.55 0.22 25);
+  /* 語意化色彩 */
+  /* 錯誤色: #FF6B6B (rgb(255, 107, 107)) */
+  --destructive: oklch(0.7 0.19 15);
   --destructive-foreground: oklch(0.98 0 0);
   
+  /* 警戒色: #FFD93D (rgb(255, 217, 61)) */
+  --warning: oklch(0.88 0.15 85);
+  --warning-foreground: oklch(0.2 0.05 260);
+  
+  /* 確認色: #6BCB77 (rgb(107, 203, 119)) */
+  --success: oklch(0.75 0.15 145);
+  --success-foreground: oklch(0.98 0 0);
+  
+  /* 資訊色: #4D96FF (rgb(77, 150, 255)) */
+  --info: oklch(0.65 0.18 250);
+  --info-foreground: oklch(0.98 0 0);
+  
   /* 邊框與輸入 */
-  --border: oklch(0.88 0.01 260);
-  --input: oklch(0.88 0.01 260);
+  --border: var(--gray-300);
+  --input: var(--gray-300);
   --ring: oklch(0.25 0.08 260);
   
   /* 圖表色系 */
@@ -110,18 +151,34 @@
   --secondary-foreground: oklch(0.98 0 0);
   --accent: oklch(0.8 0.12 70);
   --accent-foreground: oklch(0.2 0.05 260);
-  --muted: oklch(0.91 0.01 60);
-  --muted-foreground: oklch(0.45 0.02 260);
+  --gray-50: oklch(0.98 0 0);
+  --gray-100: oklch(0.95 0.005 260);
+  --gray-200: oklch(0.91 0.01 60);
+  --gray-300: oklch(0.82 0.01 260);
+  --gray-400: oklch(0.65 0.02 260);
+  --gray-500: oklch(0.52 0.02 260);
+  --gray-600: oklch(0.45 0.02 260);
+  --gray-700: oklch(0.35 0.03 260);
+  --gray-800: oklch(0.25 0.03 260);
+  --gray-900: oklch(0.15 0.02 260);
+  --muted: var(--gray-200);
+  --muted-foreground: var(--gray-600);
   --background: oklch(0.98 0 0);
   --foreground: oklch(0.2 0.02 260);
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.2 0.02 260);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.2 0.02 260);
-  --destructive: oklch(0.55 0.22 25);
+  --destructive: oklch(0.7 0.19 15);
   --destructive-foreground: oklch(0.98 0 0);
-  --border: oklch(0.88 0.01 260);
-  --input: oklch(0.88 0.01 260);
+  --warning: oklch(0.88 0.15 85);
+  --warning-foreground: oklch(0.2 0.05 260);
+  --success: oklch(0.75 0.15 145);
+  --success-foreground: oklch(0.98 0 0);
+  --info: oklch(0.65 0.18 250);
+  --info-foreground: oklch(0.98 0 0);
+  --border: var(--gray-300);
+  --input: var(--gray-300);
   --ring: oklch(0.25 0.08 260);
   --chart-1: oklch(0.25 0.08 260);
   --chart-2: oklch(0.52 0.05 240);
