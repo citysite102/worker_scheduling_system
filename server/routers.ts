@@ -268,8 +268,14 @@ export const appRouter = router({
         const { workerId, weekStart: rawWeekStart, dayOfWeek, timeSlots } = input;
         
         // 標準化 weekStart 為週一 UTC 00:00:00
-        const weekStart = new Date(rawWeekStart);
-        weekStart.setUTCHours(0, 0, 0, 0);
+        // 使用 Date.UTC 確保時區正確
+        const rawDate = new Date(rawWeekStart);
+        const weekStart = new Date(Date.UTC(
+          rawDate.getUTCFullYear(),
+          rawDate.getUTCMonth(),
+          rawDate.getUTCDate(),
+          0, 0, 0, 0
+        ));
         
         // 計算 weekEnd
         const weekEnd = new Date(weekStart);
@@ -311,9 +317,14 @@ export const appRouter = router({
       .mutation(async ({ input }) => {
         const { workerId, weekStart: rawWeekStart } = input;
         
-        // 標準化 weekStart 為 UTC
-        const weekStart = new Date(rawWeekStart);
-        weekStart.setUTCHours(0, 0, 0, 0);
+        // 標準化 weekStart 為 UTC 00:00:00
+        const rawDate = new Date(rawWeekStart);
+        const weekStart = new Date(Date.UTC(
+          rawDate.getUTCFullYear(),
+          rawDate.getUTCMonth(),
+          rawDate.getUTCDate(),
+          0, 0, 0, 0
+        ));
         
         const weekEnd = new Date(weekStart);
         weekEnd.setUTCDate(weekEnd.getUTCDate() + 6);
