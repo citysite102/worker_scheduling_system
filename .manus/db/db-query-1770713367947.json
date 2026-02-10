@@ -1,0 +1,80 @@
+{
+  "query": "SELECT \n  workerId,\n  weekStartDate,\n  weekEndDate,\n  confirmedAt,\n  LEFT(timeBlocks, 100) AS timeBlocks_preview\nFROM availability\nORDER BY weekStartDate DESC, workerId;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2iEKifVQ9gKtEas.9cbf5414b428 --database CMgr35KntT8tLtgpfJPejw --execute SELECT \n  workerId,\n  weekStartDate,\n  weekEndDate,\n  confirmedAt,\n  LEFT(timeBlocks, 100) AS timeBlocks_preview\nFROM availability\nORDER BY weekStartDate DESC, workerId;",
+  "rows": [
+    {
+      "workerId": "4",
+      "weekStartDate": "2026-02-09 16:59:01",
+      "weekEndDate": "2026-02-15 16:59:01",
+      "confirmedAt": "NULL",
+      "timeBlocks_preview": "[{\"dayOfWeek\":1,\"timeSlots\":[{\"startTime\":\"09:00\",\"endTime\":\"17:00\"}]}]"
+    },
+    {
+      "workerId": "4",
+      "weekStartDate": "2026-02-09 16:31:47",
+      "weekEndDate": "2026-02-15 16:31:47",
+      "confirmedAt": "NULL",
+      "timeBlocks_preview": "[{\"dayOfWeek\":1,\"timeSlots\":[{\"startTime\":\"09:00\",\"endTime\":\"17:00\"}]}]"
+    },
+    {
+      "workerId": "4",
+      "weekStartDate": "2026-02-09 16:31:47",
+      "weekEndDate": "2026-02-15 16:31:47",
+      "confirmedAt": "NULL",
+      "timeBlocks_preview": "[{\"dayOfWeek\":1,\"timeSlots\":[{\"startTime\":\"09:00\",\"endTime\":\"17:00\"}]}]"
+    },
+    {
+      "workerId": "1",
+      "weekStartDate": "2026-02-08 11:00:00",
+      "weekEndDate": "2026-02-15 10:59:59",
+      "confirmedAt": "2026-02-09 10:45:21",
+      "timeBlocks_preview": "[{\"dayOfWeek\":1,\"startTime\":\"08:00\",\"endTime\":\"17:00\"},{\"dayOfWeek\":2,\"startTime\":\"08:00\",\"endTime\":"
+    },
+    {
+      "workerId": "2",
+      "weekStartDate": "2026-02-08 11:00:00",
+      "weekEndDate": "2026-02-15 10:59:59",
+      "confirmedAt": "2026-02-09 10:45:21",
+      "timeBlocks_preview": "[{\"dayOfWeek\":1,\"startTime\":\"09:00\",\"endTime\":\"18:00\"},{\"dayOfWeek\":2,\"startTime\":\"09:00\",\"endTime\":"
+    },
+    {
+      "workerId": "3",
+      "weekStartDate": "2026-02-08 11:00:00",
+      "weekEndDate": "2026-02-15 10:59:59",
+      "confirmedAt": "2026-02-09 10:45:21",
+      "timeBlocks_preview": "[{\"dayOfWeek\":1,\"startTime\":\"10:00\",\"endTime\":\"19:00\"},{\"dayOfWeek\":2,\"startTime\":\"10:00\",\"endTime\":"
+    },
+    {
+      "workerId": "5",
+      "weekStartDate": "2026-02-08 11:00:00",
+      "weekEndDate": "2026-02-15 10:59:59",
+      "confirmedAt": "2026-02-09 10:45:21",
+      "timeBlocks_preview": "[{\"dayOfWeek\":1,\"startTime\":\"08:00\",\"endTime\":\"12:00\"},{\"dayOfWeek\":2,\"startTime\":\"08:00\",\"endTime\":"
+    },
+    {
+      "workerId": "6",
+      "weekStartDate": "2026-02-08 11:00:00",
+      "weekEndDate": "2026-02-15 10:59:59",
+      "confirmedAt": "NULL",
+      "timeBlocks_preview": "[{\"dayOfWeek\":1,\"startTime\":\"09:00\",\"endTime\":\"18:00\"},{\"dayOfWeek\":2,\"startTime\":\"09:00\",\"endTime\":"
+    },
+    {
+      "workerId": "4",
+      "weekStartDate": "2026-02-08 05:00:00",
+      "weekEndDate": "2026-02-15 04:59:59",
+      "confirmedAt": "2026-02-09 10:45:21",
+      "timeBlocks_preview": "[{\"dayOfWeek\":1,\"startTime\":\"14:00\",\"endTime\":\"22:00\"},{\"dayOfWeek\":2,\"timeSlots\":[{\"startTime\":\"13:"
+    },
+    {
+      "workerId": "6",
+      "weekStartDate": "2026-02-01 16:48:43",
+      "weekEndDate": "2026-02-07 16:48:43",
+      "confirmedAt": "NULL",
+      "timeBlocks_preview": "[{\"dayOfWeek\":1,\"timeSlots\":[{\"startTime\":\"09:00\",\"endTime\":\"17:00\"}]}]"
+    }
+  ],
+  "messages": [],
+  "stdout": "workerId\tweekStartDate\tweekEndDate\tconfirmedAt\ttimeBlocks_preview\n4\t2026-02-09 16:59:01\t2026-02-15 16:59:01\tNULL\t[{\"dayOfWeek\":1,\"timeSlots\":[{\"startTime\":\"09:00\",\"endTime\":\"17:00\"}]}]\n4\t2026-02-09 16:31:47\t2026-02-15 16:31:47\tNULL\t[{\"dayOfWeek\":1,\"timeSlots\":[{\"startTime\":\"09:00\",\"endTime\":\"17:00\"}]}]\n4\t2026-02-09 16:31:47\t2026-02-15 16:31:47\tNULL\t[{\"dayOfWeek\":1,\"timeSlots\":[{\"startTime\":\"09:00\",\"endTime\":\"17:00\"}]}]\n1\t2026-02-08 11:00:00\t2026-02-15 10:59:59\t2026-02-09 10:45:21\t[{\"dayOfWeek\":1,\"startTime\":\"08:00\",\"endTime\":\"17:00\"},{\"dayOfWeek\":2,\"startTime\":\"08:00\",\"endTime\":\n2\t2026-02-08 11:00:00\t2026-02-15 10:59:59\t2026-02-09 10:45:21\t[{\"dayOfWeek\":1,\"startTime\":\"09:00\",\"endTime\":\"18:00\"},{\"dayOfWeek\":2,\"startTime\":\"09:00\",\"endTime\":\n3\t2026-02-08 11:00:00\t2026-02-15 10:59:59\t2026-02-09 10:45:21\t[{\"dayOfWeek\":1,\"startTime\":\"10:00\",\"endTime\":\"19:00\"},{\"dayOfWeek\":2,\"startTime\":\"10:00\",\"endTime\":\n5\t2026-02-08 11:00:00\t2026-02-15 10:59:59\t2026-02-09 10:45:21\t[{\"dayOfWeek\":1,\"startTime\":\"08:00\",\"endTime\":\"12:00\"},{\"dayOfWeek\":2,\"startTime\":\"08:00\",\"endTime\":\n6\t2026-02-08 11:00:00\t2026-02-15 10:59:59\tNULL\t[{\"dayOfWeek\":1,\"startTime\":\"09:00\",\"endTime\":\"18:00\"},{\"dayOfWeek\":2,\"startTime\":\"09:00\",\"endTime\":\n4\t2026-02-08 05:00:00\t2026-02-15 04:59:59\t2026-02-09 10:45:21\t[{\"dayOfWeek\":1,\"startTime\":\"14:00\",\"endTime\":\"22:00\"},{\"dayOfWeek\":2,\"timeSlots\":[{\"startTime\":\"13:\n6\t2026-02-01 16:48:43\t2026-02-07 16:48:43\tNULL\t[{\"dayOfWeek\":1,\"timeSlots\":[{\"startTime\":\"09:00\",\"endTime\":\"17:00\"}]}]\n",
+  "stderr": "",
+  "execution_time_ms": 1510
+}

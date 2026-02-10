@@ -1,0 +1,73 @@
+{
+  "query": "SELECT \n  w.id AS workerId,\n  w.name AS workerName,\n  a.weekStartDate,\n  a.confirmedAt,\n  a.timeBlocks\nFROM workers w\nLEFT JOIN availability a ON w.id = a.workerId \n  AND a.weekStartDate >= '2026-02-09 00:00:00' \n  AND a.weekStartDate < '2026-02-16 00:00:00'\nWHERE w.status = 'active'\nORDER BY w.id;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2iEKifVQ9gKtEas.9cbf5414b428 --database CMgr35KntT8tLtgpfJPejw --execute SELECT \n  w.id AS workerId,\n  w.name AS workerName,\n  a.weekStartDate,\n  a.confirmedAt,\n  a.timeBlocks\nFROM workers w\nLEFT JOIN availability a ON w.id = a.workerId \n  AND a.weekStartDate >= '2026-02-09 00:00:00' \n  AND a.weekStartDate < '2026-02-16 00:00:00'\nWHERE w.status = 'active'\nORDER BY w.id;",
+  "rows": [
+    {
+      "workerId": "1",
+      "workerName": "王大明",
+      "weekStartDate": "NULL",
+      "confirmedAt": "NULL",
+      "timeBlocks": "NULL"
+    },
+    {
+      "workerId": "2",
+      "workerName": "陳小春",
+      "weekStartDate": "NULL",
+      "confirmedAt": "NULL",
+      "timeBlocks": "NULL"
+    },
+    {
+      "workerId": "3",
+      "workerName": "林志玲",
+      "weekStartDate": "NULL",
+      "confirmedAt": "NULL",
+      "timeBlocks": "NULL"
+    },
+    {
+      "workerId": "4",
+      "workerName": "李四",
+      "weekStartDate": "2026-02-09 16:31:47",
+      "confirmedAt": "NULL",
+      "timeBlocks": "[{\"dayOfWeek\":1,\"timeSlots\":[{\"startTime\":\"09:00\",\"endTime\":\"17:00\"}]}]"
+    },
+    {
+      "workerId": "4",
+      "workerName": "李四",
+      "weekStartDate": "2026-02-09 16:31:47",
+      "confirmedAt": "NULL",
+      "timeBlocks": "[{\"dayOfWeek\":1,\"timeSlots\":[{\"startTime\":\"09:00\",\"endTime\":\"17:00\"}]}]"
+    },
+    {
+      "workerId": "4",
+      "workerName": "李四",
+      "weekStartDate": "2026-02-09 16:59:01",
+      "confirmedAt": "NULL",
+      "timeBlocks": "[{\"dayOfWeek\":1,\"timeSlots\":[{\"startTime\":\"09:00\",\"endTime\":\"17:00\"}]}]"
+    },
+    {
+      "workerId": "5",
+      "workerName": "張三豐",
+      "weekStartDate": "NULL",
+      "confirmedAt": "NULL",
+      "timeBlocks": "NULL"
+    },
+    {
+      "workerId": "6",
+      "workerName": "周芷若",
+      "weekStartDate": "NULL",
+      "confirmedAt": "NULL",
+      "timeBlocks": "NULL"
+    },
+    {
+      "workerId": "9",
+      "workerName": "123",
+      "weekStartDate": "NULL",
+      "confirmedAt": "NULL",
+      "timeBlocks": "NULL"
+    }
+  ],
+  "messages": [],
+  "stdout": "workerId\tworkerName\tweekStartDate\tconfirmedAt\ttimeBlocks\n1\t王大明\tNULL\tNULL\tNULL\n2\t陳小春\tNULL\tNULL\tNULL\n3\t林志玲\tNULL\tNULL\tNULL\n4\t李四\t2026-02-09 16:31:47\tNULL\t[{\"dayOfWeek\":1,\"timeSlots\":[{\"startTime\":\"09:00\",\"endTime\":\"17:00\"}]}]\n4\t李四\t2026-02-09 16:31:47\tNULL\t[{\"dayOfWeek\":1,\"timeSlots\":[{\"startTime\":\"09:00\",\"endTime\":\"17:00\"}]}]\n4\t李四\t2026-02-09 16:59:01\tNULL\t[{\"dayOfWeek\":1,\"timeSlots\":[{\"startTime\":\"09:00\",\"endTime\":\"17:00\"}]}]\n5\t張三豐\tNULL\tNULL\tNULL\n6\t周芷若\tNULL\tNULL\tNULL\n9\t123\tNULL\tNULL\tNULL\n",
+  "stderr": "",
+  "execution_time_ms": 1519
+}

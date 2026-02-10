@@ -1,0 +1,50 @@
+{
+  "query": "SELECT id, name FROM workers ORDER BY id;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2iEKifVQ9gKtEas.9cbf5414b428 --database CMgr35KntT8tLtgpfJPejw --execute SELECT id, name FROM workers ORDER BY id;",
+  "rows": [
+    {
+      "id": "1",
+      "name": "王大明"
+    },
+    {
+      "id": "2",
+      "name": "陳小春"
+    },
+    {
+      "id": "3",
+      "name": "林志玲"
+    },
+    {
+      "id": "4",
+      "name": "李四"
+    },
+    {
+      "id": "5",
+      "name": "張三豐"
+    },
+    {
+      "id": "6",
+      "name": "周芷若"
+    },
+    {
+      "id": "7",
+      "name": "趙敏"
+    },
+    {
+      "id": "8",
+      "name": "楊過"
+    },
+    {
+      "id": "9",
+      "name": "123"
+    },
+    {
+      "id": "30001",
+      "name": "慕伊娜Ina"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\n1\t王大明\n2\t陳小春\n3\t林志玲\n4\t李四\n5\t張三豐\n6\t周芷若\n7\t趙敏\n8\t楊過\n9\t123\n30001\t慕伊娜Ina\n",
+  "stderr": "",
+  "execution_time_ms": 1569
+}
