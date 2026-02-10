@@ -1,9 +1,13 @@
 import { useRoute, Link } from "wouter";
+import { useState, useMemo } from "react";
 import { trpc } from "@/lib/trpc";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   ArrowLeft,
   User,
@@ -52,6 +56,11 @@ function StatusBadge({ status }: { status: string }) {
 export default function WorkerDetail() {
   const [, params] = useRoute("/workers/:id");
   const workerId = Number(params?.id);
+  
+  // 時間篩選狀態
+  const [dateFilter, setDateFilter] = useState<"all" | "this_week" | "next_week" | "this_month" | "custom">("all");
+  const [customStartDate, setCustomStartDate] = useState<string>("");
+  const [customEndDate, setCustomEndDate] = useState<string>("");
 
   const { data, isLoading, error } = trpc.workers.detail.useQuery(
     { id: workerId },
@@ -97,6 +106,69 @@ export default function WorkerDetail() {
   }
 
   const { worker, assignments, availability, stats } = data;
+  
+  // 篩選指派記錄
+  const filteredAssignments = useMemo(() => {
+    if (dateFilter === "all") return assignments;
+    
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    let startDate: Date;
+    let endDate: Date;
+    
+    if (dateFilter === "this_week") {
+      // 本週：從今天到週日
+      startDate = new Date(today);
+      endDate = new Date(today);
+      const dayOfWeek = today.getDay();
+      const daysUntilSunday = dayOfWeek === 0 ? 0 : 7 - dayOfWeek;
+      endDate.setDate(endDate.getDate() + daysUntilSunday);
+    } else if (dateFilter === "next_week") {
+      // 下週：下個週一到下個週日
+      startDate = new Date(today);
+      const dayOfWeek = today.getDay();
+      const daysUntilNextMonday = dayOfWeek === 0 ? 1 : 8 - dayOfWeek;
+      startDate.setDate(startDate.getDate() + daysUntilNextMonday);
+      endDate = new Date(startDate);
+      endDate.setDate(endDate.getDate() + 6);
+    } else if (dateFilter === "this_month") {
+      // 本月：從今天到月底
+      startDate = new Date(today);
+      endDate = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+    } else if (dateFilter === "custom" && customStartDate && customEndDate) {
+      // 自訂區間
+      startDate = new Date(customStartDate);
+      endDate = new Date(customEndDate);
+    } else {
+      return assignments;
+    }
+    
+    return assignments.filter((a: any) => {
+      if (!a.demand?.date) return false;
+      const assignmentDate = new Date(a.demand.date);
+      assignmentDate.setHours(0, 0, 0, 0);
+      return assignmentDate >= startDate && assignmentDate <= endDate;
+    });
+  }, [assignments, dateFilter, customStartDate, customEndDate]);
+  
+  // 統計篩選後的工時
+  const filteredStats = useMemo(() => {
+    const totalHours = filteredAssignments.reduce((sum: number, a: any) => {
+      if (a.status === "completed" && a.actualHours) {
+        return sum + (a.actualHours / 60);
+      } else if (a.status === "assigned" && a.demand) {
+        // 尚未完成的使用預排工時
+        return sum + (a.demand.estimatedHours / 60);
+      }
+      return sum;
+    }, 0);
+    
+    return {
+      count: filteredAssignments.length,
+      totalHours: totalHours.toFixed(1)
+    };
+  }, [filteredAssignments]);
 
   return (
     <div className="p-6 space-y-6">
@@ -306,13 +378,48 @@ export default function WorkerDetail() {
         <TabsContent value="assignments" className="mt-4">
           <Card className="border border-gray-100 shadow-sm">
             <CardHeader className="pb-3">
-              <CardTitle className="text-base font-semibold text-gray-700">
-                歷史指派清單
-                <span className="text-sm font-normal text-gray-400 ml-2">共 {assignments.length} 筆</span>
-              </CardTitle>
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-base font-semibold text-gray-700">
+                  歷史指派清單
+                  <span className="text-sm font-normal text-gray-400 ml-2">
+                    {dateFilter === "all" ? `全部 ${assignments.length} 筆` : `篩選後 ${filteredStats.count} 筆 · 共 ${filteredStats.totalHours} 小時`}
+                  </span>
+                </CardTitle>
+                <div className="flex items-center gap-2">
+                  <Select value={dateFilter} onValueChange={(value: any) => setDateFilter(value)}>
+                    <SelectTrigger className="w-[140px] h-8 text-xs">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">全部時間</SelectItem>
+                      <SelectItem value="this_week">本週</SelectItem>
+                      <SelectItem value="next_week">下週</SelectItem>
+                      <SelectItem value="this_month">本月</SelectItem>
+                      <SelectItem value="custom">自訂區間</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  {dateFilter === "custom" && (
+                    <>
+                      <Input 
+                        type="date" 
+                        value={customStartDate} 
+                        onChange={(e) => setCustomStartDate(e.target.value)}
+                        className="w-[130px] h-8 text-xs"
+                      />
+                      <span className="text-xs text-gray-400">至</span>
+                      <Input 
+                        type="date" 
+                        value={customEndDate} 
+                        onChange={(e) => setCustomEndDate(e.target.value)}
+                        className="w-[130px] h-8 text-xs"
+                      />
+                    </>
+                  )}
+                </div>
+              </div>
             </CardHeader>
             <CardContent className="p-0">
-              {assignments.length === 0 ? (
+              {filteredAssignments.length === 0 ? (
                 <div className="p-8 text-center text-gray-400">
                   <Briefcase className="h-10 w-10 mx-auto mb-2 opacity-40" />
                   <p>尚無指派紀錄</p>
@@ -333,7 +440,7 @@ export default function WorkerDetail() {
                       </tr>
                     </thead>
                     <tbody>
-                      {assignments.map((a: any) => (
+                      {filteredAssignments.map((a: any) => (
                         <tr key={a.id} className="border-b border-gray-50 hover:bg-gray-50/50 transition-colors">
                           <td className="px-4 py-3 text-gray-700">
                             {a.demand ? formatDate(a.demand.date) : "—"}
