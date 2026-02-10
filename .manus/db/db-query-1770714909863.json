@@ -1,0 +1,18 @@
+{
+  "query": "\nSELECT a.id, a.workerId, a.weekStartDate, a.weekEndDate, a.timeBlocks, a.confirmedAt\nFROM availability a\nJOIN workers w ON a.workerId = w.id\nWHERE (w.name LIKE '%穆伊娜%' OR w.name LIKE '%INA%')\n  AND a.weekStartDate >= '2026-02-09 00:00:00'\n  AND a.weekStartDate <= '2026-02-09 23:59:59';\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2iEKifVQ9gKtEas.9cbf5414b428 --database CMgr35KntT8tLtgpfJPejw --execute \nSELECT a.id, a.workerId, a.weekStartDate, a.weekEndDate, a.timeBlocks, a.confirmedAt\nFROM availability a\nJOIN workers w ON a.workerId = w.id\nWHERE (w.name LIKE '%穆伊娜%' OR w.name LIKE '%INA%')\n  AND a.weekStartDate >= '2026-02-09 00:00:00'\n  AND a.weekStartDate <= '2026-02-09 23:59:59';\n",
+  "rows": [
+    {
+      "id": "60017",
+      "workerId": "60002",
+      "weekStartDate": "2026-02-09 00:00:00",
+      "weekEndDate": "2026-02-16 00:00:00",
+      "timeBlocks": "[{\"dayOfWeek\":4,\"timeSlots\":[{\"startTime\":\"09:00\",\"endTime\":\"17:00\"}]}]",
+      "confirmedAt": "NULL"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tworkerId\tweekStartDate\tweekEndDate\ttimeBlocks\tconfirmedAt\n60017\t60002\t2026-02-09 00:00:00\t2026-02-16 00:00:00\t[{\"dayOfWeek\":4,\"timeSlots\":[{\"startTime\":\"09:00\",\"endTime\":\"17:00\"}]}]\tNULL\n",
+  "stderr": "",
+  "execution_time_ms": 1483
+}

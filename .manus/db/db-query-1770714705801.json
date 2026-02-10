@@ -1,0 +1,15 @@
+{
+  "query": "\nSELECT w.id, w.name, w.status\nFROM workers w\nWHERE w.name LIKE '%穆伊娜%' OR w.name LIKE '%INA%';\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2iEKifVQ9gKtEas.9cbf5414b428 --database CMgr35KntT8tLtgpfJPejw --execute \nSELECT w.id, w.name, w.status\nFROM workers w\nWHERE w.name LIKE '%穆伊娜%' OR w.name LIKE '%INA%';\n",
+  "rows": [
+    {
+      "id": "60002",
+      "name": "穆伊娜 INA",
+      "status": "active"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\tstatus\n60002\t穆伊娜 INA\tactive\n",
+  "stderr": "",
+  "execution_time_ms": 1521
+}
