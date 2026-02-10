@@ -3,9 +3,14 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Input } from "@/components/ui/input";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { AlertCircle, CheckCircle2, ChevronDown, ChevronUp, ArrowLeft, Loader2, Calendar, Clock, MapPin, Users } from "lucide-react";
+import {
+  AlertCircle, CheckCircle2, ChevronDown, ChevronUp, ArrowLeft, Loader2,
+  Calendar, Clock, MapPin, Users, Filter, GraduationCap, FileCheck, Stethoscope, X
+} from "lucide-react";
 import { useParams, useLocation } from "wouter";
 import { useState, useMemo } from "react";
 import { toast } from "sonner";
@@ -17,6 +22,12 @@ export default function DemandDetail() {
 
   const [selectedWorkerIds, setSelectedWorkerIds] = useState<number[]>([]);
   const [isInactiveExpanded, setIsInactiveExpanded] = useState(false);
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
+
+  // 篩選狀態
+  const [filterSchool, setFilterSchool] = useState("");
+  const [filterWorkPermit, setFilterWorkPermit] = useState<string>("all"); // "all" | "yes" | "no"
+  const [filterHealthCheck, setFilterHealthCheck] = useState<string>("all"); // "all" | "yes" | "no"
 
   const { data: demand, isLoading, refetch } = trpc.demands.getById.useQuery({ id: demandId });
 
@@ -47,6 +58,58 @@ export default function DemandDetail() {
     },
   });
 
+  // 計算篩選後的員工列表
+  const filteredAvailableWorkers = useMemo(() => {
+    if (!feasibility) return [];
+    return feasibility.availableWorkers.filter((worker) => {
+      if (filterSchool && !(worker.school || "").toLowerCase().includes(filterSchool.toLowerCase())) {
+        return false;
+      }
+      if (filterWorkPermit === "yes" && !worker.hasWorkPermit) return false;
+      if (filterWorkPermit === "no" && worker.hasWorkPermit) return false;
+      if (filterHealthCheck === "yes" && !worker.hasHealthCheck) return false;
+      if (filterHealthCheck === "no" && worker.hasHealthCheck) return false;
+      return true;
+    });
+  }, [feasibility, filterSchool, filterWorkPermit, filterHealthCheck]);
+
+  const filteredUnavailableWorkers = useMemo(() => {
+    if (!feasibility) return [];
+    return feasibility.unavailableWorkers
+      .filter((uw) => uw.worker.status === "active")
+      .filter((uw) => {
+        if (filterSchool && !(uw.worker.school || "").toLowerCase().includes(filterSchool.toLowerCase())) {
+          return false;
+        }
+        if (filterWorkPermit === "yes" && !uw.worker.hasWorkPermit) return false;
+        if (filterWorkPermit === "no" && uw.worker.hasWorkPermit) return false;
+        if (filterHealthCheck === "yes" && !uw.worker.hasHealthCheck) return false;
+        if (filterHealthCheck === "no" && uw.worker.hasHealthCheck) return false;
+        return true;
+      });
+  }, [feasibility, filterSchool, filterWorkPermit, filterHealthCheck]);
+
+  // 是否有啟用任何篩選
+  const hasActiveFilters = filterSchool !== "" || filterWorkPermit !== "all" || filterHealthCheck !== "all";
+  const activeFilterCount = [
+    filterSchool !== "",
+    filterWorkPermit !== "all",
+    filterHealthCheck !== "all",
+  ].filter(Boolean).length;
+
+  // 取得所有不重複的學校名稱
+  const schoolOptions = useMemo(() => {
+    if (!feasibility) return [];
+    const schools = new Set<string>();
+    feasibility.availableWorkers.forEach((w) => {
+      if (w.school) schools.add(w.school);
+    });
+    feasibility.unavailableWorkers.forEach((uw) => {
+      if (uw.worker.school) schools.add(uw.worker.school);
+    });
+    return Array.from(schools).sort();
+  }, [feasibility]);
+
   const handleToggleWorker = (workerId: number) => {
     setSelectedWorkerIds((prev) =>
       prev.includes(workerId) ? prev.filter((id) => id !== workerId) : [...prev, workerId]
@@ -56,14 +119,15 @@ export default function DemandDetail() {
   const handleAutoFill = () => {
     if (!feasibility || !demand) return;
     const needed = demand.requiredWorkers - selectedWorkerIds.length;
-    const availableIds = feasibility.availableWorkers
+    // 一鍵湊滿時也套用篩選條件
+    const availableIds = filteredAvailableWorkers
       .filter((w) => !selectedWorkerIds.includes(w.id))
       .slice(0, needed)
       .map((w) => w.id);
 
     if (availableIds.length < needed) {
       toast.warning(
-        `可用員工僅 ${feasibility.availableWorkers.length} 人，仍缺 ${feasibility.shortage} 人。建議調整時段或拆分需求單。`
+        `篩選後可用員工僅 ${filteredAvailableWorkers.length} 人，仍缺 ${needed - availableIds.length} 人。`
       );
     } else {
       toast.success(`已自動選取 ${availableIds.length} 位員工，請確認後送出。`);
@@ -74,6 +138,12 @@ export default function DemandDetail() {
   const handleClearSelection = () => {
     setSelectedWorkerIds([]);
     toast.info("已清空選取");
+  };
+
+  const handleClearFilters = () => {
+    setFilterSchool("");
+    setFilterWorkPermit("all");
+    setFilterHealthCheck("all");
   };
 
   const handleSubmit = () => {
@@ -118,9 +188,6 @@ export default function DemandDetail() {
   const gap = demand.requiredWorkers - selectedWorkerIds.length;
   const inactiveWorkers = feasibility.unavailableWorkers.filter(
     (uw) => uw.worker.status === "inactive"
-  );
-  const unavailableActiveWorkers = feasibility.unavailableWorkers.filter(
-    (uw) => uw.worker.status === "active"
   );
 
   return (
@@ -186,7 +253,7 @@ export default function DemandDetail() {
                 </div>
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-muted-foreground">不可用員工</span>
-                  <span className="font-medium">{unavailableActiveWorkers.length} 人</span>
+                  <span className="font-medium">{feasibility.unavailableWorkers.filter(uw => uw.worker.status === "active").length} 人</span>
                 </div>
                 {feasibility.shortage > 0 && (
                   <Alert variant="destructive" className="mt-2">
@@ -203,6 +270,105 @@ export default function DemandDetail() {
           </Card>
         </div>
 
+        {/* 篩選器 */}
+        <Card className="shadow-sm border-border/60">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between mb-0">
+              <button
+                onClick={() => setIsFilterOpen(!isFilterOpen)}
+                className="flex items-center gap-2 text-sm font-medium text-foreground hover:text-primary transition-colors"
+              >
+                <Filter className="h-4 w-4" />
+                <span>員工篩選</span>
+                {hasActiveFilters && (
+                  <Badge variant="secondary" className="text-xs px-1.5 py-0 bg-blue-100 text-blue-700">
+                    {activeFilterCount}
+                  </Badge>
+                )}
+                {isFilterOpen ? (
+                  <ChevronUp className="h-3.5 w-3.5 text-muted-foreground" />
+                ) : (
+                  <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
+                )}
+              </button>
+              {hasActiveFilters && (
+                <Button variant="ghost" size="sm" className="text-xs text-muted-foreground h-7" onClick={handleClearFilters}>
+                  <X className="h-3 w-3 mr-1" />
+                  清除篩選
+                </Button>
+              )}
+            </div>
+
+            {isFilterOpen && (
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-4 pt-4 border-t border-border/40">
+                {/* 學校篩選 */}
+                <div className="space-y-1.5">
+                  <label className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
+                    <GraduationCap className="h-3.5 w-3.5" />
+                    學校
+                  </label>
+                  {schoolOptions.length > 0 ? (
+                    <Select value={filterSchool || "all_schools"} onValueChange={(v) => setFilterSchool(v === "all_schools" ? "" : v)}>
+                      <SelectTrigger className="h-9 text-sm">
+                        <SelectValue placeholder="全部學校" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all_schools">全部學校</SelectItem>
+                        {schoolOptions.map((school) => (
+                          <SelectItem key={school} value={school}>{school}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  ) : (
+                    <Input
+                      placeholder="輸入學校名稱"
+                      value={filterSchool}
+                      onChange={(e) => setFilterSchool(e.target.value)}
+                      className="h-9 text-sm"
+                    />
+                  )}
+                </div>
+
+                {/* 工作簽證篩選 */}
+                <div className="space-y-1.5">
+                  <label className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
+                    <FileCheck className="h-3.5 w-3.5" />
+                    工作簽證
+                  </label>
+                  <Select value={filterWorkPermit} onValueChange={setFilterWorkPermit}>
+                    <SelectTrigger className="h-9 text-sm">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">不限</SelectItem>
+                      <SelectItem value="yes">有簽證</SelectItem>
+                      <SelectItem value="no">無簽證</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* 體檢篩選 */}
+                <div className="space-y-1.5">
+                  <label className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
+                    <Stethoscope className="h-3.5 w-3.5" />
+                    體檢狀態
+                  </label>
+                  <Select value={filterHealthCheck} onValueChange={setFilterHealthCheck}>
+                    <SelectTrigger className="h-9 text-sm">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">不限</SelectItem>
+                      <SelectItem value="yes">已體檢</SelectItem>
+                      <SelectItem value="no">未體檢</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
         {/* 操作列 */}
         <Card className="shadow-sm border-border/60">
           <CardContent className="p-4">
@@ -212,6 +378,11 @@ export default function DemandDetail() {
                 {" / "}
                 <span className="font-semibold">{demand.requiredWorkers}</span> 人
                 {gap > 0 && <span className="text-muted-foreground ml-1">（還差 {gap} 人）</span>}
+                {hasActiveFilters && (
+                  <span className="text-muted-foreground ml-2">
+                    · 篩選後 {filteredAvailableWorkers.length} 人可用
+                  </span>
+                )}
               </div>
               <div className="flex gap-2">
                 <Button variant="outline" size="sm" onClick={handleAutoFill}>
@@ -240,7 +411,12 @@ export default function DemandDetail() {
                 <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />
               </div>
               <CardTitle className="text-base font-medium">
-                可指派 ({feasibility.availableWorkers.length})
+                可指派 ({filteredAvailableWorkers.length})
+                {hasActiveFilters && feasibility.availableWorkers.length !== filteredAvailableWorkers.length && (
+                  <span className="text-xs font-normal text-muted-foreground ml-1">
+                    / 全部 {feasibility.availableWorkers.length}
+                  </span>
+                )}
               </CardTitle>
             </div>
             <CardDescription className="text-xs">
@@ -248,11 +424,13 @@ export default function DemandDetail() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            {feasibility.availableWorkers.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground text-sm">無可指派員工</div>
+            {filteredAvailableWorkers.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground text-sm">
+                {hasActiveFilters ? "篩選條件下無可指派員工，請調整篩選條件" : "無可指派員工"}
+              </div>
             ) : (
               <div className="space-y-1.5">
-                {feasibility.availableWorkers.map((worker) => (
+                {filteredAvailableWorkers.map((worker) => (
                   <div
                     key={worker.id}
                     className={`flex items-center gap-3 p-3 rounded-lg border transition-colors cursor-pointer ${
@@ -267,13 +445,33 @@ export default function DemandDetail() {
                       onCheckedChange={() => handleToggleWorker(worker.id)}
                     />
                     <div className="flex-1 min-w-0">
-                      <div className="font-medium text-sm">{worker.name}</div>
-                      <div className="text-xs text-muted-foreground">
+                      <div className="flex items-center gap-2">
+                        <span className="font-medium text-sm">{worker.name}</span>
+                        {worker.school && (
+                          <Badge variant="outline" className="text-[10px] px-1.5 py-0 font-normal text-muted-foreground">
+                            <GraduationCap className="h-2.5 w-2.5 mr-0.5" />
+                            {worker.school}
+                          </Badge>
+                        )}
+                        {worker.hasWorkPermit ? (
+                          <Badge className="text-[10px] px-1.5 py-0 bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-50">
+                            <FileCheck className="h-2.5 w-2.5 mr-0.5" />
+                            簽證
+                          </Badge>
+                        ) : null}
+                        {worker.hasHealthCheck ? (
+                          <Badge className="text-[10px] px-1.5 py-0 bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-50">
+                            <Stethoscope className="h-2.5 w-2.5 mr-0.5" />
+                            體檢
+                          </Badge>
+                        ) : null}
+                      </div>
+                      <div className="text-xs text-muted-foreground mt-0.5">
                         {worker.phone} {worker.email && `· ${worker.email}`}
                       </div>
                     </div>
                     <div className="flex gap-4 shrink-0 text-xs text-muted-foreground">
-                      <span>本週 {((worker.weekHours || 0) / 60).toFixed(1)}h</span>
+                      <span>本週 {(worker.weekHours || 0).toFixed(1)}h</span>
                       <span>近7天 {worker.last7DaysCount || 0}次</span>
                     </div>
                   </div>
@@ -291,24 +489,38 @@ export default function DemandDetail() {
                 <AlertCircle className="h-3.5 w-3.5 text-amber-600" />
               </div>
               <CardTitle className="text-base font-medium">
-                不可指派 ({unavailableActiveWorkers.length})
+                不可指派 ({filteredUnavailableWorkers.length})
+                {hasActiveFilters && feasibility.unavailableWorkers.filter(uw => uw.worker.status === "active").length !== filteredUnavailableWorkers.length && (
+                  <span className="text-xs font-normal text-muted-foreground ml-1">
+                    / 全部 {feasibility.unavailableWorkers.filter(uw => uw.worker.status === "active").length}
+                  </span>
+                )}
               </CardTitle>
             </div>
             <CardDescription className="text-xs">因故無法指派的員工</CardDescription>
           </CardHeader>
           <CardContent>
-            {unavailableActiveWorkers.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground text-sm">無不可指派員工</div>
+            {filteredUnavailableWorkers.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground text-sm">
+                {hasActiveFilters ? "篩選條件下無不可指派員工" : "無不可指派員工"}
+              </div>
             ) : (
               <div className="space-y-1.5">
-                {unavailableActiveWorkers.map((uw) => (
+                {filteredUnavailableWorkers.map((uw) => (
                   <div
                     key={uw.worker.id}
                     className="flex items-center gap-3 p-3 rounded-lg border border-border/40 bg-muted/30 opacity-60"
                   >
                     <Checkbox disabled />
                     <div className="flex-1 min-w-0">
-                      <div className="font-medium text-sm text-muted-foreground">{uw.worker.name}</div>
+                      <div className="flex items-center gap-2">
+                        <span className="font-medium text-sm text-muted-foreground">{uw.worker.name}</span>
+                        {uw.worker.school && (
+                          <Badge variant="outline" className="text-[10px] px-1.5 py-0 font-normal text-muted-foreground/60">
+                            {uw.worker.school}
+                          </Badge>
+                        )}
+                      </div>
                       <div className="text-xs text-muted-foreground mt-0.5">
                         {uw.reasons.map((reason, idx) => (
                           <span key={idx}>
