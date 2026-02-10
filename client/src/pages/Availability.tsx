@@ -6,7 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { ChevronLeft, ChevronRight, Plus, Trash2, Check, Loader2, Clock, AlertTriangle } from "lucide-react";
+import { ChevronLeft, ChevronRight, Plus, Trash2, Check, Loader2, Clock, AlertTriangle, Copy } from "lucide-react";
 import { useState, useMemo, useCallback } from "react";
 import { toast } from "sonner";
 
@@ -62,6 +62,8 @@ export default function Availability() {
   const [loadingDay, setLoadingDay] = useState<number | null>(null);
   // 追蹤正在儲存的具體天
   const [savingDay, setSavingDay] = useState<number | null>(null);
+  // 追蹤一鍵沿用上週全部設定的載入狀態
+  const [isCopyingAll, setIsCopyingAll] = useState(false);
 
   const { data: workers } = trpc.workers.list.useQuery({ status: "active" });
 
@@ -252,6 +254,62 @@ export default function Availability() {
   const isConfirmed = availabilities?.some((a: any) => a.confirmed);
   const hasAnySlots = availabilities?.some((a: any) => a.timeSlots && a.timeSlots.length > 0);
 
+  /** 一鍵沿用上週全部設定 */
+  const handleCopyAllFromLastWeek = useCallback(async () => {
+    if (!selectedWorker) return;
+
+    setIsCopyingAll(true);
+    const lastWeek = new Date(selectedWeek);
+    lastWeek.setDate(lastWeek.getDate() - 7);
+    const lastWeekStart = getWeekStart(lastWeek);
+
+    try {
+      const lastWeekData = await utils.availability.getByWeek.fetch({
+        workerId: selectedWorker,
+        weekStart: lastWeekStart,
+      });
+
+      if (!lastWeekData || lastWeekData.length === 0) {
+        toast.warning("上週沒有任何排班設定可以沿用");
+        setIsCopyingAll(false);
+        return;
+      }
+
+      const daysWithSlots = lastWeekData.filter(
+        (a: any) => a.timeSlots && a.timeSlots.length > 0
+      );
+
+      if (daysWithSlots.length === 0) {
+        toast.warning("上週沒有任何排班設定可以沿用");
+        setIsCopyingAll(false);
+        return;
+      }
+
+      let savedCount = 0;
+      for (const dayData of daysWithSlots) {
+        const slotsToSave = dayData.timeSlots.map((ts: any) => ({
+          startTime: ts.startTime,
+          endTime: ts.endTime,
+        }));
+
+        await upsertMutation.mutateAsync({
+          workerId: selectedWorker,
+          weekStart: selectedWeek,
+          dayOfWeek: dayData.dayOfWeek,
+          timeSlots: slotsToSave,
+        });
+        savedCount++;
+      }
+
+      await refetch();
+      toast.success(`已沿用上週 ${savedCount} 天的排班設定`);
+    } catch (error) {
+      toast.error("沿用上週設定時發生錯誤，請稍後再試");
+    } finally {
+      setIsCopyingAll(false);
+    }
+  }, [selectedWorker, selectedWeek, utils, upsertMutation, refetch]);
+
   return (
     <div className="p-6 lg:p-8 max-w-6xl mx-auto">
       <div className="mb-8">
@@ -311,20 +369,41 @@ export default function Availability() {
                   <CardTitle className="text-base font-medium">本週可排班時段</CardTitle>
                   <CardDescription>點擊日期設定該日的可排班時段（可設定多個時段）</CardDescription>
                 </div>
-                {isConfirmed ? (
-                  <Badge className="bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-50 flex items-center gap-1">
-                    <Check className="h-3 w-3" />
-                    已確認
-                  </Badge>
-                ) : (
+                <div className="flex items-center gap-2">
                   <Button
-                    onClick={handleConfirmWeek}
-                    disabled={confirmMutation.isPending || !hasAnySlots}
+                    variant="outline"
                     size="sm"
+                    onClick={handleCopyAllFromLastWeek}
+                    disabled={isCopyingAll || isConfirmed}
+                    className="text-muted-foreground"
                   >
-                    確認本週時間
+                    {isCopyingAll ? (
+                      <>
+                        <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+                        沿用中...
+                      </>
+                    ) : (
+                      <>
+                        <Copy className="mr-1.5 h-3.5 w-3.5" />
+                        沿用上週全部
+                      </>
+                    )}
                   </Button>
-                )}
+                  {isConfirmed ? (
+                    <Badge className="bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-50 flex items-center gap-1">
+                      <Check className="h-3 w-3" />
+                      已確認
+                    </Badge>
+                  ) : (
+                    <Button
+                      onClick={handleConfirmWeek}
+                      disabled={confirmMutation.isPending || !hasAnySlots}
+                      size="sm"
+                    >
+                      確認本週時間
+                    </Button>
+                  )}
+                </div>
               </div>
             </CardHeader>
             <CardContent>
