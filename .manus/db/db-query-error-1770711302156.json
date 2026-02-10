@@ -1,0 +1,8 @@
+{
+  "query": "SELECT w.id, w.name, a.week_start_date, a.day_of_week, a.time_blocks, a.confirmed\nFROM workers w\nLEFT JOIN availability a ON w.id = a.worker_id\nWHERE w.name LIKE '%伊娜%'\nORDER BY a.week_start_date DESC, a.day_of_week\nLIMIT 10;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2iEKifVQ9gKtEas.9cbf5414b428 --database CMgr35KntT8tLtgpfJPejw --execute SELECT w.id, w.name, a.week_start_date, a.day_of_week, a.time_blocks, a.confirmed\nFROM workers w\nLEFT JOIN availability a ON w.id = a.worker_id\nWHERE w.name LIKE '%伊娜%'\nORDER BY a.week_start_date DESC, a.day_of_week\nLIMIT 10;",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1054 (42S22) at line 1: Unknown column 'a.worker_id' in 'on clause'"
+  ]
+}

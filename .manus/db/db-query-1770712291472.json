@@ -1,0 +1,24 @@
+{
+  "query": "SELECT \n  w.name,\n  a.id,\n  DATE_FORMAT(a.weekStartDate, '%Y-%m-%d') as week_start,\n  a.timeBlocks,\n  a.confirmedAt\nFROM workers w\nJOIN availability a ON w.id = a.workerId\nWHERE w.name LIKE '%伊娜%'\nORDER BY a.createdAt DESC;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2iEKifVQ9gKtEas.9cbf5414b428 --database CMgr35KntT8tLtgpfJPejw --execute SELECT \n  w.name,\n  a.id,\n  DATE_FORMAT(a.weekStartDate, '%Y-%m-%d') as week_start,\n  a.timeBlocks,\n  a.confirmedAt\nFROM workers w\nJOIN availability a ON w.id = a.workerId\nWHERE w.name LIKE '%伊娜%'\nORDER BY a.createdAt DESC;",
+  "rows": [
+    {
+      "name": "慕伊娜Ina",
+      "id": "60001",
+      "week_start": "2026-02-08",
+      "timeBlocks": "[{\"dayOfWeek\":1,\"timeSlots\":[{\"startTime\":\"09:00\",\"endTime\":\"17:00\"}]},{\"dayOfWeek\":4,\"timeSlots\":[{\"startTime\":\"09:00\",\"endTime\":\"17:00\"}]}]",
+      "confirmedAt": "2026-02-10 08:19:45"
+    },
+    {
+      "name": "慕伊娜Ina",
+      "id": "30001",
+      "week_start": "2026-02-08",
+      "timeBlocks": "[{\"dayOfWeek\":1,\"timeSlots\":[{\"startTime\":\"09:00\",\"endTime\":\"17:00\"}]},{\"dayOfWeek\":2,\"timeSlots\":[{\"startTime\":\"09:00\",\"endTime\":\"17:00\"}]},{\"dayOfWeek\":3,\"timeSlots\":[{\"startTime\":\"09:00\",\"endTime\":\"17:00\"}]},{\"dayOfWeek\":4,\"timeSlots\":[{\"startTime\":\"09:00\",\"endTime\":\"17:00\"}]},{\"dayOfWeek\":5,\"timeSlots\":[{\"startTime\":\"09:00\",\"endTime\":\"17:00\"}]},{\"dayOfWeek\":6,\"timeSlots\":[{\"startTime\":\"09:00\",\"endTime\":\"21:01\"}]}]",
+      "confirmedAt": "2026-02-10 06:57:29"
+    }
+  ],
+  "messages": [],
+  "stdout": "name\tid\tweek_start\ttimeBlocks\tconfirmedAt\n慕伊娜Ina\t60001\t2026-02-08\t[{\"dayOfWeek\":1,\"timeSlots\":[{\"startTime\":\"09:00\",\"endTime\":\"17:00\"}]},{\"dayOfWeek\":4,\"timeSlots\":[{\"startTime\":\"09:00\",\"endTime\":\"17:00\"}]}]\t2026-02-10 08:19:45\n慕伊娜Ina\t30001\t2026-02-08\t[{\"dayOfWeek\":1,\"timeSlots\":[{\"startTime\":\"09:00\",\"endTime\":\"17:00\"}]},{\"dayOfWeek\":2,\"timeSlots\":[{\"startTime\":\"09:00\",\"endTime\":\"17:00\"}]},{\"dayOfWeek\":3,\"timeSlots\":[{\"startTime\":\"09:00\",\"endTime\":\"17:00\"}]},{\"dayOfWeek\":4,\"timeSlots\":[{\"startTime\":\"09:00\",\"endTime\":\"17:00\"}]},{\"dayOfWeek\":5,\"timeSlots\":[{\"startTime\":\"09:00\",\"endTime\":\"17:00\"}]},{\"dayOfWeek\":6,\"timeSlots\":[{\"startTime\":\"09:00\",\"endTime\":\"21:01\"}]}]\t2026-02-10 06:57:29\n",
+  "stderr": "",
+  "execution_time_ms": 1498
+}

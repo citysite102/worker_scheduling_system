@@ -207,6 +207,23 @@ export default function Availability() {
 
   const hasInvalidSlots = invalidSlots.size > 0;
 
+  const handleClearTimeSlots = async () => {
+    if (!selectedWorker || selectedDayOfWeek === null) return;
+
+    setSavingDay(selectedDayOfWeek);
+    await upsertMutation.mutateAsync({
+      workerId: selectedWorker,
+      weekStart: selectedWeek,
+      dayOfWeek: selectedDayOfWeek,
+      timeSlots: [],
+    });
+
+    toast.success("已清除該日的排班時段");
+    setIsDialogOpen(false);
+    setSavingDay(null);
+    await refetch();
+  };
+
   const handleSaveTimeSlots = async () => {
     if (!selectedWorker || selectedDayOfWeek === null) return;
 
@@ -414,6 +431,11 @@ export default function Availability() {
                   const hasSlots = availability && availability.timeSlots && availability.timeSlots.length > 0;
                   const isDayLoading = loadingDay === dayOfWeek || savingDay === dayOfWeek;
 
+                  // 計算該日對應的實際日期
+                  const actualDate = new Date(weekStart);
+                  actualDate.setDate(actualDate.getDate() + index);
+                  const dateStr = `${actualDate.getMonth() + 1}/${actualDate.getDate()}`;
+
                   return (
                     <div
                       key={index}
@@ -423,7 +445,8 @@ export default function Availability() {
                           : "bg-card border-border/60 hover:border-border"
                       }`}
                     >
-                      <div className="text-sm font-semibold mb-1.5 text-center">{day}</div>
+                      <div className="text-sm font-semibold mb-0.5 text-center">{day}</div>
+                      <div className="text-xs text-muted-foreground mb-1.5 text-center">{dateStr}</div>
                       {hasSlots ? (
                         <div className="space-y-0.5 mb-2">
                           {availability.timeSlots.map((slot: any, idx: number) => (
@@ -526,21 +549,31 @@ export default function Availability() {
               新增時段
             </Button>
           </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
-              取消
-            </Button>
+          <DialogFooter className="flex justify-between items-center">
             <Button
-              onClick={handleSaveTimeSlots}
-              disabled={upsertMutation.isPending || hasOverlaps || hasInvalidSlots}
+              variant="outline"
+              onClick={handleClearTimeSlots}
+              disabled={upsertMutation.isPending}
+              className="text-destructive hover:text-destructive hover:bg-destructive/10"
             >
-              {upsertMutation.isPending ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  儲存中...
-                </>
-              ) : "儲存"}
+              清除時段
             </Button>
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
+                取消
+              </Button>
+              <Button
+                onClick={handleSaveTimeSlots}
+                disabled={upsertMutation.isPending || hasOverlaps || hasInvalidSlots}
+              >
+                {upsertMutation.isPending ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    儲存中...
+                  </>
+                ) : "儲存"}
+              </Button>
+            </div>
           </DialogFooter>
         </DialogContent>
       </Dialog>

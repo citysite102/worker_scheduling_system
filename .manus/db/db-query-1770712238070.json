@@ -1,0 +1,9 @@
+{
+  "query": "UPDATE availability a\nJOIN workers w ON a.workerId = w.id\nSET a.confirmedAt = NULL\nWHERE w.name LIKE '%伊娜%'\nAND a.weekStartDate >= '2026-02-09'\nAND a.weekStartDate < '2026-02-16';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2iEKifVQ9gKtEas.9cbf5414b428 --database CMgr35KntT8tLtgpfJPejw --execute UPDATE availability a\nJOIN workers w ON a.workerId = w.id\nSET a.confirmedAt = NULL\nWHERE w.name LIKE '%伊娜%'\nAND a.weekStartDate >= '2026-02-09'\nAND a.weekStartDate < '2026-02-16';",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 1594
+}

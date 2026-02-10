@@ -267,14 +267,14 @@ export const appRouter = router({
       .mutation(async ({ input }) => {
         const { workerId, weekStart: rawWeekStart, dayOfWeek, timeSlots } = input;
         
-        // 標準化 weekStart 為週一 00:00:00
+        // 標準化 weekStart 為週一 UTC 00:00:00
         const weekStart = new Date(rawWeekStart);
-        weekStart.setHours(0, 0, 0, 0);
+        weekStart.setUTCHours(0, 0, 0, 0);
         
         // 計算 weekEnd
         const weekEnd = new Date(weekStart);
-        weekEnd.setDate(weekEnd.getDate() + 6);
-        weekEnd.setHours(23, 59, 59, 0);
+        weekEnd.setUTCDate(weekEnd.getUTCDate() + 6);
+        weekEnd.setUTCHours(23, 59, 59, 999);
         
         // 查詢現有記錄（使用 workerId + weekStart 查詢）
         const existingRecord = await db.getAvailabilityByWorkerAndWeek(workerId, weekStart);
@@ -311,13 +311,13 @@ export const appRouter = router({
       .mutation(async ({ input }) => {
         const { workerId, weekStart: rawWeekStart } = input;
         
-        // 標準化 weekStart
+        // 標準化 weekStart 為 UTC
         const weekStart = new Date(rawWeekStart);
-        weekStart.setHours(0, 0, 0, 0);
+        weekStart.setUTCHours(0, 0, 0, 0);
         
         const weekEnd = new Date(weekStart);
-        weekEnd.setDate(weekEnd.getDate() + 6);
-        weekEnd.setHours(23, 59, 59, 0);
+        weekEnd.setUTCDate(weekEnd.getUTCDate() + 6);
+        weekEnd.setUTCHours(23, 59, 59, 999);
         
         const existingRecord = await db.getAvailabilityByWorkerAndWeek(workerId, weekStart);
         
@@ -325,19 +325,27 @@ export const appRouter = router({
           throw new Error("尚未設定排班時間設置");
         }
         
-        // 驗證：至少設定一天才可確認
-        const blocks = JSON.parse(existingRecord.timeBlocks || "[]");
-        if (blocks.length === 0) {
-          throw new Error("請至少設定一天的排班時間");
-        }
+        // 更新確認時間 - 使用 SQL 直接更新所有符合條件的記錄
+        const dbInstance = await db.getDb();
+        if (!dbInstance) throw new Error("Database not available");
         
-        await db.upsertAvailability({
-          workerId,
-          weekStartDate: weekStart,
-          weekEndDate: weekEnd,
-          timeBlocks: existingRecord.timeBlocks,
-          confirmedAt: new Date(),
-        });
+        const { availability } = await import("../drizzle/schema");
+        const { and, eq, gte, lt } = await import("drizzle-orm");
+        
+        const dayStart = new Date(weekStart);
+        dayStart.setHours(0, 0, 0, 0);
+        const dayEnd = new Date(dayStart);
+        dayEnd.setDate(dayEnd.getDate() + 7);
+        
+        await dbInstance.update(availability)
+          .set({ confirmedAt: new Date() })
+          .where(
+            and(
+              eq(availability.workerId, workerId),
+              gte(availability.weekStartDate, dayStart),
+              lt(availability.weekStartDate, dayEnd)
+            )
+          );
         
         return { success: true };
       }),

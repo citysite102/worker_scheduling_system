@@ -220,11 +220,15 @@ export async function getAvailabilityByWorkerAndWeek(workerId: number, weekStart
   const db = await getDb();
   if (!db) return undefined;
   
-  // 使用日期範圍查詢避免時區問題：匹配 weekStartDate 在同一天內的記錄
-  const dayStart = new Date(weekStartDate);
-  dayStart.setHours(0, 0, 0, 0);
+  // 使用 UTC 日期範圍查詢避免時區問題
+  const dayStart = new Date(Date.UTC(
+    weekStartDate.getUTCFullYear(),
+    weekStartDate.getUTCMonth(),
+    weekStartDate.getUTCDate(),
+    0, 0, 0, 0
+  ));
   const dayEnd = new Date(dayStart);
-  dayEnd.setDate(dayEnd.getDate() + 1);
+  dayEnd.setUTCDate(dayEnd.getUTCDate() + 1);
   
   const result = await db.select().from(availability).where(
     and(
@@ -233,6 +237,7 @@ export async function getAvailabilityByWorkerAndWeek(workerId: number, weekStart
       lt(availability.weekStartDate, dayEnd)
     )
   ).limit(1);
+  
   return result[0];
 }
 
@@ -240,11 +245,35 @@ export async function upsertAvailability(data: { workerId: number; weekStartDate
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   
-  const existing = await getAvailabilityByWorkerAndWeek(data.workerId, data.weekStartDate);
+  // 查詢該週的所有記錄（不只是第一筆）
+  const dayStart = new Date(Date.UTC(
+    data.weekStartDate.getUTCFullYear(),
+    data.weekStartDate.getUTCMonth(),
+    data.weekStartDate.getUTCDate(),
+    0, 0, 0, 0
+  ));
+  const dayEnd = new Date(dayStart);
+  dayEnd.setUTCDate(dayEnd.getUTCDate() + 7);
   
-  if (existing) {
-    await db.update(availability).set(data).where(eq(availability.id, existing.id));
-    return existing.id;
+  const existingRecords = await db.select().from(availability).where(
+    and(
+      eq(availability.workerId, data.workerId),
+      gte(availability.weekStartDate, dayStart),
+      lt(availability.weekStartDate, dayEnd)
+    )
+  );
+  
+  if (existingRecords.length > 0) {
+    // 如果有多筆記錄，刪除其他記錄，只保留第一筆
+    if (existingRecords.length > 1) {
+      const idsToDelete = existingRecords.slice(1).map(r => r.id);
+      for (const id of idsToDelete) {
+        await db.delete(availability).where(eq(availability.id, id));
+      }
+    }
+    // 更新第一筆記錄
+    await db.update(availability).set(data).where(eq(availability.id, existingRecords[0].id));
+    return existingRecords[0].id;
   } else {
     const result = await db.insert(availability).values(data);
     return result;

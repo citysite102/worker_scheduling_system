@@ -1,0 +1,30 @@
+{
+  "query": "SELECT \n  w.id as worker_id,\n  w.name,\n  a.id as avail_id,\n  a.weekStartDate,\n  a.weekEndDate,\n  a.timeBlocks,\n  a.confirmedAt,\n  a.createdAt\nFROM workers w\nLEFT JOIN availability a ON w.id = a.workerId\nWHERE w.name LIKE '%伊娜%'\nORDER BY a.createdAt DESC;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2iEKifVQ9gKtEas.9cbf5414b428 --database CMgr35KntT8tLtgpfJPejw --execute SELECT \n  w.id as worker_id,\n  w.name,\n  a.id as avail_id,\n  a.weekStartDate,\n  a.weekEndDate,\n  a.timeBlocks,\n  a.confirmedAt,\n  a.createdAt\nFROM workers w\nLEFT JOIN availability a ON w.id = a.workerId\nWHERE w.name LIKE '%伊娜%'\nORDER BY a.createdAt DESC;",
+  "rows": [
+    {
+      "worker_id": "30001",
+      "name": "慕伊娜Ina",
+      "avail_id": "60001",
+      "weekStartDate": "2026-02-08 05:00:00",
+      "weekEndDate": "2026-02-15 04:59:59",
+      "timeBlocks": "[{\"dayOfWeek\":1,\"timeSlots\":[{\"startTime\":\"09:00\",\"endTime\":\"17:00\"}]},{\"dayOfWeek\":4,\"timeSlots\":[{\"startTime\":\"09:00\",\"endTime\":\"17:00\"}]}]",
+      "confirmedAt": "2026-02-10 08:19:45",
+      "createdAt": "2026-02-10 08:19:25"
+    },
+    {
+      "worker_id": "30001",
+      "name": "慕伊娜Ina",
+      "avail_id": "30001",
+      "weekStartDate": "2026-02-08 00:00:00",
+      "weekEndDate": "2026-02-14 23:59:59",
+      "timeBlocks": "[{\"dayOfWeek\":1,\"timeSlots\":[{\"startTime\":\"09:00\",\"endTime\":\"17:00\"}]},{\"dayOfWeek\":2,\"timeSlots\":[{\"startTime\":\"09:00\",\"endTime\":\"17:00\"}]},{\"dayOfWeek\":3,\"timeSlots\":[{\"startTime\":\"09:00\",\"endTime\":\"17:00\"}]},{\"dayOfWeek\":4,\"timeSlots\":[{\"startTime\":\"09:00\",\"endTime\":\"17:00\"}]},{\"dayOfWeek\":5,\"timeSlots\":[{\"startTime\":\"09:00\",\"endTime\":\"17:00\"}]},{\"dayOfWeek\":6,\"timeSlots\":[{\"startTime\":\"09:00\",\"endTime\":\"21:01\"}]}]",
+      "confirmedAt": "2026-02-10 06:57:29",
+      "createdAt": "2026-02-10 06:56:05"
+    }
+  ],
+  "messages": [],
+  "stdout": "worker_id\tname\tavail_id\tweekStartDate\tweekEndDate\ttimeBlocks\tconfirmedAt\tcreatedAt\n30001\t慕伊娜Ina\t60001\t2026-02-08 05:00:00\t2026-02-15 04:59:59\t[{\"dayOfWeek\":1,\"timeSlots\":[{\"startTime\":\"09:00\",\"endTime\":\"17:00\"}]},{\"dayOfWeek\":4,\"timeSlots\":[{\"startTime\":\"09:00\",\"endTime\":\"17:00\"}]}]\t2026-02-10 08:19:45\t2026-02-10 08:19:25\n30001\t慕伊娜Ina\t30001\t2026-02-08 00:00:00\t2026-02-14 23:59:59\t[{\"dayOfWeek\":1,\"timeSlots\":[{\"startTime\":\"09:00\",\"endTime\":\"17:00\"}]},{\"dayOfWeek\":2,\"timeSlots\":[{\"startTime\":\"09:00\",\"endTime\":\"17:00\"}]},{\"dayOfWeek\":3,\"timeSlots\":[{\"startTime\":\"09:00\",\"endTime\":\"17:00\"}]},{\"dayOfWeek\":4,\"timeSlots\":[{\"startTime\":\"09:00\",\"endTime\":\"17:00\"}]},{\"dayOfWeek\":5,\"timeSlots\":[{\"startTime\":\"09:00\",\"endTime\":\"17:00\"}]},{\"dayOfWeek\":6,\"timeSlots\":[{\"startTime\":\"09:00\",\"endTime\":\"21:01\"}]}]\t2026-02-10 06:57:29\t2026-02-10 06:56:05\n",
+  "stderr": "",
+  "execution_time_ms": 1509
+}

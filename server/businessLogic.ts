@@ -64,7 +64,7 @@ export async function checkWorkerAvailability(
 ): Promise<{ available: boolean; reason?: string; availableTimeBlocks?: string }> {
   // 取得該週的週一日期
   const weekStartDate = getWeekStart(demandDate);
-
+  
   // 查詢該員工在該週的排班時間設置
   const availability = await getAvailabilityByWorkerAndWeek(workerId, weekStartDate);
 
@@ -236,14 +236,14 @@ export async function calculateDemandFeasibility(
 }
 
 /**
- * 取得指定日期所在週的週一日期（00:00:00）
+ * 取得指定日期所在週的週一日期（UTC 00:00:00）
  */
 export function getWeekStart(date: Date): Date {
   const d = new Date(date);
-  const day = d.getDay();
+  const day = d.getUTCDay();
   const diff = day === 0 ? -6 : 1 - day; // 週日為 0，需要往前 6 天
-  d.setDate(d.getDate() + diff);
-  d.setHours(0, 0, 0, 0);
+  d.setUTCDate(d.getUTCDate() + diff);
+  d.setUTCHours(0, 0, 0, 0);
   return d;
 }
 

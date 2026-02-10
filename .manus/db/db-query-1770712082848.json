@@ -1,0 +1,24 @@
+{
+  "query": "SELECT \n  a.id,\n  DATE_FORMAT(a.weekStartDate, '%Y-%m-%d') as week_start,\n  a.timeBlocks,\n  DATE_FORMAT(a.confirmedAt, '%Y-%m-%d %H:%i:%s') as confirmed_at,\n  DATE_FORMAT(a.createdAt, '%Y-%m-%d %H:%i:%s') as created_at\nFROM workers w\nJOIN availability a ON w.id = a.workerId\nWHERE w.name LIKE '%伊娜%'\nORDER BY a.weekStartDate DESC, a.createdAt DESC;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2iEKifVQ9gKtEas.9cbf5414b428 --database CMgr35KntT8tLtgpfJPejw --execute SELECT \n  a.id,\n  DATE_FORMAT(a.weekStartDate, '%Y-%m-%d') as week_start,\n  a.timeBlocks,\n  DATE_FORMAT(a.confirmedAt, '%Y-%m-%d %H:%i:%s') as confirmed_at,\n  DATE_FORMAT(a.createdAt, '%Y-%m-%d %H:%i:%s') as created_at\nFROM workers w\nJOIN availability a ON w.id = a.workerId\nWHERE w.name LIKE '%伊娜%'\nORDER BY a.weekStartDate DESC, a.createdAt DESC;",
+  "rows": [
+    {
+      "id": "60001",
+      "week_start": "2026-02-08",
+      "timeBlocks": "[{\"dayOfWeek\":1,\"timeSlots\":[{\"startTime\":\"09:00\",\"endTime\":\"17:00\"}]},{\"dayOfWeek\":4,\"timeSlots\":[{\"startTime\":\"09:00\",\"endTime\":\"17:00\"}]}]",
+      "confirmed_at": "2026-02-10 08:19:45",
+      "created_at": "2026-02-10 08:19:25"
+    },
+    {
+      "id": "30001",
+      "week_start": "2026-02-08",
+      "timeBlocks": "[{\"dayOfWeek\":1,\"timeSlots\":[{\"startTime\":\"09:00\",\"endTime\":\"17:00\"}]},{\"dayOfWeek\":2,\"timeSlots\":[{\"startTime\":\"09:00\",\"endTime\":\"17:00\"}]},{\"dayOfWeek\":3,\"timeSlots\":[{\"startTime\":\"09:00\",\"endTime\":\"17:00\"}]},{\"dayOfWeek\":4,\"timeSlots\":[{\"startTime\":\"09:00\",\"endTime\":\"17:00\"}]},{\"dayOfWeek\":5,\"timeSlots\":[{\"startTime\":\"09:00\",\"endTime\":\"17:00\"}]},{\"dayOfWeek\":6,\"timeSlots\":[{\"startTime\":\"09:00\",\"endTime\":\"21:01\"}]}]",
+      "confirmed_at": "2026-02-10 06:57:29",
+      "created_at": "2026-02-10 06:56:05"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tweek_start\ttimeBlocks\tconfirmed_at\tcreated_at\n60001\t2026-02-08\t[{\"dayOfWeek\":1,\"timeSlots\":[{\"startTime\":\"09:00\",\"endTime\":\"17:00\"}]},{\"dayOfWeek\":4,\"timeSlots\":[{\"startTime\":\"09:00\",\"endTime\":\"17:00\"}]}]\t2026-02-10 08:19:45\t2026-02-10 08:19:25\n30001\t2026-02-08\t[{\"dayOfWeek\":1,\"timeSlots\":[{\"startTime\":\"09:00\",\"endTime\":\"17:00\"}]},{\"dayOfWeek\":2,\"timeSlots\":[{\"startTime\":\"09:00\",\"endTime\":\"17:00\"}]},{\"dayOfWeek\":3,\"timeSlots\":[{\"startTime\":\"09:00\",\"endTime\":\"17:00\"}]},{\"dayOfWeek\":4,\"timeSlots\":[{\"startTime\":\"09:00\",\"endTime\":\"17:00\"}]},{\"dayOfWeek\":5,\"timeSlots\":[{\"startTime\":\"09:00\",\"endTime\":\"17:00\"}]},{\"dayOfWeek\":6,\"timeSlots\":[{\"startTime\":\"09:00\",\"endTime\":\"21:01\"}]}]\t2026-02-10 06:57:29\t2026-02-10 06:56:05\n",
+  "stderr": "",
+  "execution_time_ms": 1544
+}
