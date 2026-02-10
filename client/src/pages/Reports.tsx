@@ -72,9 +72,9 @@ export default function Reports() {
         csvContent += `${row.workerName},${row.clientName},${row.demandDate},${row.actualStart},${row.actualEnd},${row.actualHours}\n`;
       });
     } else {
-      csvContent = "\uFEFF客戶名稱,員工姓名,日期,開始時間,結束時間,實際工時(小時)\n";
+      csvContent = "\uFEFF客戶名稱,員工姓名,總工時(小時)\n";
       data.forEach((row: any) => {
-        csvContent += `${row.clientName},${row.workerName},${row.demandDate},${row.actualStart},${row.actualEnd},${row.actualHours}\n`;
+        csvContent += `${row.clientName},${row.workerName},${row.totalHours}\n`;
       });
     }
 
@@ -125,7 +125,7 @@ export default function Reports() {
                 <p className="text-xs text-muted-foreground mt-1.5">
                   {reportType === "worker"
                     ? "按員工分組，顯示客戶、日期、實際工時，方便計算薪資"
-                    : "按客戶分組，顯示員工、日期、實際工時，方便帳務對帳"}
+                    : "按客戶+員工彙總工時，方便計算薪資和帳務對帳"}
                 </p>
               </div>
 
@@ -255,10 +255,7 @@ export default function Reports() {
                           <>
                             <TableHead className="text-xs font-medium">客戶名稱</TableHead>
                             <TableHead className="text-xs font-medium">員工姓名</TableHead>
-                            <TableHead className="text-xs font-medium">日期</TableHead>
-                            <TableHead className="text-xs font-medium">開始時間</TableHead>
-                            <TableHead className="text-xs font-medium">結束時間</TableHead>
-                            <TableHead className="text-xs font-medium text-right">實際工時(小時)</TableHead>
+                            <TableHead className="text-xs font-medium text-right">總工時(小時)</TableHead>
                           </>
                         )}
                       </TableRow>
@@ -279,10 +276,7 @@ export default function Reports() {
                             <>
                               <TableCell className="font-medium text-sm">{row.clientName}</TableCell>
                               <TableCell className="text-sm">{row.workerName}</TableCell>
-                              <TableCell className="text-sm">{row.demandDate}</TableCell>
-                              <TableCell className="text-sm">{row.actualStart}</TableCell>
-                              <TableCell className="text-sm">{row.actualEnd}</TableCell>
-                              <TableCell className="text-right text-sm tabular-nums">{row.actualHours}</TableCell>
+                              <TableCell className="text-right text-sm tabular-nums">{row.totalHours}</TableCell>
                             </>
                           )}
                         </TableRow>

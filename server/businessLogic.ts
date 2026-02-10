@@ -202,9 +202,10 @@ export async function calculateDemandFeasibility(
       weekEnd.setHours(23, 59, 59, 999);
 
       const weekAssignments = await getAssignmentsByWorker(worker.id, weekStart, weekEnd);
-      const weekHours = weekAssignments
+      const weekMinutes = weekAssignments
         .filter((a) => a.status !== "cancelled")
         .reduce((sum, a) => sum + (a.scheduledHours || 0), 0);
+      const weekHours = weekMinutes / 60; // scheduledHours 是分鐘，轉換為小時
 
       const last7DaysStart = new Date(demandDate);
       last7DaysStart.setDate(last7DaysStart.getDate() - 7);

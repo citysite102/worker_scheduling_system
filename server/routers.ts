@@ -789,7 +789,7 @@ export const appRouter = router({
         return records;
       }),
 
-    // 客戶工時報表
+    // 客戶工時報表（彙總格式）
     clientHours: publicProcedure
       .input(z.object({
         startDate: z.date(),
@@ -803,7 +803,14 @@ export const appRouter = router({
           ? allDemands.filter(d => d.clientId === input.clientId)
           : allDemands;
         
-        const records = [];
+        // 使用 Map 彙總：key = "clientId-workerId"
+        const summaryMap = new Map<string, {
+          clientId: number;
+          clientName: string;
+          workerId: number;
+          workerName: string;
+          totalMinutes: number;
+        }>();
         
         for (const demand of clientDemands) {
           const assignments = await db.getAssignmentsByDemand(demand.id);
@@ -817,17 +824,37 @@ export const appRouter = router({
           for (const assignment of completed) {
             const worker = await db.getWorkerById(assignment.workerId);
             const client = await db.getClientById(demand.clientId);
+            if (!worker || !client) continue;
             
-            records.push({
-              clientName: client?.name || "",
-              workerName: worker?.name || "",
-              demandDate: logic.formatDate(new Date(demand.date)),
-              actualStart: logic.formatTime(new Date(assignment.actualStart || "")),
-              actualEnd: logic.formatTime(new Date(assignment.actualEnd || "")),
-              actualHours: ((assignment.actualHours || 0) / 60).toFixed(2),
-            });
+            const key = `${client.id}-${worker.id}`;
+            const existing = summaryMap.get(key);
+            
+            if (existing) {
+              existing.totalMinutes += assignment.actualHours || 0;
+            } else {
+              summaryMap.set(key, {
+                clientId: client.id,
+                clientName: client.name,
+                workerId: worker.id,
+                workerName: worker.name,
+                totalMinutes: assignment.actualHours || 0,
+              });
+            }
           }
         }
+        
+        // 轉換為陣列並計算小時
+        const records = Array.from(summaryMap.values()).map(item => ({
+          clientName: item.clientName,
+          workerName: item.workerName,
+          totalHours: (item.totalMinutes / 60).toFixed(2),
+        }));
+        
+        // 排序：客戶名稱 → 員工名稱
+        records.sort((a, b) => {
+          if (a.clientName !== b.clientName) return a.clientName.localeCompare(b.clientName, "zh-TW");
+          return a.workerName.localeCompare(b.workerName, "zh-TW");
+        });
         
         return records;
       }),
