@@ -90,6 +90,81 @@ export const appRouter = router({
         await db.updateWorker(id, updateData);
         return { success: true };
       }),
+
+    // 員工詳情：包含基本資料、歷史指派、累計工時、排班紀錄
+    detail: publicProcedure
+      .input(z.object({ id: z.number() }))
+      .query(async ({ input }) => {
+        const worker = await db.getWorkerById(input.id);
+        if (!worker) throw new TRPCError({ code: "NOT_FOUND", message: "員工不存在" });
+
+        // 歷史指派（附帶需求單與客戶資訊）
+        const assignmentHistory = await db.getWorkerAssignmentHistory(input.id);
+        const enrichedAssignments = await Promise.all(
+          assignmentHistory.map(async (a) => {
+            const demand = await db.getDemandById(a.demandId);
+            const client = demand ? await db.getClientById(demand.clientId) : null;
+            return {
+              ...a,
+              demand: demand ? {
+                id: demand.id,
+                date: demand.date,
+                startTime: demand.startTime,
+                endTime: demand.endTime,
+                location: demand.location,
+              } : null,
+              clientName: client?.name || "未知",
+            };
+          })
+        );
+
+        // 累計工時統計
+        const completedAssignments = assignmentHistory.filter(a => a.status === "completed");
+        const totalScheduledMinutes = assignmentHistory
+          .filter(a => a.status !== "cancelled")
+          .reduce((sum, a) => sum + (a.scheduledHours || 0), 0);
+        const totalActualMinutes = completedAssignments
+          .reduce((sum, a) => sum + (a.actualHours || 0), 0);
+        const totalVarianceMinutes = completedAssignments
+          .reduce((sum, a) => sum + (a.varianceHours || 0), 0);
+
+        // 排班紀錄
+        const availabilityHistory = await db.getWorkerAvailabilityHistory(input.id);
+        const parsedAvailability = availabilityHistory.map((av) => {
+          const blocks = JSON.parse(av.timeBlocks || "[]");
+          return {
+            id: av.id,
+            weekStartDate: av.weekStartDate,
+            weekEndDate: av.weekEndDate,
+            confirmed: !!av.confirmedAt,
+            confirmedAt: av.confirmedAt,
+            days: blocks.map((b: any) => {
+              let timeSlots = b.timeSlots;
+              if (!timeSlots && b.startTime && b.endTime) {
+                timeSlots = [{ startTime: b.startTime, endTime: b.endTime }];
+              }
+              return {
+                dayOfWeek: b.dayOfWeek,
+                timeSlots: timeSlots || [],
+              };
+            }),
+          };
+        });
+
+        return {
+          worker,
+          assignments: enrichedAssignments,
+          availability: parsedAvailability,
+          stats: {
+            totalAssignments: assignmentHistory.filter(a => a.status !== "cancelled").length,
+            completedAssignments: completedAssignments.length,
+            cancelledAssignments: assignmentHistory.filter(a => a.status === "cancelled").length,
+            totalScheduledHours: +(totalScheduledMinutes / 60).toFixed(1),
+            totalActualHours: +(totalActualMinutes / 60).toFixed(1),
+            totalVarianceHours: +(totalVarianceMinutes / 60).toFixed(1),
+          },
+        };
+      }),
   }),
 
   // ============ Clients ============

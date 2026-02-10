@@ -10,6 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Plus, Search, Edit, UserX, UserCheck, Loader2, Phone, Mail, GraduationCap, ShieldCheck, HeartPulse, Filter } from "lucide-react";
+import { Link } from "wouter";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -299,7 +300,7 @@ export default function Workers() {
                 >
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <span className="font-medium text-sm">{worker.name}</span>
+                      <Link href={`/workers/${worker.id}`} className="font-medium text-sm text-blue-600 hover:text-blue-800 hover:underline cursor-pointer">{worker.name}</Link>
                       <Badge
                         variant="outline"
                         className={`text-xs ${

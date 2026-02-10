@@ -393,3 +393,23 @@ export async function updateUserRole(userId: number, role: "admin" | "user") {
   if (!db) throw new Error("Database not available");
   await db.update(users).set({ role }).where(eq(users.id, userId));
 }
+
+// ============ Worker Detail Queries ============
+
+/** 取得員工所有歷史指派（含需求單與客戶資訊），按日期倒序 */
+export async function getWorkerAssignmentHistory(workerId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return await db.select().from(assignments)
+    .where(eq(assignments.workerId, workerId))
+    .orderBy(desc(assignments.scheduledStart));
+}
+
+/** 取得員工所有排班紀錄，按週倒序 */
+export async function getWorkerAvailabilityHistory(workerId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return await db.select().from(availability)
+    .where(eq(availability.workerId, workerId))
+    .orderBy(desc(availability.weekStartDate));
+}
