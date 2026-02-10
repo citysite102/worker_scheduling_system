@@ -94,17 +94,6 @@ export default function Workers() {
 
   const activeFilterCount = [schoolFilter, workPermitFilter !== undefined, healthCheckFilter !== undefined].filter(Boolean).length;
 
-  if (isLoading) {
-    return (
-      <div className="p-6 lg:p-8 max-w-6xl mx-auto">
-        <h1 className="text-2xl font-semibold mb-6">員工管理</h1>
-        <div className="flex items-center justify-center py-12">
-          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="p-6 lg:p-8 max-w-6xl mx-auto">
       <div className="flex items-center justify-between mb-8">
@@ -289,7 +278,11 @@ export default function Workers() {
           </div>
         </CardHeader>
         <CardContent>
-          {!workers || workers.length === 0 ? (
+          {isLoading ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+            </div>
+          ) : !workers || workers.length === 0 ? (
             <div className="text-center py-10 text-muted-foreground text-sm">無員工資料</div>
           ) : (
             <div className="space-y-2">
