@@ -703,6 +703,17 @@ export const appRouter = router({
         await db.deleteAssignment(input.id);
         return { success: true };
       }),
+
+    cancel: publicProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input }) => {
+        const assignment = await db.getAssignmentById(input.id);
+        if (!assignment) throw new TRPCError({ code: "NOT_FOUND", message: "指派記錄不存在" });
+        
+        // 更新狀態為 cancelled
+        await db.updateAssignment(input.id, { status: "cancelled" });
+        return { success: true };
+      }),
   }),
 
   // ============ Reports ============

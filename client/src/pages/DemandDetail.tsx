@@ -14,6 +14,16 @@ import {
 import { useParams, useLocation } from "wouter";
 import { useState, useMemo } from "react";
 import { toast } from "sonner";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 export default function DemandDetail() {
   const params = useParams();
@@ -23,6 +33,8 @@ export default function DemandDetail() {
   const [selectedWorkerIds, setSelectedWorkerIds] = useState<number[]>([]);
   const [isInactiveExpanded, setIsInactiveExpanded] = useState(false);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
+  const [assignmentToCancel, setAssignmentToCancel] = useState<number | null>(null);
 
   // 篩選狀態
   const [filterSchool, setFilterSchool] = useState("");
@@ -61,6 +73,18 @@ export default function DemandDetail() {
     },
     onError: (error) => {
       toast.error(`指派失敗：${error.message}`);
+    },
+  });
+
+  const cancelMutation = trpc.assignments.cancel.useMutation({
+    onSuccess: () => {
+      toast.success("已取消指派");
+      refetch();
+      setCancelDialogOpen(false);
+      setAssignmentToCancel(null);
+    },
+    onError: (error) => {
+      toast.error(`取消失敗：${error.message}`);
     },
   });
 
@@ -431,13 +455,27 @@ export default function DemandDetail() {
                         {assignment.worker?.phone} · {assignment.worker?.email}
                       </div>
                     </div>
-                    <div className="text-xs text-muted-foreground">
-                      <Badge variant="secondary" className="bg-blue-100 text-blue-700">
+                    <div className="flex items-center gap-2">
+                      <Badge variant="secondary" className="bg-blue-100 text-blue-700 text-xs">
                         {assignment.status === "assigned" && "已指派"}
                         {assignment.status === "completed" && "已完成"}
                         {assignment.status === "cancelled" && "已取消"}
                         {assignment.status === "disputed" && "異常"}
                       </Badge>
+                      {assignment.status === "assigned" && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-7 px-2 text-xs text-red-600 hover:text-red-700 hover:bg-red-50"
+                          onClick={() => {
+                            setAssignmentToCancel(assignment.id);
+                            setCancelDialogOpen(true);
+                          }}
+                        >
+                          <X className="h-3.5 w-3.5 mr-1" />
+                          取消指派
+                        </Button>
+                      )}
                     </div>
                   </div>
                 ))}
@@ -651,6 +689,52 @@ export default function DemandDetail() {
           </Card>
         </Collapsible>
       </div>
+
+      {/* 取消指派確認對話框 */}
+      <AlertDialog open={cancelDialogOpen} onOpenChange={setCancelDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>確認取消指派</AlertDialogTitle>
+            <AlertDialogDescription>
+              {demand && (() => {
+                const demandDateTime = new Date(demand.date);
+                const [startHour, startMin] = demand.startTime.split(":").map(Number);
+                demandDateTime.setHours(startHour, startMin, 0, 0);
+                const now = new Date();
+                const hasStarted = demandDateTime <= now;
+
+                if (hasStarted) {
+                  return (
+                    <div className="space-y-2">
+                      <div className="flex items-start gap-2 p-3 bg-amber-50 border border-amber-200 rounded-md">
+                        <AlertCircle className="h-5 w-5 text-amber-600 flex-shrink-0 mt-0.5" />
+                        <div className="text-sm text-amber-900">
+                          <div className="font-medium mb-1">注意：排班時間已開始</div>
+                          <div>此需求單的排班時間已經開始，取消指派可能影響現場作業安排。請確認是否繼續取消指派？</div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                }
+                return "確定要取消這位員工的指派嗎？取消後該員工將重新出現在可指派列表中。";
+              })()}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>不，取消</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (assignmentToCancel) {
+                  cancelMutation.mutate({ id: assignmentToCancel });
+                }
+              }}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              確定取消指派
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
