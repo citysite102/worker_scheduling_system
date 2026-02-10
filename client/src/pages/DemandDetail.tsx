@@ -112,9 +112,14 @@ export default function DemandDetail() {
     },
   });
 
-  // 已指派的員工 ID 列表
+  // 已指派的員工 ID 列表（排除已取消的）
   const assignedWorkerIds = useMemo(() => {
-    return assignments?.map(a => a.workerId) || [];
+    return assignments?.filter(a => a.status !== "cancelled").map(a => a.workerId) || [];
+  }, [assignments]);
+
+  // 有效的已指派記錄（排除已取消的）
+  const activeAssignments = useMemo(() => {
+    return assignments?.filter(a => a.status !== "cancelled") || [];
   }, [assignments]);
 
   // 計算篩選後的員工列表（排除已指派的員工）
@@ -439,7 +444,7 @@ export default function DemandDetail() {
                   <CheckCircle2 className="h-3.5 w-3.5 text-blue-600" />
                 </div>
                 <CardTitle className="text-base font-medium">
-                  已指派 ({assignments.length})
+                  已指派 ({activeAssignments.length})
                 </CardTitle>
               </div>
               <CardDescription className="text-xs">
@@ -448,7 +453,7 @@ export default function DemandDetail() {
             </CardHeader>
             <CardContent>
               <div className="space-y-1.5">
-                {assignments.map((assignment) => (
+                {activeAssignments.map((assignment) => (
                   <div
                     key={assignment.id}
                     className="flex items-center gap-3 p-3 rounded-lg border border-blue-200 bg-blue-50/30"
@@ -515,8 +520,8 @@ export default function DemandDetail() {
               <div className="text-sm">
                 已選 <span className="font-semibold text-blue-600">{selectedWorkerIds.length}</span>
                 {" / "}
-                <span className="font-semibold">{Math.max(0, demand.requiredWorkers - (assignments?.length || 0))}</span> 人
-                {gap > 0 && <span className="text-muted-foreground ml-1">（還差 {gap - (assignments?.length || 0)} 人）</span>}
+                <span className="font-semibold">{Math.max(0, demand.requiredWorkers - (activeAssignments?.length || 0))}</span> 人
+                {gap > 0 && <span className="text-muted-foreground ml-1">（還差 {gap - (activeAssignments?.length || 0)} 人）</span>}
                 {hasActiveFilters && (
                   <span className="text-muted-foreground ml-2">
                     · 篩選後 {filteredAvailableWorkers.length} 人可用
