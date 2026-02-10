@@ -42,6 +42,12 @@ export default function DemandDetail() {
     { enabled: !!demand }
   );
 
+  // 查詢已指派的員工
+  const { data: assignments, isLoading: assignmentsLoading } = trpc.assignments.getByDemand.useQuery(
+    { demandId },
+    { enabled: !!demand }
+  );
+
   const batchCreateMutation = trpc.assignments.batchCreate.useMutation({
     onSuccess: (result) => {
       if (result.success) {
@@ -58,10 +64,17 @@ export default function DemandDetail() {
     },
   });
 
-  // 計算篩選後的員工列表
+  // 已指派的員工 ID 列表
+  const assignedWorkerIds = useMemo(() => {
+    return assignments?.map(a => a.workerId) || [];
+  }, [assignments]);
+
+  // 計算篩選後的員工列表（排除已指派的員工）
   const filteredAvailableWorkers = useMemo(() => {
     if (!feasibility) return [];
-    return feasibility.availableWorkers.filter((worker) => {
+    return feasibility.availableWorkers
+      .filter((worker) => !assignedWorkerIds.includes(worker.id))
+      .filter((worker) => {
       if (filterSchool && !(worker.school || "").toLowerCase().includes(filterSchool.toLowerCase())) {
         return false;
       }
@@ -369,6 +382,70 @@ export default function DemandDetail() {
           </CardContent>
         </Card>
 
+        {/* 已指派員工 */}
+        {assignments && assignments.length > 0 && (
+          <Card className="shadow-sm border-border/60">
+            <CardHeader className="pb-3">
+              <div className="flex items-center gap-2">
+                <div className="h-5 w-5 rounded-full bg-blue-50 flex items-center justify-center">
+                  <CheckCircle2 className="h-3.5 w-3.5 text-blue-600" />
+                </div>
+                <CardTitle className="text-base font-medium">
+                  已指派 ({assignments.length})
+                </CardTitle>
+              </div>
+              <CardDescription className="text-xs">
+                已確認指派的員工
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-1.5">
+                {assignments.map((assignment) => (
+                  <div
+                    key={assignment.id}
+                    className="flex items-center gap-3 p-3 rounded-lg border border-blue-200 bg-blue-50/30"
+                  >
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="font-medium text-sm">{assignment.worker?.name}</span>
+                        {assignment.worker?.school && (
+                          <Badge variant="outline" className="text-xs px-1.5 py-0 bg-white">
+                            <GraduationCap className="h-3 w-3 mr-0.5" />
+                            {assignment.worker.school}
+                          </Badge>
+                        )}
+                        {assignment.worker?.hasWorkPermit && (
+                          <Badge variant="outline" className="text-xs px-1.5 py-0 bg-emerald-50 text-emerald-700 border-emerald-200">
+                            <FileCheck className="h-3 w-3 mr-0.5" />
+                            簽證
+                          </Badge>
+                        )}
+                        {assignment.worker?.hasHealthCheck && (
+                          <Badge variant="outline" className="text-xs px-1.5 py-0 bg-blue-50 text-blue-700 border-blue-200">
+                            <Stethoscope className="h-3 w-3 mr-0.5" />
+                            體檢
+                          </Badge>
+                        )}
+                      </div>
+                      <div className="text-xs text-muted-foreground mt-0.5">
+                        {assignment.worker?.phone} · {assignment.worker?.email}
+                      </div>
+                    </div>
+                    <div className="text-xs text-muted-foreground">
+                      <Badge variant="secondary" className="bg-blue-100 text-blue-700">
+                        {assignment.status === "assigned" && "已指派"}
+                        {assignment.status === "completed" && "已完成"}
+                        {assignment.status === "cancelled" && "已取消"}
+                        {assignment.status === "disputed" && "異常"}
+                      </Badge>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {/* 操作列 */}
         <Card className="shadow-sm border-border/60">
           <CardContent className="p-4">
@@ -376,8 +453,8 @@ export default function DemandDetail() {
               <div className="text-sm">
                 已選 <span className="font-semibold text-blue-600">{selectedWorkerIds.length}</span>
                 {" / "}
-                <span className="font-semibold">{demand.requiredWorkers}</span> 人
-                {gap > 0 && <span className="text-muted-foreground ml-1">（還差 {gap} 人）</span>}
+                <span className="font-semibold">{Math.max(0, demand.requiredWorkers - (assignments?.length || 0))}</span> 人
+                {gap > 0 && <span className="text-muted-foreground ml-1">（還差 {gap - (assignments?.length || 0)} 人）</span>}
                 {hasActiveFilters && (
                   <span className="text-muted-foreground ml-2">
                     · 篩選後 {filteredAvailableWorkers.length} 人可用
