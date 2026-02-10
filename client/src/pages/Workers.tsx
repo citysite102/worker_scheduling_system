@@ -72,6 +72,8 @@ export default function Workers() {
       phone: formData.get("phone") as string,
       email: (formData.get("email") as string) || undefined,
       school: (formData.get("school") as string) || undefined,
+      lineId: (formData.get("lineId") as string) || undefined,
+      whatsappId: (formData.get("whatsappId") as string) || undefined,
       hasWorkPermit: formData.get("hasWorkPermit") === "on",
       hasHealthCheck: formData.get("hasHealthCheck") === "on",
       workPermitExpiryDate: workPermitDate ? new Date(workPermitDate) : undefined,
@@ -136,6 +138,16 @@ export default function Workers() {
                   <div className="grid gap-2">
                     <Label htmlFor="school">學校</Label>
                     <Input id="school" name="school" defaultValue={editingWorker?.school} placeholder="例：台大、政大" />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="grid gap-2">
+                    <Label htmlFor="lineId">Line ID</Label>
+                    <Input id="lineId" name="lineId" defaultValue={editingWorker?.lineId} placeholder="例：@username" />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="whatsappId">WhatsApp ID</Label>
+                    <Input id="whatsappId" name="whatsappId" defaultValue={editingWorker?.whatsappId} placeholder="例：+886912345678" />
                   </div>
                 </div>
                 <div className="flex gap-6 pt-2">

@@ -38,6 +38,8 @@ export const workers = mysqlTable("workers", {
   hasHealthCheck: int("hasHealthCheck").default(0).notNull(), // 0=無, 1=有體檢
   workPermitExpiryDate: timestamp("workPermitExpiryDate"), // 工作許可到期日，可為 null 表示無期限
   attendanceNotes: text("attendanceNotes"), // 出勤備註（遲到/曠職記錄）
+  lineId: varchar("lineId", { length: 100 }), // Line ID（選填）
+  whatsappId: varchar("whatsappId", { length: 100 }), // WhatsApp ID（選填）
   status: mysqlEnum("status", ["active", "inactive"]).default("active").notNull(),
   note: text("note"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
