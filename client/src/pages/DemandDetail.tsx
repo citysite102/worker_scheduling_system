@@ -41,7 +41,8 @@ export default function DemandDetail() {
   const [filterWorkPermit, setFilterWorkPermit] = useState<string>("all"); // "all" | "yes" | "no"
   const [filterHealthCheck, setFilterHealthCheck] = useState<string>("all"); // "all" | "yes" | "no"
 
-  const { data: demand, isLoading, refetch } = trpc.demands.getById.useQuery({ id: demandId });
+  const utils = trpc.useUtils();
+  const { data: demand, isLoading } = trpc.demands.getById.useQuery({ id: demandId });
 
   const { data: feasibility, isLoading: feasibilityLoading } = trpc.demands.feasibility.useQuery(
     {
@@ -65,10 +66,25 @@ export default function DemandDetail() {
       if (result.success) {
         toast.success(`已成功指派 ${result.successCount} 位員工`);
         setSelectedWorkerIds([]);
-        refetch();
+        // 重新查詢 assignments 和 feasibility
+        utils.assignments.getByDemand.invalidate({ demandId });
+        utils.demands.feasibility.invalidate({
+          demandId,
+          date: demand?.date || new Date(),
+          startTime: demand?.startTime || "00:00",
+          endTime: demand?.endTime || "00:00",
+          requiredWorkers: demand?.requiredWorkers || 0,
+        });
       } else {
         toast.error(`部分指派失敗：${result.errors.join("、")}`);
-        refetch();
+        utils.assignments.getByDemand.invalidate({ demandId });
+        utils.demands.feasibility.invalidate({
+          demandId,
+          date: demand?.date || new Date(),
+          startTime: demand?.startTime || "00:00",
+          endTime: demand?.endTime || "00:00",
+          requiredWorkers: demand?.requiredWorkers || 0,
+        });
       }
     },
     onError: (error) => {
@@ -79,7 +95,15 @@ export default function DemandDetail() {
   const cancelMutation = trpc.assignments.cancel.useMutation({
     onSuccess: () => {
       toast.success("已取消指派");
-      refetch();
+      // 重新查詢 assignments 和 feasibility，讓員工重新出現在對應的列表中
+      utils.assignments.getByDemand.invalidate({ demandId });
+      utils.demands.feasibility.invalidate({
+        demandId,
+        date: demand?.date || new Date(),
+        startTime: demand?.startTime || "00:00",
+        endTime: demand?.endTime || "00:00",
+        requiredWorkers: demand?.requiredWorkers || 0,
+      });
       setCancelDialogOpen(false);
       setAssignmentToCancel(null);
     },
