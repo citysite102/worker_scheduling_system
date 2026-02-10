@@ -1,0 +1,18 @@
+{
+  "query": "\nSELECT w.id, w.name, a.weekStartDate, a.weekEndDate, a.timeBlocks, a.confirmedAt\nFROM workers w\nLEFT JOIN availability a ON w.id = a.workerId\nWHERE w.name = '測試員工'\nORDER BY a.weekStartDate DESC;\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2iEKifVQ9gKtEas.9cbf5414b428 --database CMgr35KntT8tLtgpfJPejw --execute \nSELECT w.id, w.name, a.weekStartDate, a.weekEndDate, a.timeBlocks, a.confirmedAt\nFROM workers w\nLEFT JOIN availability a ON w.id = a.workerId\nWHERE w.name = '測試員工'\nORDER BY a.weekStartDate DESC;\n",
+  "rows": [
+    {
+      "id": "60003",
+      "name": "測試員工",
+      "weekStartDate": "2026-02-09 00:00:00",
+      "weekEndDate": "2026-02-16 00:00:00",
+      "timeBlocks": "[{\"dayOfWeek\":4,\"timeSlots\":[{\"startTime\":\"09:00\",\"endTime\":\"17:00\"}]}]",
+      "confirmedAt": "2026-02-10 09:05:50"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\tweekStartDate\tweekEndDate\ttimeBlocks\tconfirmedAt\n60003\t測試員工\t2026-02-09 00:00:00\t2026-02-16 00:00:00\t[{\"dayOfWeek\":4,\"timeSlots\":[{\"startTime\":\"09:00\",\"endTime\":\"17:00\"}]}]\t2026-02-10 09:05:50\n",
+  "stderr": "",
+  "execution_time_ms": 1518
+}

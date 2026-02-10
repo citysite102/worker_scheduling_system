@@ -1,0 +1,8 @@
+{
+  "query": "\nSELECT w.id, w.name, a.weekStartDate, a.weekEndDate, a.timeBlocks, a.confirmedAt\nFROM worker w\nLEFT JOIN availability a ON w.id = a.workerId\nWHERE w.name = '測試員工'\nORDER BY a.weekStartDate DESC;\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2iEKifVQ9gKtEas.9cbf5414b428 --database CMgr35KntT8tLtgpfJPejw --execute \nSELECT w.id, w.name, a.weekStartDate, a.weekEndDate, a.timeBlocks, a.confirmedAt\nFROM worker w\nLEFT JOIN availability a ON w.id = a.workerId\nWHERE w.name = '測試員工'\nORDER BY a.weekStartDate DESC;\n",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1146 (42S02) at line 2: Table 'cmgr35kntt8tltgpfjpejw.worker' doesn't exist"
+  ]
+}
