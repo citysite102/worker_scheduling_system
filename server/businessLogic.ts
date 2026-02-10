@@ -82,8 +82,8 @@ export async function checkWorkerAvailability(
     };
   }
 
-  // 解析 timeBlocks
-  let timeBlocks: Array<{ dayOfWeek: number; startTime: string; endTime: string }> = [];
+  // 解析 timeBlocks（支援新舊格式）
+  let timeBlocks: Array<{ dayOfWeek: number; startTime?: string; endTime?: string; timeSlots?: Array<{ startTime: string; endTime: string }> }> = [];
   try {
     timeBlocks = JSON.parse(availability.timeBlocks);
   } catch (error) {
@@ -108,9 +108,21 @@ export async function checkWorkerAvailability(
   }
 
   // 檢查需求時段是否完全被任一可排班時段覆蓋
+  // 支援新格式 { dayOfWeek, timeSlots: [{startTime, endTime}] } 和舊格式 { dayOfWeek, startTime, endTime }
   const isWithinAnyBlock = dayBlocks.some((block) => {
-    return timeToMinutes(startTime) >= timeToMinutes(block.startTime) &&
-           timeToMinutes(endTime) <= timeToMinutes(block.endTime);
+    // 新格式：有 timeSlots 陣列
+    if (block.timeSlots && Array.isArray(block.timeSlots)) {
+      return block.timeSlots.some((slot) => {
+        return timeToMinutes(startTime) >= timeToMinutes(slot.startTime) &&
+               timeToMinutes(endTime) <= timeToMinutes(slot.endTime);
+      });
+    }
+    // 舊格式：直接有 startTime 和 endTime
+    if (block.startTime && block.endTime) {
+      return timeToMinutes(startTime) >= timeToMinutes(block.startTime) &&
+             timeToMinutes(endTime) <= timeToMinutes(block.endTime);
+    }
+    return false;
   });
 
   if (!isWithinAnyBlock) {
@@ -256,11 +268,22 @@ function timeToMinutes(time: string): number {
 /**
  * 格式化 timeBlocks 為可讀字串
  */
-function formatTimeBlocks(timeBlocks: Array<{ dayOfWeek: number; startTime: string; endTime: string }>): string {
+function formatTimeBlocks(timeBlocks: Array<{ dayOfWeek: number; startTime?: string; endTime?: string; timeSlots?: Array<{ startTime: string; endTime: string }> }>): string {
   const dayNames = ["", "週一", "週二", "週三", "週四", "週五", "週六", "週日"];
   const grouped = timeBlocks.reduce((acc, block) => {
     if (!acc[block.dayOfWeek]) acc[block.dayOfWeek] = [];
-    acc[block.dayOfWeek].push(`${block.startTime}-${block.endTime}`);
+    
+    // 支援新格式：有 timeSlots 陣列
+    if (block.timeSlots && Array.isArray(block.timeSlots)) {
+      block.timeSlots.forEach((slot) => {
+        acc[block.dayOfWeek].push(`${slot.startTime}-${slot.endTime}`);
+      });
+    }
+    // 支援舊格式：直接有 startTime 和 endTime
+    else if (block.startTime && block.endTime) {
+      acc[block.dayOfWeek].push(`${block.startTime}-${block.endTime}`);
+    }
+    
     return acc;
   }, {} as Record<number, string[]>);
 

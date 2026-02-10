@@ -1,0 +1,8 @@
+{
+  "query": "\nSELECT \n  d.id as demandId,\n  c.name as clientName,\n  d.location,\n  d.demandDate,\n  DATE_FORMAT(d.demandDate, '%Y-%m-%d %H:%i:%s') as demandDateFormatted,\n  d.startTime,\n  d.endTime,\n  d.requiredWorkers\nFROM demands d\nJOIN clients c ON d.clientId = c.id\nWHERE c.name LIKE '%米窩%'\nORDER BY d.demandDate DESC\nLIMIT 5;\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2iEKifVQ9gKtEas.9cbf5414b428 --database CMgr35KntT8tLtgpfJPejw --execute \nSELECT \n  d.id as demandId,\n  c.name as clientName,\n  d.location,\n  d.demandDate,\n  DATE_FORMAT(d.demandDate, '%Y-%m-%d %H:%i:%s') as demandDateFormatted,\n  d.startTime,\n  d.endTime,\n  d.requiredWorkers\nFROM demands d\nJOIN clients c ON d.clientId = c.id\nWHERE c.name LIKE '%米窩%'\nORDER BY d.demandDate DESC\nLIMIT 5;\n",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1054 (42S22) at line 2: Unknown column 'd.demandDate' in 'order clause'"
+  ]
+}

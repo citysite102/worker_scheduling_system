@@ -1,0 +1,18 @@
+{
+  "query": "\nSELECT \n  w.id as workerId,\n  w.name as workerName,\n  a.weekStartDate,\n  DATE_FORMAT(a.weekStartDate, '%Y-%m-%d %H:%i:%s') as weekStartFormatted,\n  a.confirmedAt,\n  SUBSTRING(a.timeBlocks, 1, 300) as timeBlocksPreview\nFROM workers w\nLEFT JOIN availability a ON w.id = a.workerId\nWHERE w.name LIKE '%伊娜%'\nORDER BY a.weekStartDate DESC\nLIMIT 5;\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2iEKifVQ9gKtEas.9cbf5414b428 --database CMgr35KntT8tLtgpfJPejw --execute \nSELECT \n  w.id as workerId,\n  w.name as workerName,\n  a.weekStartDate,\n  DATE_FORMAT(a.weekStartDate, '%Y-%m-%d %H:%i:%s') as weekStartFormatted,\n  a.confirmedAt,\n  SUBSTRING(a.timeBlocks, 1, 300) as timeBlocksPreview\nFROM workers w\nLEFT JOIN availability a ON w.id = a.workerId\nWHERE w.name LIKE '%伊娜%'\nORDER BY a.weekStartDate DESC\nLIMIT 5;\n",
+  "rows": [
+    {
+      "workerId": "30001",
+      "workerName": "慕伊娜Ina",
+      "weekStartDate": "2026-02-08 00:00:00",
+      "weekStartFormatted": "2026-02-08 00:00:00",
+      "confirmedAt": "2026-02-10 06:57:29",
+      "timeBlocksPreview": "[{\"dayOfWeek\":1,\"timeSlots\":[{\"startTime\":\"09:00\",\"endTime\":\"17:00\"}]},{\"dayOfWeek\":2,\"timeSlots\":[{\"startTime\":\"09:00\",\"endTime\":\"17:00\"}]},{\"dayOfWeek\":3,\"timeSlots\":[{\"startTime\":\"09:00\",\"endTime\":\"17:00\"}]},{\"dayOfWeek\":4,\"timeSlots\":[{\"startTime\":\"09:00\",\"endTime\":\"17:00\"}]},{\"dayOfWeek\":5,\"tim"
+    }
+  ],
+  "messages": [],
+  "stdout": "workerId\tworkerName\tweekStartDate\tweekStartFormatted\tconfirmedAt\ttimeBlocksPreview\n30001\t慕伊娜Ina\t2026-02-08 00:00:00\t2026-02-08 00:00:00\t2026-02-10 06:57:29\t[{\"dayOfWeek\":1,\"timeSlots\":[{\"startTime\":\"09:00\",\"endTime\":\"17:00\"}]},{\"dayOfWeek\":2,\"timeSlots\":[{\"startTime\":\"09:00\",\"endTime\":\"17:00\"}]},{\"dayOfWeek\":3,\"timeSlots\":[{\"startTime\":\"09:00\",\"endTime\":\"17:00\"}]},{\"dayOfWeek\":4,\"timeSlots\":[{\"startTime\":\"09:00\",\"endTime\":\"17:00\"}]},{\"dayOfWeek\":5,\"tim\n",
+  "stderr": "",
+  "execution_time_ms": 1597
+}

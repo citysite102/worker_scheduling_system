@@ -1,0 +1,20 @@
+{
+  "query": "\nSELECT \n  d.id as demandId,\n  c.name as clientName,\n  d.location,\n  d.date,\n  DATE_FORMAT(d.date, '%Y-%m-%d %H:%i:%s') as dateFormatted,\n  d.startTime,\n  d.endTime,\n  d.requiredWorkers\nFROM demands d\nJOIN clients c ON d.clientId = c.id\nWHERE c.name LIKE '%米窩%'\nORDER BY d.date DESC\nLIMIT 5;\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2iEKifVQ9gKtEas.9cbf5414b428 --database CMgr35KntT8tLtgpfJPejw --execute \nSELECT \n  d.id as demandId,\n  c.name as clientName,\n  d.location,\n  d.date,\n  DATE_FORMAT(d.date, '%Y-%m-%d %H:%i:%s') as dateFormatted,\n  d.startTime,\n  d.endTime,\n  d.requiredWorkers\nFROM demands d\nJOIN clients c ON d.clientId = c.id\nWHERE c.name LIKE '%米窩%'\nORDER BY d.date DESC\nLIMIT 5;\n",
+  "rows": [
+    {
+      "demandId": "30001",
+      "clientName": "米窩-中山館(漫慢米窩)",
+      "location": "104臺北市中山區中山北路二段183巷30號3樓",
+      "date": "2026-02-13 00:00:00",
+      "dateFormatted": "2026-02-13 00:00:00",
+      "startTime": "09:00",
+      "endTime": "16:00",
+      "requiredWorkers": "1"
+    }
+  ],
+  "messages": [],
+  "stdout": "demandId\tclientName\tlocation\tdate\tdateFormatted\tstartTime\tendTime\trequiredWorkers\n30001\t米窩-中山館(漫慢米窩)\t104臺北市中山區中山北路二段183巷30號3樓\t2026-02-13 00:00:00\t2026-02-13 00:00:00\t09:00\t16:00\t1\n",
+  "stderr": "",
+  "execution_time_ms": 1495
+}

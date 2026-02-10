@@ -1,0 +1,8 @@
+{
+  "query": "\nSELECT \n  '慕伊娜排班' as type,\n  w.id as workerId,\n  w.name as workerName,\n  a.weekStartDate,\n  DATE_FORMAT(a.weekStartDate, '%Y-%m-%d %H:%i:%s') as weekStartFormatted,\n  a.confirmedAt,\n  SUBSTRING(a.timeBlocks, 1, 200) as timeBlocksPreview\nFROM workers w\nLEFT JOIN availability a ON w.id = a.workerId\nWHERE w.name LIKE '%伊娜%'\nORDER BY a.weekStartDate DESC\nLIMIT 3\n\nUNION ALL\n\nSELECT \n  '米窩需求單' as type,\n  d.id as demandId,\n  c.name as clientName,\n  d.demandDate,\n  DATE_FORMAT(d.demandDate, '%Y-%m-%d %H:%i:%s') as demandDateFormatted,\n  d.startTime,\n  d.endTime\nFROM demands d\nJOIN clients c ON d.clientId = c.id\nWHERE c.name LIKE '%米窩%'\nORDER BY d.demandDate DESC\nLIMIT 3;\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2iEKifVQ9gKtEas.9cbf5414b428 --database CMgr35KntT8tLtgpfJPejw --execute \nSELECT \n  '慕伊娜排班' as type,\n  w.id as workerId,\n  w.name as workerName,\n  a.weekStartDate,\n  DATE_FORMAT(a.weekStartDate, '%Y-%m-%d %H:%i:%s') as weekStartFormatted,\n  a.confirmedAt,\n  SUBSTRING(a.timeBlocks, 1, 200) as timeBlocksPreview\nFROM workers w\nLEFT JOIN availability a ON w.id = a.workerId\nWHERE w.name LIKE '%伊娜%'\nORDER BY a.weekStartDate DESC\nLIMIT 3\n\nUNION ALL\n\nSELECT \n  '米窩需求單' as type,\n  d.id as demandId,\n  c.name as clientName,\n  d.demandDate,\n  DATE_FORMAT(d.demandDate, '%Y-%m-%d %H:%i:%s') as demandDateFormatted,\n  d.startTime,\n  d.endTime\nFROM demands d\nJOIN clients c ON d.clientId = c.id\nWHERE c.name LIKE '%米窩%'\nORDER BY d.demandDate DESC\nLIMIT 3;\n",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1221 (HY000) at line 2: Incorrect usage of UNION and LIMIT"
+  ]
+}
