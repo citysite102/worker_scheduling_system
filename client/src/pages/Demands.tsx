@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, Calendar, Clock, MapPin, AlertTriangle, Loader2, ArrowRight } from "lucide-react";
+import { Plus, Calendar, Clock, MapPin, AlertTriangle, Loader2, ArrowRight, Copy } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { useLocation } from "wouter";
@@ -31,6 +31,18 @@ export default function Demands() {
     },
     onError: (error) => {
       toast.error(`建立失敗：${error.message}`);
+    },
+  });
+
+  const duplicateMutation = trpc.demands.duplicate.useMutation({
+    onSuccess: (data) => {
+      toast.success("需求單複製成功");
+      refetch();
+      // 跳轉到新的需求單詳情頁面
+      setLocation(`/demands/${data.newDemandId}`);
+    },
+    onError: (error) => {
+      toast.error(`複製失敗：${error.message}`);
     },
   });
 
@@ -225,6 +237,18 @@ export default function Demands() {
                           缺 {shortage} 人
                         </Badge>
                       )}
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-7 px-2 opacity-0 group-hover:opacity-100 transition-opacity"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          duplicateMutation.mutate({ id: demand.id });
+                        }}
+                        disabled={duplicateMutation.isPending}
+                      >
+                        <Copy className="h-3.5 w-3.5" />
+                      </Button>
                       <ArrowRight className="h-3.5 w-3.5 text-muted-foreground/50 opacity-0 group-hover:opacity-100 transition-opacity" />
                     </div>
                   </div>

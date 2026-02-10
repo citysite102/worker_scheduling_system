@@ -303,7 +303,7 @@ export const appRouter = router({
           weekStartDate: weekStart,
           weekEndDate: weekEnd,
           timeBlocks: JSON.stringify(blocks),
-          confirmedAt: existingRecord?.confirmedAt || null,
+          confirmedAt: null, // 修改排班時清除確認狀態，要求使用者重新確認
         });
         
         return { success: true };
@@ -438,6 +438,27 @@ export const appRouter = router({
         const { id, ...data } = input;
         await db.updateDemand(id, data);
         return { success: true };
+      }),
+
+    duplicate: publicProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input }) => {
+        const originalDemand = await db.getDemandById(input.id);
+        if (!originalDemand) throw new Error("需求單不存在");
+        
+        // 複製需求，狀態設為 draft
+        const newDemandId = await db.createDemand({
+          clientId: originalDemand.clientId,
+          date: originalDemand.date,
+          startTime: originalDemand.startTime,
+          endTime: originalDemand.endTime,
+          requiredWorkers: originalDemand.requiredWorkers,
+          location: originalDemand.location || undefined,
+          note: originalDemand.note ? `[複製] ${originalDemand.note}` : "[複製]",
+          status: "draft",
+        });
+        
+        return { success: true, newDemandId };
       }),
 
     // 計算人力可行性
