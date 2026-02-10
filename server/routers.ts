@@ -734,12 +734,18 @@ export const appRouter = router({
       .input(z.object({
         startDate: z.date(),
         endDate: z.date(),
+        workerId: z.number().optional(),
       }))
       .query(async ({ input }) => {
         const assignments = await db.getAssignmentsByDateRange(input.startDate, input.endDate);
         
         // 只包含已完成的排班
-        const completed = assignments.filter(a => a.status === "completed" && a.actualHours);
+        let completed = assignments.filter(a => a.status === "completed" && a.actualHours);
+        
+        // 如果指定了員工，過濾該員工的記錄
+        if (input.workerId) {
+          completed = completed.filter(a => a.workerId === input.workerId);
+        }
         
         // 附加完整資訊
         const records = await Promise.all(
@@ -767,10 +773,14 @@ export const appRouter = router({
       .input(z.object({
         startDate: z.date(),
         endDate: z.date(),
+        clientId: z.number().optional(),
       }))
       .query(async ({ input }) => {
         const allDemands = await db.getAllDemands();
-        const clientDemands = allDemands;
+        // 如果指定了客戶，過濾該客戶的需求單
+        const clientDemands = input.clientId 
+          ? allDemands.filter(d => d.clientId === input.clientId)
+          : allDemands;
         
         const records = [];
         

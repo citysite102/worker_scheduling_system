@@ -177,6 +177,29 @@ export default function WorkerDetail() {
                 </p>
               </div>
             </div>
+            <div className="flex items-center gap-2.5">
+              <div className="h-9 w-9 rounded-lg bg-indigo-50 flex items-center justify-center">
+                <CalendarDays className="h-4 w-4 text-indigo-600" />
+              </div>
+              <div>
+                <p className="text-xs text-gray-400">工作許可到期</p>
+                <p className="text-sm font-medium">
+                  {worker.workPermitExpiryDate ? (() => {
+                    const expiryDate = new Date(worker.workPermitExpiryDate);
+                    const today = new Date();
+                    const daysUntilExpiry = Math.ceil((expiryDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+                    const dateStr = formatDate(worker.workPermitExpiryDate);
+                    
+                    if (daysUntilExpiry < 0) {
+                      return <span className="text-red-600">{dateStr} (已過期)</span>;
+                    } else if (daysUntilExpiry <= 30) {
+                      return <span className="text-orange-600">{dateStr} ({daysUntilExpiry}天)</span>;
+                    }
+                    return <span className="text-gray-700">{dateStr}</span>;
+                  })() : <span className="text-gray-400">無期限</span>}
+                </p>
+              </div>
+            </div>
             {worker.note && (
               <div className="flex items-center gap-2.5">
                 <div className="h-9 w-9 rounded-lg bg-gray-50 flex items-center justify-center">
@@ -185,6 +208,17 @@ export default function WorkerDetail() {
                 <div>
                   <p className="text-xs text-gray-400">備註</p>
                   <p className="text-sm font-medium text-gray-700 truncate max-w-[140px]">{worker.note}</p>
+                </div>
+              </div>
+            )}
+            {worker.attendanceNotes && (
+              <div className="flex items-center gap-2.5 col-span-full">
+                <div className="h-9 w-9 rounded-lg bg-yellow-50 flex items-center justify-center">
+                  <AlertCircle className="h-4 w-4 text-yellow-600" />
+                </div>
+                <div className="flex-1">
+                  <p className="text-xs text-gray-400">出勤記錄</p>
+                  <p className="text-sm font-medium text-gray-700">{worker.attendanceNotes}</p>
                 </div>
               </div>
             )}

@@ -66,6 +66,7 @@ export default function Workers() {
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
+    const workPermitDate = formData.get("workPermitExpiryDate") as string;
     const data = {
       name: formData.get("name") as string,
       phone: formData.get("phone") as string,
@@ -73,6 +74,8 @@ export default function Workers() {
       school: (formData.get("school") as string) || undefined,
       hasWorkPermit: formData.get("hasWorkPermit") === "on",
       hasHealthCheck: formData.get("hasHealthCheck") === "on",
+      workPermitExpiryDate: workPermitDate ? new Date(workPermitDate) : undefined,
+      attendanceNotes: (formData.get("attendanceNotes") as string) || undefined,
       note: (formData.get("note") as string) || undefined,
     };
 
@@ -152,6 +155,20 @@ export default function Workers() {
                     />
                     <Label htmlFor="hasHealthCheck" className="text-sm font-normal cursor-pointer">有體檢</Label>
                   </div>
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="workPermitExpiryDate">工作許可到期日</Label>
+                  <Input 
+                    id="workPermitExpiryDate" 
+                    name="workPermitExpiryDate" 
+                    type="date" 
+                    defaultValue={editingWorker?.workPermitExpiryDate ? new Date(editingWorker.workPermitExpiryDate).toISOString().split('T')[0] : ''} 
+                  />
+                  <p className="text-xs text-muted-foreground">留空表示無期限</p>
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="attendanceNotes">出勤記錄（遲到/曠職）</Label>
+                  <Textarea id="attendanceNotes" name="attendanceNotes" defaultValue={editingWorker?.attendanceNotes} placeholder="記錄員工的遲到、曠職或其他出勤問題" />
                 </div>
                 <div className="grid gap-2">
                   <Label htmlFor="note">備註</Label>
@@ -316,6 +333,27 @@ export default function Workers() {
                           體檢
                         </Badge>
                       )}
+                      {(() => {
+                        if (!worker.workPermitExpiryDate) return null;
+                        const expiryDate = new Date(worker.workPermitExpiryDate);
+                        const today = new Date();
+                        const daysUntilExpiry = Math.ceil((expiryDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+                        
+                        if (daysUntilExpiry < 0) {
+                          return (
+                            <Badge variant="outline" className="text-xs bg-red-50 text-red-700 border-red-200">
+                              許可已過期
+                            </Badge>
+                          );
+                        } else if (daysUntilExpiry <= 30) {
+                          return (
+                            <Badge variant="outline" className="text-xs bg-orange-50 text-orange-700 border-orange-200">
+                              許可 {daysUntilExpiry} 天到期
+                            </Badge>
+                          );
+                        }
+                        return null;
+                      })()}
                     </div>
                     <div className="flex items-center gap-3 text-xs text-muted-foreground mt-1.5 flex-wrap">
                       <span className="flex items-center gap-1">

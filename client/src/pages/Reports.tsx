@@ -15,15 +15,28 @@ export default function Reports() {
   const [reportType, setReportType] = useState<ReportType>("worker");
   const [startDate, setStartDate] = useState<string>("");
   const [endDate, setEndDate] = useState<string>("");
+  const [selectedWorker, setSelectedWorker] = useState<string>("all");
+  const [selectedClient, setSelectedClient] = useState<string>("all");
   const [hasGenerated, setHasGenerated] = useState(false);
 
+  const { data: workers } = trpc.workers.list.useQuery({ status: "active" });
+  const { data: clients } = trpc.clients.list.useQuery();
+
   const { data: workerReport, isLoading: workerLoading, refetch: refetchWorker } = trpc.reports.workerPayroll.useQuery(
-    { startDate: new Date(startDate), endDate: new Date(endDate) },
+    { 
+      startDate: new Date(startDate), 
+      endDate: new Date(endDate),
+      workerId: selectedWorker === "all" ? undefined : parseInt(selectedWorker)
+    },
     { enabled: false }
   );
 
   const { data: clientReport, isLoading: clientLoading, refetch: refetchClient } = trpc.reports.clientHours.useQuery(
-    { startDate: new Date(startDate), endDate: new Date(endDate) },
+    { 
+      startDate: new Date(startDate), 
+      endDate: new Date(endDate),
+      clientId: selectedClient === "all" ? undefined : parseInt(selectedClient)
+    },
     { enabled: false }
   );
 
@@ -115,6 +128,56 @@ export default function Reports() {
                     : "按客戶分組，顯示員工、日期、實際工時，方便帳務對帳"}
                 </p>
               </div>
+
+              {reportType === "worker" && (
+                <div>
+                  <Label className="text-sm font-medium">篩選員工</Label>
+                  <Select value={selectedWorker} onValueChange={(value) => {
+                    setSelectedWorker(value);
+                    setHasGenerated(false);
+                  }}>
+                    <SelectTrigger className="mt-1.5 h-9">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">全部員工</SelectItem>
+                      {workers?.map((worker) => (
+                        <SelectItem key={worker.id} value={worker.id.toString()}>
+                          {worker.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-muted-foreground mt-1.5">
+                    選擇特定員工或全部員工的薪資記錄
+                  </p>
+                </div>
+              )}
+
+              {reportType === "client" && (
+                <div>
+                  <Label className="text-sm font-medium">篩選客戶</Label>
+                  <Select value={selectedClient} onValueChange={(value) => {
+                    setSelectedClient(value);
+                    setHasGenerated(false);
+                  }}>
+                    <SelectTrigger className="mt-1.5 h-9">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">全部客戶</SelectItem>
+                      {clients?.map((client) => (
+                        <SelectItem key={client.id} value={client.id.toString()}>
+                          {client.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-muted-foreground mt-1.5">
+                    選擇特定客戶或全部客戶的工時記錄
+                  </p>
+                </div>
+              )}
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
