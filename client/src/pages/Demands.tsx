@@ -18,6 +18,7 @@ export default function Demands() {
   const [editingDemand, setEditingDemand] = useState<any>(null);
   const [statusFilter, setStatusFilter] = useState<string | undefined>(undefined);
   const [dateFilter, setDateFilter] = useState<"all" | "today" | "thisWeek" | "nextWeek">("all");
+  const [clientFilter, setClientFilter] = useState<number | undefined>(undefined);
 
   // 計算日期範圍
   const getDateRange = (filter: typeof dateFilter) => {
@@ -80,9 +81,9 @@ export default function Demands() {
     },
   });
 
-  const deleteMutation = trpc.demands.delete.useMutation({
+  const cancelMutation = trpc.demands.cancel.useMutation({
     onSuccess: () => {
-      toast.success("需求單刪除成功");
+      toast.success("需求單已取消");
       refetch();
     },
     onError: (error) => {
@@ -124,9 +125,9 @@ export default function Demands() {
     }
   };
 
-  const handleDelete = (id: number) => {
-    if (confirm("確定要刪除這個需求單嗎？")) {
-      deleteMutation.mutate({ id });
+  const handleCancel = (id: number) => {
+    if (confirm("確定要取消這個需求單嗎？取消後需求單狀態將變為「已取消」。")) {
+      cancelMutation.mutate({ id });
     }
   };
 
@@ -237,7 +238,7 @@ export default function Demands() {
       {/* 篩選 */}
       <Card className="mb-6 shadow-sm border-border/60">
         <CardContent className="p-4">
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 flex-wrap">
             <Label className="text-sm text-muted-foreground shrink-0">狀態篩選</Label>
             <Select
               value={statusFilter || "all"}
@@ -288,6 +289,24 @@ export default function Demands() {
                 下週
               </Button>
             </div>
+            
+            <Label className="text-sm text-muted-foreground shrink-0">客戶篩選</Label>
+            <Select
+              value={clientFilter?.toString() || "all"}
+              onValueChange={(value) => setClientFilter(value === "all" ? undefined : parseInt(value))}
+            >
+              <SelectTrigger className="w-[180px] h-9">
+                <SelectValue placeholder="全部客戶" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">全部客戶</SelectItem>
+                {clients?.map((client) => (
+                  <SelectItem key={client.id} value={client.id.toString()}>
+                    {client.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
         </CardContent>
       </Card>
@@ -306,14 +325,19 @@ export default function Demands() {
               return <div className="text-center py-10 text-muted-foreground text-sm">無需求單資料</div>;
             }
 
-            // 根據日期篩選過濾需求單
+            // 根據日期和客戶篩選過濾需求單
             const dateRange = getDateRange(dateFilter);
-            const filteredDemands = dateRange
+            let filteredDemands = dateRange
               ? demands.filter((demand: any) => {
                   const demandDate = new Date(demand.date);
                   return demandDate >= dateRange.start && demandDate < dateRange.end;
                 })
               : demands;
+            
+            // 根據客戶篩選
+            if (clientFilter) {
+              filteredDemands = filteredDemands.filter((demand: any) => demand.clientId === clientFilter);
+            }
 
             if (filteredDemands.length === 0) {
               return <div className="text-center py-10 text-muted-foreground text-sm">無符合條件的需求單</div>;
@@ -395,9 +419,9 @@ export default function Demands() {
                         className="h-7 px-2 text-red-600 hover:text-red-700 hover:bg-red-50"
                         onClick={(e) => {
                           e.stopPropagation();
-                          handleDelete(demand.id);
+                          handleCancel(demand.id);
                         }}
-                        disabled={deleteMutation.isPending}
+                        disabled={cancelMutation.isPending}
                       >
                         <Trash2 className="h-3.5 w-3.5" />
                       </Button>

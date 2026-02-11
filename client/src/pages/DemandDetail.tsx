@@ -81,10 +81,10 @@ export default function DemandDetail() {
     },
   });
 
-  // 刪除需求單
-  const deleteMutation = trpc.demands.delete.useMutation({
+  // 取消需求單
+  const cancelDemandMutation = trpc.demands.cancel.useMutation({
     onSuccess: () => {
-      toast.success("需求單刪除成功");
+      toast.success("需求單已取消");
       setLocation("/demands");
     },
     onError: (error) => {
@@ -340,13 +340,13 @@ export default function DemandDetail() {
             variant="outline"
             size="sm"
             onClick={() => {
-              if (window.confirm("確定要刪除這個需求單嗎？")) {
-                deleteMutation.mutate({ id: demandId });
+              if (window.confirm("確定要取消這個需求單嗎？取消後需求單狀態將變為「已取消」。")) {
+                cancelDemandMutation.mutate({ id: demandId });
               }
             }}
           >
             <Trash2 className="mr-1.5 h-3.5 w-3.5" />
-            刪除
+            取消
           </Button>
         </div>
       </div>
