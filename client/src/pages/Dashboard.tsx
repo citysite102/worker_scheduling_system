@@ -59,7 +59,8 @@ export default function Dashboard() {
 
   const confirmedDemands = todayDemands?.filter(d => d.status === "confirmed") || [];
   const totalRequired = confirmedDemands.reduce((sum, d) => sum + d.requiredWorkers, 0);
-  const totalAssigned = todayAssignments?.length || 0;
+  // 只計算非 cancelled 狀態的指派，避免已取消的指派影響完成度
+  const totalAssigned = todayAssignments?.filter(a => a.status !== "cancelled").length || 0;
   const completionRate = totalRequired > 0 ? Math.round((totalAssigned / totalRequired) * 100) : 0;
 
   const statCards = [
