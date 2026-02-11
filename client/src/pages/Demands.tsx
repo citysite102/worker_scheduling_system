@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, Calendar, Clock, MapPin, AlertTriangle, Loader2, ArrowRight, Copy } from "lucide-react";
+import { Plus, Calendar, Clock, MapPin, AlertTriangle, Loader2, ArrowRight, Copy, Edit, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { useLocation } from "wouter";
@@ -15,6 +15,7 @@ import { useLocation } from "wouter";
 export default function Demands() {
   const [, setLocation] = useLocation();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [editingDemand, setEditingDemand] = useState<any>(null);
   const [statusFilter, setStatusFilter] = useState<string | undefined>(undefined);
 
   const { data: demands, isLoading, refetch } = trpc.demands.list.useQuery({
@@ -27,6 +28,7 @@ export default function Demands() {
     onSuccess: () => {
       toast.success("需求單建立成功");
       setIsDialogOpen(false);
+      setEditingDemand(null);
       refetch();
     },
     onError: (error) => {
@@ -34,11 +36,32 @@ export default function Demands() {
     },
   });
 
+  const updateMutation = trpc.demands.update.useMutation({
+    onSuccess: () => {
+      toast.success("需求單更新成功");
+      setIsDialogOpen(false);
+      setEditingDemand(null);
+      refetch();
+    },
+    onError: (error) => {
+      toast.error(`更新失敗：${error.message}`);
+    },
+  });
+
+  const deleteMutation = trpc.demands.delete.useMutation({
+    onSuccess: () => {
+      toast.success("需求單刪除成功");
+      refetch();
+    },
+    onError: (error) => {
+      toast.error(`刪除失敗：${error.message}`);
+    },
+  });
+
   const duplicateMutation = trpc.demands.duplicate.useMutation({
     onSuccess: (data) => {
       toast.success("需求單複製成功");
-      refetch();
-      // 跳轉到新的需求單詳情頁面
+      // 直接跳轉，不需要 refetch 避免競態條件
       setLocation(`/demands/${data.newDemandId}`);
     },
     onError: (error) => {
@@ -52,7 +75,7 @@ export default function Demands() {
     const dateStr = formData.get("date") as string;
     const date = new Date(dateStr);
 
-    createMutation.mutate({
+    const data = {
       clientId: parseInt(formData.get("clientId") as string),
       date,
       startTime: formData.get("startTime") as string,
@@ -60,8 +83,19 @@ export default function Demands() {
       requiredWorkers: parseInt(formData.get("requiredWorkers") as string),
       location: (formData.get("location") as string) || undefined,
       note: (formData.get("note") as string) || undefined,
-      status: "confirmed",
-    });
+    };
+
+    if (editingDemand) {
+      updateMutation.mutate({ id: editingDemand.id, ...data });
+    } else {
+      createMutation.mutate(data);
+    }
+  };
+
+  const handleDelete = (id: number) => {
+    if (confirm("確定要刪除這個需求單嗎？")) {
+      deleteMutation.mutate({ id });
+    }
   };
 
   const statusConfig: Record<string, { label: string; className: string }> = {
@@ -89,21 +123,27 @@ export default function Demands() {
           <h1 className="text-2xl font-semibold text-foreground">用工需求管理</h1>
           <p className="text-sm text-muted-foreground mt-1">管理客戶的用工需求單與人力指派</p>
         </div>
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <Button onClick={() => setIsDialogOpen(true)} size="sm">
+        <Dialog open={isDialogOpen} onOpenChange={(open) => {
+          setIsDialogOpen(open);
+          if (!open) setEditingDemand(null);
+        }}>
+          <Button onClick={() => {
+            setEditingDemand(null);
+            setIsDialogOpen(true);
+          }} size="sm">
             <Plus className="mr-2 h-4 w-4" />
             新增需求單
           </Button>
           <DialogContent className="max-w-md">
             <form onSubmit={handleSubmit}>
               <DialogHeader>
-                <DialogTitle>新增用工需求</DialogTitle>
+                <DialogTitle>{editingDemand ? "編輯用工需求" : "新增用工需求"}</DialogTitle>
                 <DialogDescription>填寫需求單基本資料</DialogDescription>
               </DialogHeader>
               <div className="grid gap-4 py-4">
                 <div className="grid gap-2">
                   <Label htmlFor="clientId">客戶 *</Label>
-                  <Select name="clientId" required>
+                  <Select name="clientId" defaultValue={editingDemand?.clientId?.toString()} required>
                     <SelectTrigger>
                       <SelectValue placeholder="請選擇客戶" />
                     </SelectTrigger>
@@ -118,29 +158,35 @@ export default function Demands() {
                 </div>
                 <div className="grid gap-2">
                   <Label htmlFor="date">日期 *</Label>
-                  <Input id="date" name="date" type="date" required />
+                  <Input 
+                    id="date" 
+                    name="date" 
+                    type="date" 
+                    defaultValue={editingDemand?.date ? new Date(editingDemand.date).toISOString().split('T')[0] : ''}
+                    required 
+                  />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="grid gap-2">
                     <Label htmlFor="startTime">開始時間 *</Label>
-                    <Input id="startTime" name="startTime" type="time" required />
+                    <Input id="startTime" name="startTime" type="time" defaultValue={editingDemand?.startTime} required />
                   </div>
                   <div className="grid gap-2">
                     <Label htmlFor="endTime">結束時間 *</Label>
-                    <Input id="endTime" name="endTime" type="time" required />
+                    <Input id="endTime" name="endTime" type="time" defaultValue={editingDemand?.endTime} required />
                   </div>
                 </div>
                 <div className="grid gap-2">
                   <Label htmlFor="requiredWorkers">需求人數 *</Label>
-                  <Input id="requiredWorkers" name="requiredWorkers" type="number" min="1" required />
+                  <Input id="requiredWorkers" name="requiredWorkers" type="number" min="1" defaultValue={editingDemand?.requiredWorkers} required />
                 </div>
                 <div className="grid gap-2">
                   <Label htmlFor="location">地點</Label>
-                  <Input id="location" name="location" placeholder="工作地點" />
+                  <Input id="location" name="location" placeholder="工作地點" defaultValue={editingDemand?.location} />
                 </div>
                 <div className="grid gap-2">
                   <Label htmlFor="note">備註</Label>
-                  <Textarea id="note" name="note" placeholder="其他說明..." rows={3} />
+                  <Textarea id="note" name="note" placeholder="其他說明..." rows={3} defaultValue={editingDemand?.note} />
                 </div>
               </div>
               <DialogFooter>
@@ -243,11 +289,35 @@ export default function Demands() {
                         className="h-7 px-2 opacity-0 group-hover:opacity-100 transition-opacity"
                         onClick={(e) => {
                           e.stopPropagation();
+                          setEditingDemand(demand);
+                          setIsDialogOpen(true);
+                        }}
+                      >
+                        <Edit className="h-3.5 w-3.5" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-7 px-2 opacity-0 group-hover:opacity-100 transition-opacity"
+                        onClick={(e) => {
+                          e.stopPropagation();
                           duplicateMutation.mutate({ id: demand.id });
                         }}
                         disabled={duplicateMutation.isPending}
                       >
                         <Copy className="h-3.5 w-3.5" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-7 px-2 opacity-0 group-hover:opacity-100 transition-opacity text-red-600 hover:text-red-700 hover:bg-red-50"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDelete(demand.id);
+                        }}
+                        disabled={deleteMutation.isPending}
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
                       </Button>
                       <ArrowRight className="h-3.5 w-3.5 text-muted-foreground/50 opacity-0 group-hover:opacity-100 transition-opacity" />
                     </div>

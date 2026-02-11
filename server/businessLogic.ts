@@ -173,16 +173,23 @@ export async function calculateDemandFeasibility(
       }
     }
 
-    // 檢查排班衝突
-    const conflicts = await checkWorkerConflicts(worker.id, scheduledStart, scheduledEnd);
+    // 檢查同一天是否已指派到其他需求單（無論時間是否重疊）
+    const dayStart = new Date(demandDate);
+    dayStart.setHours(0, 0, 0, 0);
+    const dayEnd = new Date(demandDate);
+    dayEnd.setHours(23, 59, 59, 999);
+    
+    const dayAssignments = await getAssignmentsByWorker(worker.id, dayStart, dayEnd);
+    const activeAssignments = dayAssignments.filter(
+      (a) => a.status !== "cancelled" && a.demandId !== demandId
+    );
 
-    if (conflicts.length > 0) {
-      for (const conflict of conflicts) {
-        const conflictDemand = await import("./db").then(m => m.getDemandById(conflict.demandId));
-        const conflictClient = conflictDemand ? await getClientById(conflictDemand.clientId) : null;
-        const conflictDateStr = formatDate(new Date(conflict.scheduledStart));
-        const conflictTimeStr = `${formatTime(new Date(conflict.scheduledStart))}-${formatTime(new Date(conflict.scheduledEnd))}`;
-        reasons.push(`時間衝突：與「${conflictClient?.name || "未知客戶"} ${conflictDateStr} ${conflictTimeStr}」重疊`);
+    if (activeAssignments.length > 0) {
+      for (const assignment of activeAssignments) {
+        const assignedDemand = await import("./db").then(m => m.getDemandById(assignment.demandId));
+        const assignedClient = assignedDemand ? await getClientById(assignedDemand.clientId) : null;
+        const assignedTimeStr = `${formatTime(new Date(assignment.scheduledStart))}-${formatTime(new Date(assignment.scheduledEnd))}`;
+        reasons.push(`已指派到：${assignedClient?.name || "未知客戶"} ${assignedTimeStr}`);
       }
     }
 

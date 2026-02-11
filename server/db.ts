@@ -327,6 +327,12 @@ export async function updateDemand(id: number, data: Partial<{ clientId: number;
   await db.update(demands).set(data).where(eq(demands.id, id));
 }
 
+export async function deleteDemand(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.delete(demands).where(eq(demands.id, id));
+}
+
 // ============ Assignments ============
 export async function getAssignmentsByDemand(demandId: number) {
   const db = await getDb();
