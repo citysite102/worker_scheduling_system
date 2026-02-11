@@ -318,7 +318,9 @@ export async function createDemand(data: { clientId: number; date: Date; startTi
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   const result = await db.insert(demands).values(data);
-  return result;
+  // 返回新建立的 ID（MySQL 使用 lastInsertRowid 或直接查詢）
+  const [newDemand] = await db.select().from(demands).orderBy(desc(demands.id)).limit(1);
+  return newDemand.id;
 }
 
 export async function updateDemand(id: number, data: Partial<{ clientId: number; date: Date; startTime: string; endTime: string; requiredWorkers: number; location?: string; note?: string; status: "draft" | "confirmed" | "cancelled" | "closed" }>) {
