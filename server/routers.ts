@@ -474,6 +474,12 @@ export const appRouter = router({
           throw new Error("無法刪除：該需求單已有員工指派，請先取消指派後再刪除");
         }
         
+        // 先刪除所有相關的 assignments（包括已取消的）以避免外鍵約束問題
+        for (const assignment of assignments) {
+          await db.deleteAssignment(assignment.id);
+        }
+        
+        // 再刪除需求單
         await db.deleteDemand(input.id);
         return { success: true };
       }),
