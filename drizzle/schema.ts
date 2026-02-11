@@ -98,6 +98,7 @@ export const demands = mysqlTable("demands", {
   startTime: varchar("startTime", { length: 5 }).notNull(), // HH:mm
   endTime: varchar("endTime", { length: 5 }).notNull(), // HH:mm
   requiredWorkers: int("requiredWorkers").notNull(),
+  breakHours: int("breakHours").default(0).notNull(), // 休息時間（以分鐘為單位，預設 0）
   location: varchar("location", { length: 200 }),
   note: text("note"),
   status: mysqlEnum("status", ["draft", "confirmed", "cancelled", "closed"]).default("draft").notNull(),

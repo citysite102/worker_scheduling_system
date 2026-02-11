@@ -130,6 +130,7 @@ export default function Demands() {
       startTime: formData.get("startTime") as string,
       endTime: formData.get("endTime") as string,
       requiredWorkers: parseInt(formData.get("requiredWorkers") as string),
+      breakHours: parseFloat(formData.get("breakHours") as string) || 0,
       location: (formData.get("location") as string) || undefined,
       note: (formData.get("note") as string) || undefined,
     };
@@ -228,6 +229,21 @@ export default function Demands() {
                 <div className="grid gap-2">
                   <Label htmlFor="requiredWorkers">需求人數 *</Label>
                   <Input id="requiredWorkers" name="requiredWorkers" type="number" min="1" defaultValue={editingDemand?.requiredWorkers} required />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="breakHours">休息時間（小時）</Label>
+                  <Select name="breakHours" defaultValue={editingDemand?.breakHours ? (editingDemand.breakHours / 60).toString() : "0"}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="請選擇休息時間" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="0">0 小時（無休息）</SelectItem>
+                      <SelectItem value="0.5">0.5 小時</SelectItem>
+                      <SelectItem value="1">1 小時</SelectItem>
+                      <SelectItem value="1.5">1.5 小時</SelectItem>
+                      <SelectItem value="2">2 小時</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div className="grid gap-2">
                   <Label htmlFor="location">地點</Label>

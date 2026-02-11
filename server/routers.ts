@@ -415,12 +415,17 @@ export const appRouter = router({
         startTime: z.string().regex(/^\d{2}:\d{2}$/, "時間格式應為 HH:mm"),
         endTime: z.string().regex(/^\d{2}:\d{2}$/, "時間格式應為 HH:mm"),
         requiredWorkers: z.number().min(1, "需求人數至少為 1"),
+        breakHours: z.number().min(0, "休息時間不可為負數").optional(), // 以小時為單位，如 0.5, 1, 1.5
         location: z.string().optional(),
         note: z.string().optional(),
         status: z.enum(["draft", "confirmed", "cancelled", "closed"]).optional(),
       }))
       .mutation(async ({ input }) => {
-        await db.createDemand(input);
+        const { breakHours, ...rest } = input;
+        await db.createDemand({
+          ...rest,
+          breakHours: breakHours ? Math.round(breakHours * 60) : 0, // 轉換為分鐘
+        });
         return { success: true };
       }),
 
@@ -432,13 +437,18 @@ export const appRouter = router({
         startTime: z.string().regex(/^\d{2}:\d{2}$/, "時間格式應為 HH:mm").optional(),
         endTime: z.string().regex(/^\d{2}:\d{2}$/, "時間格式應為 HH:mm").optional(),
         requiredWorkers: z.number().min(1, "需求人數至少為 1").optional(),
+        breakHours: z.number().min(0, "休息時間不可為負數").optional(), // 以小時為單位
         location: z.string().optional(),
         note: z.string().optional(),
         status: z.enum(["draft", "confirmed", "cancelled", "closed"]).optional(),
       }))
       .mutation(async ({ input }) => {
-        const { id, ...data } = input;
-        await db.updateDemand(id, data);
+        const { id, breakHours, ...rest } = input;
+        const updateData: any = { ...rest };
+        if (breakHours !== undefined) {
+          updateData.breakHours = Math.round(breakHours * 60); // 轉換為分鐘
+        }
+        await db.updateDemand(id, updateData);
         return { success: true };
       }),
 
@@ -813,13 +823,22 @@ export const appRouter = router({
             const demand = await db.getDemandById(assignment.demandId);
             const client = demand ? await db.getClientById(demand.clientId) : null;
             
+            // 計算實際工時（分鐘）
+            const actualMinutes = assignment.actualHours || 0;
+            // 休息時間（分鐘）
+            const breakMinutes = demand?.breakHours || 0;
+            // 計薪工時 = 實際工時 - 休息時間
+            const billableMinutes = Math.max(0, actualMinutes - breakMinutes);
+            
             return {
               workerName: worker?.name || "",
               clientName: client?.name || "",
               demandDate: logic.formatDate(new Date(demand?.date || "")),
               actualStart: logic.formatTime(new Date(assignment.actualStart || "")),
               actualEnd: logic.formatTime(new Date(assignment.actualEnd || "")),
-              actualHours: ((assignment.actualHours || 0) / 60).toFixed(2),
+              actualHours: (actualMinutes / 60).toFixed(2),
+              breakHours: (breakMinutes / 60).toFixed(2),
+              billableHours: (billableMinutes / 60).toFixed(2),
             };
           })
         );
@@ -864,18 +883,25 @@ export const appRouter = router({
             const client = await db.getClientById(demand.clientId);
             if (!worker || !client) continue;
             
+            // 計算實際工時（分鐘）
+            const actualMinutes = assignment.actualHours || 0;
+            // 休息時間（分鐘）
+            const breakMinutes = demand.breakHours || 0;
+            // 計費工時 = 實際工時 - 休息時間
+            const billableMinutes = Math.max(0, actualMinutes - breakMinutes);
+            
             const key = `${client.id}-${worker.id}`;
             const existing = summaryMap.get(key);
             
             if (existing) {
-              existing.totalMinutes += assignment.actualHours || 0;
+              existing.totalMinutes += billableMinutes;
             } else {
               summaryMap.set(key, {
                 clientId: client.id,
                 clientName: client.name,
                 workerId: worker.id,
                 workerName: worker.name,
-                totalMinutes: assignment.actualHours || 0,
+                totalMinutes: billableMinutes,
               });
             }
           }

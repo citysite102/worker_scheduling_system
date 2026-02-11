@@ -330,7 +330,7 @@ export async function getDemandById(id: number) {
   return result[0];
 }
 
-export async function createDemand(data: { clientId: number; date: Date; startTime: string; endTime: string; requiredWorkers: number; location?: string; note?: string; status?: "draft" | "confirmed" | "cancelled" | "closed" }) {
+export async function createDemand(data: { clientId: number; date: Date; startTime: string; endTime: string; requiredWorkers: number; breakHours?: number; location?: string; note?: string; status?: "draft" | "confirmed" | "cancelled" | "closed" }) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   // 明確指定要插入的欄位，確保 clientId 正確傳遞
@@ -340,6 +340,7 @@ export async function createDemand(data: { clientId: number; date: Date; startTi
     startTime: data.startTime,
     endTime: data.endTime,
     requiredWorkers: data.requiredWorkers,
+    breakHours: data.breakHours || 0,
     status: data.status || "draft",
   };
   if (data.location) insertData.location = data.location;
@@ -351,7 +352,7 @@ export async function createDemand(data: { clientId: number; date: Date; startTi
   return newDemand;
 }
 
-export async function updateDemand(id: number, data: Partial<{ clientId: number; date: Date; startTime: string; endTime: string; requiredWorkers: number; location?: string; note?: string; status: "draft" | "confirmed" | "cancelled" | "closed" }>) {
+export async function updateDemand(id: number, data: Partial<{ clientId: number; date: Date; startTime: string; endTime: string; requiredWorkers: number; breakHours?: number; location?: string; note?: string; status: "draft" | "confirmed" | "cancelled" | "closed" }>) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   await db.update(demands).set(data).where(eq(demands.id, id));
