@@ -146,17 +146,25 @@ export async function getWorkerById(id: number) {
   return result[0];
 }
 
-export async function createWorker(data: { name: string; phone: string; email?: string; school?: string; hasWorkPermit?: number; hasHealthCheck?: number; note?: string }) {
+export async function createWorker(data: { name: string; phone: string; email?: string; school?: string; hasWorkPermit?: boolean; hasHealthCheck?: boolean; status?: "active" | "inactive"; note?: string; lineId?: string; whatsappId?: string }) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
-  const result = await db.insert(workers).values(data);
-  return result;
+  await db.insert(workers).values(data);
+  // 返回新建立的記錄
+  const [newWorker] = await db.select().from(workers).orderBy(desc(workers.id)).limit(1);
+  return newWorker;
 }
 
-export async function updateWorker(id: number, data: Partial<{ name: string; phone: string; email?: string; school?: string; hasWorkPermit?: number; hasHealthCheck?: number; status: "active" | "inactive"; note?: string }>) {
+export async function updateWorker(id: number, data: Partial<{ name: string; phone: string; email?: string; school?: string; hasWorkPermit?: number; hasHealthCheck?: number; status: "active" | "inactive"; note?: string; lineId?: string; whatsappId?: string }>) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   await db.update(workers).set(data).where(eq(workers.id, id));
+}
+
+export async function deleteWorker(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.delete(workers).where(eq(workers.id, id));
 }
 
 // ============ Clients ============
@@ -198,14 +206,22 @@ export async function getClientById(id: number) {
 export async function createClient(data: { name: string; contactName?: string; contactEmail?: string; contactPhone?: string; address?: string; billingType?: "hourly" | "fixed" | "custom"; note?: string }) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
-  const result = await db.insert(clients).values(data);
-  return result;
+  await db.insert(clients).values(data);
+  // 返回新建立的記錄
+  const [newClient] = await db.select().from(clients).orderBy(desc(clients.id)).limit(1);
+  return newClient;
 }
 
 export async function updateClient(id: number, data: Partial<{ name: string; contactName?: string; contactEmail?: string; contactPhone?: string; address?: string; billingType?: "hourly" | "fixed" | "custom"; status: "active" | "inactive"; note?: string }>) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   await db.update(clients).set(data).where(eq(clients.id, id));
+}
+
+export async function deleteClient(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.delete(clients).where(eq(clients.id, id));
 }
 
 // ============ Availability ============
@@ -317,7 +333,19 @@ export async function getDemandById(id: number) {
 export async function createDemand(data: { clientId: number; date: Date; startTime: string; endTime: string; requiredWorkers: number; location?: string; note?: string; status?: "draft" | "confirmed" | "cancelled" | "closed" }) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
-  const result = await db.insert(demands).values(data);
+  // 明確指定要插入的欄位，確保 clientId 正確傳遞
+  const insertData: any = {
+    clientId: data.clientId,
+    date: data.date,
+    startTime: data.startTime,
+    endTime: data.endTime,
+    requiredWorkers: data.requiredWorkers,
+    status: data.status || "draft",
+  };
+  if (data.location) insertData.location = data.location;
+  if (data.note) insertData.note = data.note;
+  
+  const result = await db.insert(demands).values(insertData);
   // 返回新建立的 ID（MySQL 使用 lastInsertRowid 或直接查詢）
   const [newDemand] = await db.select().from(demands).orderBy(desc(demands.id)).limit(1);
   return newDemand.id;
