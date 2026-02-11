@@ -395,11 +395,13 @@ export async function getAssignmentsByDateRange(startDate: Date, endDate: Date) 
   );
 }
 
-export async function createAssignment(data: { demandId: number; workerId: number; scheduledStart: Date; scheduledEnd: Date; scheduledHours: number; note?: string }) {
+export async function createAssignment(data: { demandId: number; workerId: number; scheduledStart: Date; scheduledEnd: Date; scheduledHours: number; status?: "assigned" | "completed" | "cancelled" | "disputed"; note?: string }) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   const result = await db.insert(assignments).values(data);
-  return result;
+  // 返回新建立的完整 assignment 物件
+  const [newAssignment] = await db.select().from(assignments).orderBy(desc(assignments.id)).limit(1);
+  return newAssignment;
 }
 
 export async function getAssignmentById(id: number) {
