@@ -146,7 +146,7 @@ export async function getWorkerById(id: number) {
   return result[0];
 }
 
-export async function createWorker(data: { name: string; phone: string; email?: string; school?: string; hasWorkPermit?: boolean; hasHealthCheck?: boolean; status?: "active" | "inactive"; note?: string; lineId?: string; whatsappId?: string }) {
+export async function createWorker(data: { name: string; phone: string; email?: string; school?: string; hasWorkPermit?: number; hasHealthCheck?: number; status?: "active" | "inactive"; note?: string; lineId?: string; whatsappId?: string }) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   await db.insert(workers).values(data);

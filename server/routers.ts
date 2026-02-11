@@ -694,6 +694,18 @@ export const appRouter = router({
           }
         }
         
+        // 自動狀態更新：檢查是否達到需求人數
+        const demand = await db.getDemandById(input.demandId);
+        if (demand && demand.status === "draft") {
+          const assignments = await db.getAssignmentsByDemand(input.demandId);
+          const activeAssignments = assignments.filter(a => a.status !== "cancelled");
+          
+          // 如果已指派人數達到需求人數，自動改為已確認
+          if (activeAssignments.length >= demand.requiredWorkers) {
+            await db.updateDemand(input.demandId, { status: "confirmed" });
+          }
+        }
+        
         return {
           success: errors.length === 0,
           successCount: successCount.value,
@@ -755,6 +767,19 @@ export const appRouter = router({
         
         // 更新狀態為 cancelled
         await db.updateAssignment(input.id, { status: "cancelled" });
+        
+        // 自動狀態更新：檢查是否所有指派都被取消
+        const demand = await db.getDemandById(assignment.demandId);
+        if (demand && demand.status === "confirmed") {
+          const assignments = await db.getAssignmentsByDemand(assignment.demandId);
+          const activeAssignments = assignments.filter(a => a.status !== "cancelled");
+          
+          // 如果所有指派都被取消，自動改回草稿
+          if (activeAssignments.length === 0) {
+            await db.updateDemand(assignment.demandId, { status: "draft" });
+          }
+        }
+        
         return { success: true };
       }),
   }),
