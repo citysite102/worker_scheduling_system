@@ -17,6 +17,38 @@ export default function Demands() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingDemand, setEditingDemand] = useState<any>(null);
   const [statusFilter, setStatusFilter] = useState<string | undefined>(undefined);
+  const [dateFilter, setDateFilter] = useState<"all" | "today" | "thisWeek" | "nextWeek">("all");
+
+  // 計算日期範圍
+  const getDateRange = (filter: typeof dateFilter) => {
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    
+    switch (filter) {
+      case "today":
+        return { start: today, end: new Date(today.getTime() + 24 * 60 * 60 * 1000) };
+      
+      case "thisWeek": {
+        const dayOfWeek = today.getDay();
+        const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+        const monday = new Date(today.getTime() + mondayOffset * 24 * 60 * 60 * 1000);
+        const sunday = new Date(monday.getTime() + 7 * 24 * 60 * 60 * 1000);
+        return { start: monday, end: sunday };
+      }
+      
+      case "nextWeek": {
+        const dayOfWeek = today.getDay();
+        const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+        const thisMonday = new Date(today.getTime() + mondayOffset * 24 * 60 * 60 * 1000);
+        const nextMonday = new Date(thisMonday.getTime() + 7 * 24 * 60 * 60 * 1000);
+        const nextSunday = new Date(nextMonday.getTime() + 7 * 24 * 60 * 60 * 1000);
+        return { start: nextMonday, end: nextSunday };
+      }
+      
+      default:
+        return null;
+    }
+  };
 
   const { data: demands, isLoading, refetch } = trpc.demands.list.useQuery({
     status: statusFilter,
@@ -222,6 +254,40 @@ export default function Demands() {
                 <SelectItem value="closed">已結案</SelectItem>
               </SelectContent>
             </Select>
+            <div className="flex items-center gap-2 ml-auto">
+              <Button
+                variant={dateFilter === "all" ? "default" : "outline"}
+                size="sm"
+                className="h-9"
+                onClick={() => setDateFilter("all")}
+              >
+                全部
+              </Button>
+              <Button
+                variant={dateFilter === "today" ? "default" : "outline"}
+                size="sm"
+                className="h-9"
+                onClick={() => setDateFilter("today")}
+              >
+                今日
+              </Button>
+              <Button
+                variant={dateFilter === "thisWeek" ? "default" : "outline"}
+                size="sm"
+                className="h-9"
+                onClick={() => setDateFilter("thisWeek")}
+              >
+                本週
+              </Button>
+              <Button
+                variant={dateFilter === "nextWeek" ? "default" : "outline"}
+                size="sm"
+                className="h-9"
+                onClick={() => setDateFilter("nextWeek")}
+              >
+                下週
+              </Button>
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -235,11 +301,27 @@ export default function Demands() {
           </div>
         </CardHeader>
         <CardContent>
-          {!demands || demands.length === 0 ? (
-            <div className="text-center py-10 text-muted-foreground text-sm">無需求單資料</div>
-          ) : (
-            <div className="space-y-2">
-              {demands.map((demand: any) => {
+          {(() => {
+            if (!demands || demands.length === 0) {
+              return <div className="text-center py-10 text-muted-foreground text-sm">無需求單資料</div>;
+            }
+
+            // 根據日期篩選過濾需求單
+            const dateRange = getDateRange(dateFilter);
+            const filteredDemands = dateRange
+              ? demands.filter((demand: any) => {
+                  const demandDate = new Date(demand.date);
+                  return demandDate >= dateRange.start && demandDate < dateRange.end;
+                })
+              : demands;
+
+            if (filteredDemands.length === 0) {
+              return <div className="text-center py-10 text-muted-foreground text-sm">無符合條件的需求單</div>;
+            }
+
+            return (
+              <div className="space-y-2">
+                {filteredDemands.map((demand: any) => {
                 const shortage = demand.requiredWorkers - (demand.assignedCount || 0);
                 const sc = statusConfig[demand.status] || statusConfig.draft;
                 return (
@@ -323,9 +405,10 @@ export default function Demands() {
                     </div>
                   </div>
                 );
-              })}
-            </div>
-          )}
+                })}
+              </div>
+            );
+          })()}
         </CardContent>
       </Card>
     </div>
