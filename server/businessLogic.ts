@@ -152,80 +152,125 @@ export async function calculateDemandFeasibility(
   const scheduledStart = combineDateAndTime(demandDate, startTime);
   const scheduledEnd = combineDateAndTime(demandDate, endTime);
 
-  const availableWorkers = [];
-  const unavailableWorkers = [];
+  // 批次查詢：預先載入所有員工的當天 assignments
+  const dayStart = new Date(demandDate);
+  dayStart.setHours(0, 0, 0, 0);
+  const dayEnd = new Date(demandDate);
+  dayEnd.setHours(23, 59, 59, 999);
 
-  for (const worker of allWorkers) {
-    const reasons: string[] = [];
+  // 使用 Promise.all 並行查詢所有員工的 assignments
+  const allDayAssignments = await Promise.all(
+    allWorkers.map(worker => getAssignmentsByWorker(worker.id, dayStart, dayEnd))
+  );
 
-    // 檢查排班時間設置
-    const availabilityCheck = await checkWorkerAvailability(
-      worker.id,
-      demandDate,
-      startTime,
-      endTime
-    );
+  // 建立 worker ID 到 assignments 的映射
+  const workerAssignmentsMap = new Map<number, any[]>();
+  allWorkers.forEach((worker, index) => {
+    workerAssignmentsMap.set(worker.id, allDayAssignments[index]);
+  });
 
-    if (!availabilityCheck.available) {
-      reasons.push(availabilityCheck.reason || "不在可排班時段");
-      if (availabilityCheck.availableTimeBlocks) {
-        reasons.push(`本週可排：${availabilityCheck.availableTimeBlocks}`);
+  // 預先查詢所有相關的 demands 和 clients（去重）
+  const uniqueDemandIds = new Set<number>();
+  allDayAssignments.flat().forEach(assignment => {
+    if (assignment.status !== "cancelled" && assignment.demandId !== demandId) {
+      uniqueDemandIds.add(assignment.demandId);
+    }
+  });
+
+  const demandsMap = new Map<number, any>();
+  const clientsMap = new Map<number, any>();
+  
+  await Promise.all(
+    Array.from(uniqueDemandIds).map(async (id) => {
+      const demand = await import("./db").then(m => m.getDemandById(id));
+      if (demand) {
+        demandsMap.set(id, demand);
+        if (!clientsMap.has(demand.clientId)) {
+          const client = await getClientById(demand.clientId);
+          if (client) clientsMap.set(demand.clientId, client);
+        }
       }
-    }
-
-    // 檢查同一天是否已指派到其他需求單（無論時間是否重疊）
-    const dayStart = new Date(demandDate);
-    dayStart.setHours(0, 0, 0, 0);
-    const dayEnd = new Date(demandDate);
-    dayEnd.setHours(23, 59, 59, 999);
-    
-    const dayAssignments = await getAssignmentsByWorker(worker.id, dayStart, dayEnd);
-    const activeAssignments = dayAssignments.filter(
-      (a) => a.status !== "cancelled" && a.demandId !== demandId
-    );
-
-    if (activeAssignments.length > 0) {
-      for (const assignment of activeAssignments) {
-        const assignedDemand = await import("./db").then(m => m.getDemandById(assignment.demandId));
-        const assignedClient = assignedDemand ? await getClientById(assignedDemand.clientId) : null;
-        const assignedTimeStr = `${formatTime(new Date(assignment.scheduledStart))}-${formatTime(new Date(assignment.scheduledEnd))}`;
-        reasons.push(`已指派到：${assignedClient?.name || "未知客戶"} ${assignedTimeStr}`);
-      }
-    }
-
-    if (reasons.length === 0) {
-      availableWorkers.push(worker);
-    } else {
-      unavailableWorkers.push({ worker, reasons });
-    }
-  }
-
-  // 計算本週已排工時與近 7 天排班次數（用於排序）
-  const workersWithStats = await Promise.all(
-    availableWorkers.map(async (worker) => {
-      const weekStart = getWeekStart(demandDate);
-      const weekEnd = new Date(weekStart);
-      weekEnd.setDate(weekEnd.getDate() + 6);
-      weekEnd.setHours(23, 59, 59, 999);
-
-      const weekAssignments = await getAssignmentsByWorker(worker.id, weekStart, weekEnd);
-      const weekMinutes = weekAssignments
-        .filter((a) => a.status !== "cancelled")
-        .reduce((sum, a) => sum + (a.scheduledHours || 0), 0);
-      const weekHours = weekMinutes / 60; // scheduledHours 是分鐘，轉換為小時
-
-      const last7DaysStart = new Date(demandDate);
-      last7DaysStart.setDate(last7DaysStart.getDate() - 7);
-      const last7DaysAssignments = await getAssignmentsByWorker(worker.id, last7DaysStart, demandDate);
-      const last7DaysCount = last7DaysAssignments.filter((a) => a.status !== "cancelled").length;
-
-      return {
-        ...worker,
-        weekHours,
-        last7DaysCount,
-      };
     })
   );
+
+  // 並行處理所有員工
+  const workerChecks = await Promise.all(
+    allWorkers.map(async (worker) => {
+      const reasons: string[] = [];
+
+      // 檢查排班時間設置
+      const availabilityCheck = await checkWorkerAvailability(
+        worker.id,
+        demandDate,
+        startTime,
+        endTime
+      );
+
+      if (!availabilityCheck.available) {
+        reasons.push(availabilityCheck.reason || "不在可排班時段");
+        if (availabilityCheck.availableTimeBlocks) {
+          reasons.push(`本週可排：${availabilityCheck.availableTimeBlocks}`);
+        }
+      }
+
+      // 從 map 中取得當天 assignments（已預先查詢）
+      const dayAssignments = workerAssignmentsMap.get(worker.id) || [];
+      const activeAssignments = dayAssignments.filter(
+        (a) => a.status !== "cancelled" && a.demandId !== demandId
+      );
+
+      if (activeAssignments.length > 0) {
+        for (const assignment of activeAssignments) {
+          const assignedDemand = demandsMap.get(assignment.demandId);
+          const assignedClient = assignedDemand ? clientsMap.get(assignedDemand.clientId) : null;
+          const assignedTimeStr = `${formatTime(new Date(assignment.scheduledStart))}-${formatTime(new Date(assignment.scheduledEnd))}`;
+          reasons.push(`已指派到：${assignedClient?.name || "未知客戶"} ${assignedTimeStr}`);
+        }
+      }
+
+      return { worker, reasons };
+    })
+  );
+
+  const availableWorkers = workerChecks
+    .filter(check => check.reasons.length === 0)
+    .map(check => check.worker);
+  
+  const unavailableWorkers = workerChecks
+    .filter(check => check.reasons.length > 0)
+    .map(check => ({ worker: check.worker, reasons: check.reasons }));
+
+  // 計算本週已排工時與近 7 天排班次數（用於排序）
+  // 批次查詢：並行查詢所有可用員工的 assignments
+  const weekStart = getWeekStart(demandDate);
+  const weekEnd = new Date(weekStart);
+  weekEnd.setDate(weekEnd.getDate() + 6);
+  weekEnd.setHours(23, 59, 59, 999);
+
+  const last7DaysStart = new Date(demandDate);
+  last7DaysStart.setDate(last7DaysStart.getDate() - 7);
+
+  const [allWeekAssignments, allLast7DaysAssignments] = await Promise.all([
+    Promise.all(availableWorkers.map(worker => getAssignmentsByWorker(worker.id, weekStart, weekEnd))),
+    Promise.all(availableWorkers.map(worker => getAssignmentsByWorker(worker.id, last7DaysStart, demandDate)))
+  ]);
+
+  const workersWithStats = availableWorkers.map((worker, index) => {
+    const weekAssignments = allWeekAssignments[index];
+    const weekMinutes = weekAssignments
+      .filter((a) => a.status !== "cancelled")
+      .reduce((sum, a) => sum + (a.scheduledHours || 0), 0);
+    const weekHours = weekMinutes / 60; // scheduledHours 是分鐘，轉換為小時
+
+    const last7DaysAssignments = allLast7DaysAssignments[index];
+    const last7DaysCount = last7DaysAssignments.filter((a) => a.status !== "cancelled").length;
+
+    return {
+      ...worker,
+      weekHours,
+      last7DaysCount,
+    };
+  });
 
   // 排序：本週工時少 → 近 7 天排班少 → 姓名
   workersWithStats.sort((a, b) => {

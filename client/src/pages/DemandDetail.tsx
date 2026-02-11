@@ -5,6 +5,9 @@ import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import {
@@ -36,6 +39,7 @@ export default function DemandDetail() {
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
   const [assignmentToCancel, setAssignmentToCancel] = useState<number | null>(null);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
 
   // 篩選狀態
   const [filterSchool, setFilterSchool] = useState("");
@@ -43,6 +47,28 @@ export default function DemandDetail() {
   const [filterHealthCheck, setFilterHealthCheck] = useState<string>("all"); // "all" | "yes" | "no"
 
   const utils = trpc.useUtils();
+
+  // 查詢客戶列表
+  const { data: clients } = trpc.clients.list.useQuery({});
+
+  // 更新需求單
+  const updateMutation = trpc.demands.update.useMutation({
+    onSuccess: () => {
+      toast.success("需求單更新成功");
+      setIsEditDialogOpen(false);
+      utils.demands.getById.invalidate({ id: demandId });
+      utils.demands.feasibility.invalidate({
+        demandId,
+        date: demand?.date || new Date(),
+        startTime: demand?.startTime || "00:00",
+        endTime: demand?.endTime || "00:00",
+        requiredWorkers: demand?.requiredWorkers || 0,
+      });
+    },
+    onError: (error) => {
+      toast.error(`更新失敗：${error.message}`);
+    },
+  });
 
   // 複製需求單
   const duplicateMutation = trpc.demands.duplicate.useMutation({
@@ -295,7 +321,7 @@ export default function DemandDetail() {
           <Button
             variant="outline"
             size="sm"
-            onClick={() => setLocation(`/demands?edit=${demandId}`)}
+            onClick={() => setIsEditDialogOpen(true)}
           >
             <Edit className="mr-1.5 h-3.5 w-3.5" />
             編輯
@@ -775,6 +801,93 @@ export default function DemandDetail() {
           </Card>
         </Collapsible>
       </div>
+
+      {/* 編輯對話框 */}
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent className="max-w-md">
+          <form onSubmit={(e) => {
+            e.preventDefault();
+            const formData = new FormData(e.currentTarget);
+            const dateStr = formData.get("date") as string;
+            const date = new Date(dateStr);
+
+            const data = {
+              id: demandId,
+              clientId: parseInt(formData.get("clientId") as string),
+              date,
+              startTime: formData.get("startTime") as string,
+              endTime: formData.get("endTime") as string,
+              requiredWorkers: parseInt(formData.get("requiredWorkers") as string),
+              location: (formData.get("location") as string) || undefined,
+              note: (formData.get("note") as string) || undefined,
+            };
+
+            updateMutation.mutate(data);
+          }}>
+            <DialogHeader>
+              <DialogTitle>編輯用工需求</DialogTitle>
+              <DialogDescription>填寫需求單基本資料</DialogDescription>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+              <div className="grid gap-2">
+                <Label htmlFor="clientId">客戶 *</Label>
+                <Select name="clientId" defaultValue={demand?.clientId?.toString()} required>
+                  <SelectTrigger>
+                    <SelectValue placeholder="請選擇客戶" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {clients?.map((client) => (
+                      <SelectItem key={client.id} value={client.id.toString()}>
+                        {client.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="date">日期 *</Label>
+                <Input 
+                  id="date" 
+                  name="date" 
+                  type="date" 
+                  defaultValue={demand?.date ? new Date(demand.date).toISOString().split('T')[0] : ''}
+                  required 
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="startTime">開始時間 *</Label>
+                  <Input id="startTime" name="startTime" type="time" defaultValue={demand?.startTime} required />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="endTime">結束時間 *</Label>
+                  <Input id="endTime" name="endTime" type="time" defaultValue={demand?.endTime} required />
+                </div>
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="requiredWorkers">需求人數 *</Label>
+                <Input id="requiredWorkers" name="requiredWorkers" type="number" min="1" defaultValue={demand?.requiredWorkers} required />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="location">地點</Label>
+                <Input id="location" name="location" placeholder="工作地點" defaultValue={demand?.location || ''} />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="note">備註</Label>
+                <Textarea id="note" name="note" placeholder="其他說明..." rows={3} defaultValue={demand?.note || ''} />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+                取消
+              </Button>
+              <Button type="submit" disabled={updateMutation.isPending}>
+                {updateMutation.isPending ? "更新中..." : "更新"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
 
       {/* 取消指派確認對話框 */}
       <AlertDialog open={cancelDialogOpen} onOpenChange={setCancelDialogOpen}>
