@@ -58,6 +58,7 @@ export const appRouter = router({
         school: z.string().optional(),
         hasWorkPermit: z.boolean().optional(),
         hasHealthCheck: z.boolean().optional(),
+        workPermitExpiryDate: z.date().optional(),
         note: z.string().optional(),
       }))
       .mutation(async ({ input }) => {
@@ -79,6 +80,7 @@ export const appRouter = router({
         school: z.string().optional(),
         hasWorkPermit: z.boolean().optional(),
         hasHealthCheck: z.boolean().optional(),
+        workPermitExpiryDate: z.date().optional(),
         status: z.enum(["active", "inactive"]).optional(),
         note: z.string().optional(),
       }))
@@ -610,8 +612,8 @@ export const appRouter = router({
         const status = conflicts.length > 0 ? "disputed" : "completed";
         
         await db.updateAssignment(input.assignmentId, {
-          actualStartTime: input.actualStartTime,
-          actualEndTime: input.actualEndTime,
+          actualStart: actualStart,
+          actualEnd: actualEnd,
           actualHours,
           varianceHours,
           status,

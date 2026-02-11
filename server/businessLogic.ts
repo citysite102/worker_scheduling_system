@@ -355,13 +355,15 @@ function formatTimeBlocks(timeBlocks: Array<{ dayOfWeek: number; startTime?: str
 }
 
 /**
- * 格式化日期為 YYYY/MM/DD
+ * 格式化日期為 YYYY/M/D 星期幾
  */
 export function formatDate(date: Date): string {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  return `${year}/${month}/${day}`;
+  const year = date.getUTCFullYear();
+  const month = date.getUTCMonth() + 1;
+  const day = date.getUTCDate();
+  const weekdays = ["星期日", "星期一", "星期二", "星期三", "星期四", "星期五", "星期六"];
+  const weekday = weekdays[date.getUTCDay()];
+  return `${year}/${month}/${day} ${weekday}`;
 }
 
 /**
