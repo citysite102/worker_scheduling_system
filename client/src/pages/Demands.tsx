@@ -17,7 +17,9 @@ export default function Demands() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingDemand, setEditingDemand] = useState<any>(null);
   const [statusFilter, setStatusFilter] = useState<string | undefined>(undefined);
-  const [dateFilter, setDateFilter] = useState<"all" | "today" | "thisWeek" | "nextWeek">("all");
+  const [dateFilter, setDateFilter] = useState<"all" | "today" | "thisWeek" | "nextWeek" | "thisMonth" | "custom">("all");
+  const [customStartDate, setCustomStartDate] = useState<string>("");
+  const [customEndDate, setCustomEndDate] = useState<string>("");
   const [clientFilter, setClientFilter] = useState<number | undefined>(undefined);
 
   // 計算日期範圍
@@ -44,6 +46,20 @@ export default function Demands() {
         const nextMonday = new Date(thisMonday.getTime() + 7 * 24 * 60 * 60 * 1000);
         const nextSunday = new Date(nextMonday.getTime() + 7 * 24 * 60 * 60 * 1000);
         return { start: nextMonday, end: nextSunday };
+      }
+      
+      case "thisMonth": {
+        const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+        const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0, 23, 59, 59);
+        return { start: firstDay, end: lastDay };
+      }
+      
+      case "custom": {
+        if (!customStartDate || !customEndDate) return null;
+        const start = new Date(customStartDate);
+        const end = new Date(customEndDate);
+        end.setHours(23, 59, 59);
+        return { start, end };
       }
       
       default:
@@ -288,7 +304,43 @@ export default function Demands() {
               >
                 下週
               </Button>
+              <Button
+                variant={dateFilter === "thisMonth" ? "default" : "outline"}
+                size="sm"
+                className="h-9"
+                onClick={() => setDateFilter("thisMonth")}
+              >
+                本月
+              </Button>
+              <Button
+                variant={dateFilter === "custom" ? "default" : "outline"}
+                size="sm"
+                className="h-9"
+                onClick={() => setDateFilter("custom")}
+              >
+                自訂區間
+              </Button>
             </div>
+            
+            {/* 自訂日期區間選擇器 */}
+            {dateFilter === "custom" && (
+              <div className="flex items-center gap-2 ml-auto">
+                <Label className="text-sm text-muted-foreground shrink-0">開始日期</Label>
+                <Input
+                  type="date"
+                  value={customStartDate}
+                  onChange={(e) => setCustomStartDate(e.target.value)}
+                  className="w-[150px] h-9"
+                />
+                <Label className="text-sm text-muted-foreground shrink-0">結束日期</Label>
+                <Input
+                  type="date"
+                  value={customEndDate}
+                  onChange={(e) => setCustomEndDate(e.target.value)}
+                  className="w-[150px] h-9"
+                />
+              </div>
+            )}
             
             <Label className="text-sm text-muted-foreground shrink-0">客戶篩選</Label>
             <Select
