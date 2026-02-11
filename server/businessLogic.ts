@@ -229,11 +229,18 @@ export async function calculateDemandFeasibility(
       );
 
       if (activeAssignments.length > 0) {
+        // 檢查時段是否重疊
         for (const assignment of activeAssignments) {
-          const assignedDemand = demandsMap.get(assignment.demandId);
-          const assignedClient = assignedDemand ? clientsMap.get(assignedDemand.clientId) : null;
-          const assignedTimeStr = `${formatTime(new Date(assignment.scheduledStart))}-${formatTime(new Date(assignment.scheduledEnd))}`;
-          reasons.push(`已指派到：${assignedClient?.name || "未知客戶"} ${assignedTimeStr}`);
+          const assignmentStart = new Date(assignment.scheduledStart);
+          const assignmentEnd = new Date(assignment.scheduledEnd);
+          
+          // 只有當時段真正重疊時才標記為衝突
+          if (isTimeOverlap(scheduledStart, scheduledEnd, assignmentStart, assignmentEnd)) {
+            const assignedDemand = demandsMap.get(assignment.demandId);
+            const assignedClient = assignedDemand ? clientsMap.get(assignedDemand.clientId) : null;
+            const assignedTimeStr = `${formatTime(assignmentStart)}-${formatTime(assignmentEnd)}`;
+            reasons.push(`排班衝突：${assignedClient?.name || "未知客戶"} ${assignedTimeStr}`);
+          }
         }
       }
 

@@ -506,3 +506,16 @@
 
 ### 修正內容
 - [x] 修正 Dashboard.tsx 中的時間顯示邏輯，加入 `timeZone: "UTC"` 參數避免時區轉換
+
+## 使用者回報需求（2026/02/12 - 允許同一天多次指派）
+
+### 需求描述
+- 目前員工在同一天只能被指派到一個需求單
+- 希望修改為：員工可以在同一天被指派到多個時段不重疊的需求單
+- 例如：員工可以同時接 09:00-12:00 和 14:00-17:00 兩個需求單
+
+### 待辦事項
+- [x] 修改 businessLogic.ts 中的 calculateDemandFeasibility 函式
+- [x] 加入時段重疊判斷邏輯（使用 isTimeOverlap 函式，只有真正重疊時才標記為「排班衝突」）
+- [x] 更新相關測試案例（core-workflow.test.ts 和 cancelled-demand-release.test.ts）
+- [x] 執行測試確保功能正常（2/2 測試通過）

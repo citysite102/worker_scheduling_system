@@ -71,17 +71,23 @@ describe("核心流程整合測試", () => {
   });
 
   afterAll(async () => {
-    // 清理測試資料
-    if (testDemandId) {
-      try {
+    // 清理測試資料（按照外鍵依賴順序）
+    try {
+      if (testDemandId) {
         await db.deleteDemand(testDemandId);
-      } catch (e) {
-        // 可能已被刪除
       }
+      if (testClientId) {
+        await db.deleteClient(testClientId);
+      }
+      if (testWorkerId1) {
+        await db.deleteWorker(testWorkerId1);
+      }
+      if (testWorkerId2) {
+        await db.deleteWorker(testWorkerId2);
+      }
+    } catch (e) {
+      console.error("清理測試資料失敗：", e);
     }
-    if (testWorkerId1) await db.deleteWorker(testWorkerId1);
-    if (testWorkerId2) await db.deleteWorker(testWorkerId2);
-    if (testClientId) await db.deleteClient(testClientId);
   });
 
   it("應該能建立員工並設置排班時間", async () => {
@@ -125,7 +131,7 @@ describe("核心流程整合測試", () => {
       note: "測試需求單",
     });
 
-    testDemandId = demand;
+    testDemandId = demand.id;
     expect(testDemandId).toBeGreaterThan(0);
 
     // 檢查指派條件
@@ -174,7 +180,7 @@ describe("核心流程整合測試", () => {
     });
 
     const feasibility = await logic.calculateDemandFeasibility(
-      lateDemand,
+      lateDemand.id,
       demandDate,
       "19:00",
       "22:00",
@@ -196,7 +202,7 @@ describe("核心流程整合測試", () => {
     // 如果邏輯是「需求時間必須完全在排班時間內」，則 worker2 也應該不可指派
 
     // 清理測試需求單
-    await db.deleteDemand(lateDemand);
+    await db.deleteDemand(lateDemand.id);
   });
 
   it("應該能複製需求單", async () => {
@@ -247,7 +253,7 @@ describe("核心流程整合測試", () => {
     scheduledEnd.setUTCHours(17, 0, 0, 0);
 
     const assignment = await db.createAssignment({
-      demandId: demandToDelete,
+      demandId: demandToDelete.id,
       workerId: testWorkerId1,
       scheduledStart,
       scheduledEnd,
@@ -257,15 +263,15 @@ describe("核心流程整合測試", () => {
 
     expect(assignment.id).toBeGreaterThan(0);
 
-    // 刪除需求單（應該同時刪除相關的 assignments）
-    await db.deleteDemand(demandToDelete);
+    // 刪除需求單（應該也會刪除相關的 assignment）
+    await db.deleteDemand(demandToDelete.id);;
 
     // 檢查需求單是否已刪除
-    const deletedDemand = await db.getDemandById(demandToDelete);
+    const deletedDemand = await db.getDemandById(demandToDelete.id);
     expect(deletedDemand).toBeNull();
 
     // 檢查 assignment 是否也被刪除
-    const assignments = await db.getAssignmentsByDemand(demandToDelete);
+    const assignments = await db.getAssignmentsByDemand(demandToDelete.id);
     expect(assignments.length).toBe(0);
   });
 
@@ -294,7 +300,7 @@ describe("核心流程整合測試", () => {
     scheduledEnd1.setUTCHours(12, 0, 0, 0);
 
     await db.createAssignment({
-      demandId: demand1,
+      demandId: demand1.id,
       workerId: testWorkerId1,
       scheduledStart: scheduledStart1,
       scheduledEnd: scheduledEnd1,
@@ -315,28 +321,27 @@ describe("核心流程整合測試", () => {
 
     // 檢查第二個需求單的指派條件
     const feasibility = await logic.calculateDemandFeasibility(
-      demand2,
+      demand2.id,
       demandDate,
       "14:00",
       "17:00",
       1
     );
 
-    // 員工 1 應該在不可指派列表（已指派到同一天的其他需求單）
+    // 員工 1 應該在可指派列表（時段不重疊：09:00-12:00 和 14:00-17:00）
+    const worker1Available = feasibility.availableWorkers.some(
+      (w: any) => w.id === testWorkerId1
+    );
+    expect(worker1Available).toBe(true);
+
+    // 確認員工 1 不在不可指派列表中（因為時段不重疊）
     const worker1Unavailable = feasibility.unavailableWorkers.some(
       (uw: any) => uw.worker.id === testWorkerId1
     );
-    expect(worker1Unavailable).toBe(true);
-
-    // 檢查不可指派原因是否包含「已指派到」
-    const worker1Reason = feasibility.unavailableWorkers.find(
-      (uw: any) => uw.worker.id === testWorkerId1
-    );
-    // 檢查是否有不可指派的原因（可能是「已指派到」或「排班衝突」）
-    expect(worker1Reason?.reasons.length).toBeGreaterThan(0);
+    expect(worker1Unavailable).toBe(false);
 
     // 清理測試資料
-    await db.deleteDemand(demand1);
-    await db.deleteDemand(demand2);
+    await db.deleteDemand(demand1.id);
+    await db.deleteDemand(demand2.id);
   });
 });
