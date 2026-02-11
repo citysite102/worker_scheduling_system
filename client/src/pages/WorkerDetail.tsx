@@ -188,7 +188,7 @@ export default function WorkerDetail() {
             {worker.status === "active" ? "啟用" : "停用"}
           </Badge>
         </div>
-        <Link href="/availability">
+        <Link href={`/availability?workerId=${workerId}`}>
           <Button variant="outline" size="sm" className="gap-1.5">
             <Clock className="h-4 w-4" /> 前往排班時間設置
           </Button>

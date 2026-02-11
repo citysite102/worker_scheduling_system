@@ -7,8 +7,9 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { ChevronLeft, ChevronRight, Plus, Trash2, Check, Loader2, Clock, AlertTriangle, Copy } from "lucide-react";
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
 import { toast } from "sonner";
+import { useSearch } from "wouter";
 
 const WEEKDAYS = ["週一", "週二", "週三", "週四", "週五", "週六", "週日"];
 
@@ -51,8 +52,13 @@ function findOverlaps(slots: { startTime: string; endTime: string }[]): [number,
 }
 
 export default function Availability() {
+  const searchParams = new URLSearchParams(useSearch());
+  const workerIdFromUrl = searchParams.get("workerId");
+  
   const [selectedWeek, setSelectedWeek] = useState(() => getWeekStart(new Date()));
-  const [selectedWorker, setSelectedWorker] = useState<number | null>(null);
+  const [selectedWorker, setSelectedWorker] = useState<number | null>(
+    workerIdFromUrl ? Number(workerIdFromUrl) : null
+  );
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [timeSlots, setTimeSlots] = useState<{ startTime: string; endTime: string }[]>([
     { startTime: "09:00", endTime: "17:00" },
