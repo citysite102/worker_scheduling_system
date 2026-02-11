@@ -216,7 +216,16 @@ export async function calculateDemandFeasibility(
       // 從 map 中取得當天 assignments（已預先查詢）
       const dayAssignments = workerAssignmentsMap.get(worker.id) || [];
       const activeAssignments = dayAssignments.filter(
-        (a) => a.status !== "cancelled" && a.demandId !== demandId
+        (a) => {
+          // 排除已取消的指派記錄
+          if (a.status === "cancelled") return false;
+          // 排除當前需求單的指派
+          if (a.demandId === demandId) return false;
+          // 排除已取消需求單的指派
+          const assignedDemand = demandsMap.get(a.demandId);
+          if (assignedDemand && assignedDemand.status === "cancelled") return false;
+          return true;
+        }
       );
 
       if (activeAssignments.length > 0) {
