@@ -301,7 +301,7 @@ export async function getAllDemands(statusFilter?: string, dateFilter?: Date) {
   const db = await getDb();
   if (!db) return [];
 
-  let query = db.select().from(demands).orderBy(desc(demands.date));
+  let query = db.select().from(demands).orderBy(desc(demands.createdAt));
   const conditions = [];
 
   if (statusFilter) {
@@ -346,9 +346,9 @@ export async function createDemand(data: { clientId: number; date: Date; startTi
   if (data.note) insertData.note = data.note;
   
   const result = await db.insert(demands).values(insertData);
-  // 返回新建立的 ID（MySQL 使用 lastInsertRowid 或直接查詢）
+  // 返回新建立的完整 demand 物件
   const [newDemand] = await db.select().from(demands).orderBy(desc(demands.id)).limit(1);
-  return newDemand.id;
+  return newDemand;
 }
 
 export async function updateDemand(id: number, data: Partial<{ clientId: number; date: Date; startTime: string; endTime: string; requiredWorkers: number; location?: string; note?: string; status: "draft" | "confirmed" | "cancelled" | "closed" }>) {

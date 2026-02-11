@@ -669,7 +669,6 @@ export default function DemandDetail() {
                   >
                     <Checkbox
                       checked={selectedWorkerIds.includes(worker.id)}
-                      onCheckedChange={() => handleToggleWorker(worker.id)}
                     />
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">

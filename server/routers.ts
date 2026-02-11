@@ -449,7 +449,7 @@ export const appRouter = router({
         if (!originalDemand) throw new Error("需求單不存在");
         
         // 複製需求，狀態設為 draft
-        const newDemandId = await db.createDemand({
+        const newDemand = await db.createDemand({
           clientId: originalDemand.clientId,
           date: originalDemand.date,
           startTime: originalDemand.startTime,
@@ -460,7 +460,7 @@ export const appRouter = router({
           status: "draft",
         });
         
-        return { success: true, newDemandId };
+        return { success: true, newDemandId: newDemand.id };
       }),
 
     cancel: publicProcedure

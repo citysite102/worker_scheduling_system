@@ -376,6 +376,11 @@ export default function Demands() {
                             {demand.location}
                           </span>
                         )}
+                        {demand.createdAt && (
+                          <span className="flex items-center gap-1 text-[10px] text-muted-foreground/70">
+                            建立於 {new Date(demand.createdAt).toLocaleString("zh-TW", { month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit" })}
+                          </span>
+                        )}
                       </div>
                     </div>
                     <div className="flex items-center gap-2.5 shrink-0 ml-3">
