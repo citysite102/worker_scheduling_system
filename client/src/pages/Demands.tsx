@@ -286,7 +286,7 @@ export default function Demands() {
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="h-7 px-2 opacity-0 group-hover:opacity-100 transition-opacity"
+                        className="h-7 px-2"
                         onClick={(e) => {
                           e.stopPropagation();
                           setEditingDemand(demand);
@@ -298,7 +298,7 @@ export default function Demands() {
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="h-7 px-2 opacity-0 group-hover:opacity-100 transition-opacity"
+                        className="h-7 px-2"
                         onClick={(e) => {
                           e.stopPropagation();
                           duplicateMutation.mutate({ id: demand.id });
@@ -310,7 +310,7 @@ export default function Demands() {
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="h-7 px-2 opacity-0 group-hover:opacity-100 transition-opacity text-red-600 hover:text-red-700 hover:bg-red-50"
+                        className="h-7 px-2 text-red-600 hover:text-red-700 hover:bg-red-50"
                         onClick={(e) => {
                           e.stopPropagation();
                           handleDelete(demand.id);
@@ -319,7 +319,7 @@ export default function Demands() {
                       >
                         <Trash2 className="h-3.5 w-3.5" />
                       </Button>
-                      <ArrowRight className="h-3.5 w-3.5 text-muted-foreground/50 opacity-0 group-hover:opacity-100 transition-opacity" />
+                      <ArrowRight className="h-3.5 w-3.5 text-muted-foreground/50" />
                     </div>
                   </div>
                 );
