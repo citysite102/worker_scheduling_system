@@ -268,7 +268,7 @@ export default function Dashboard() {
                     <div className="min-w-0 flex-1 mr-3">
                       <div className="font-medium text-sm">{assignment.worker?.name}</div>
                       <div className="text-xs text-muted-foreground mt-0.5">
-                        {assignment.demand?.client?.name || "未知客戶"} · {new Date(assignment.scheduledStart).toLocaleTimeString("zh-TW", { hour: "2-digit", minute: "2-digit" })} - {new Date(assignment.scheduledEnd).toLocaleTimeString("zh-TW", { hour: "2-digit", minute: "2-digit" })}
+                        {assignment.demand?.client?.name || "未知客戶"} · {new Date(assignment.scheduledStart).toLocaleTimeString("zh-TW", { hour: "2-digit", minute: "2-digit", timeZone: "UTC" })} - {new Date(assignment.scheduledEnd).toLocaleTimeString("zh-TW", { hour: "2-digit", minute: "2-digit", timeZone: "UTC" })}
                       </div>
                     </div>
                     <Badge
