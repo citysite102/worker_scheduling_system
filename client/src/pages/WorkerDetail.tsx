@@ -31,7 +31,8 @@ const DAY_NAMES = ["", "週一", "週二", "週三", "週四", "週五", "週六
 
 function formatDate(date: string | Date) {
   const d = new Date(date);
-  return `${d.getFullYear()}/${String(d.getMonth() + 1).padStart(2, "0")}/${String(d.getDate()).padStart(2, "0")}`;
+  // 使用 UTC 方法避免時區影響
+  return `${d.getUTCFullYear()}/${String(d.getUTCMonth() + 1).padStart(2, "0")}/${String(d.getUTCDate()).padStart(2, "0")}`;
 }
 
 function formatWeekRange(start: string | Date, end: string | Date) {

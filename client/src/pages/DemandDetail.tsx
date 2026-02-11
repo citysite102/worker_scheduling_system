@@ -9,7 +9,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import {
   AlertCircle, CheckCircle2, ChevronDown, ChevronUp, ArrowLeft, Loader2,
-  Calendar, Clock, MapPin, Users, Filter, GraduationCap, FileCheck, Stethoscope, X
+  Calendar, Clock, MapPin, Users, Filter, GraduationCap, FileCheck, Stethoscope, X,
+  Edit, Copy, Trash2
 } from "lucide-react";
 import { useParams, useLocation } from "wouter";
 import { useState, useMemo } from "react";
@@ -42,6 +43,28 @@ export default function DemandDetail() {
   const [filterHealthCheck, setFilterHealthCheck] = useState<string>("all"); // "all" | "yes" | "no"
 
   const utils = trpc.useUtils();
+
+  // 複製需求單
+  const duplicateMutation = trpc.demands.duplicate.useMutation({
+    onSuccess: (data) => {
+      toast.success("需求單複製成功");
+      setLocation(`/demands/${data.newDemandId}`);
+    },
+    onError: (error) => {
+      toast.error(`複製失敗：${error.message}`);
+    },
+  });
+
+  // 刪除需求單
+  const deleteMutation = trpc.demands.delete.useMutation({
+    onSuccess: () => {
+      toast.success("需求單刪除成功");
+      setLocation("/demands");
+    },
+    onError: (error) => {
+      toast.error(`刪除失敗：${error.message}`);
+    },
+  });
   const { data: demand, isLoading } = trpc.demands.getById.useQuery({ id: demandId });
 
   const { data: feasibility, isLoading: feasibilityLoading } = trpc.demands.feasibility.useQuery(
@@ -263,9 +286,43 @@ export default function DemandDetail() {
         返回需求列表
       </Button>
 
-      <div className="mb-8">
-        <h1 className="text-2xl font-semibold text-foreground">需求單：{demand.client?.name}</h1>
-        <p className="text-sm text-muted-foreground mt-1">指派員工至此需求單</p>
+      <div className="mb-8 flex items-start justify-between">
+        <div>
+          <h1 className="text-2xl font-semibold text-foreground">需求單：{demand.client?.name}</h1>
+          <p className="text-sm text-muted-foreground mt-1">指派員工至此需求單</p>
+        </div>
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setLocation(`/demands?edit=${demandId}`)}
+          >
+            <Edit className="mr-1.5 h-3.5 w-3.5" />
+            編輯
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              duplicateMutation.mutate({ id: demandId });
+            }}
+          >
+            <Copy className="mr-1.5 h-3.5 w-3.5" />
+            複製
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              if (window.confirm("確定要刪除這個需求單嗎？")) {
+                deleteMutation.mutate({ id: demandId });
+              }
+            }}
+          >
+            <Trash2 className="mr-1.5 h-3.5 w-3.5" />
+            刪除
+          </Button>
+        </div>
       </div>
 
       <div className="grid gap-5 mb-6">
