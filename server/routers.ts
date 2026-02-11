@@ -629,7 +629,18 @@ export const appRouter = router({
           status,
         });
         
-        return { success: true, status };
+        // 檢查該需求單的所有 assignment 是否都已回填實際工時
+        const allAssignments = await db.getAssignmentsByDemand(assignment.demandId);
+        const allCompleted = allAssignments.every(a => 
+          a.status === "completed" || a.status === "disputed"
+        );
+        
+        // 如果所有 assignment 都已完成，自動將需求單狀態改為「已結案」
+        if (allCompleted && allAssignments.length > 0) {
+          await db.updateDemand(assignment.demandId, { status: "closed" });
+        }
+        
+        return { success: true, status, demandClosed: allCompleted };
       }),
 
     create: publicProcedure
