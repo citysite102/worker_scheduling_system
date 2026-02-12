@@ -1,0 +1,37 @@
+{
+  "query": "-- 檢查 clients 表中的測試資料\nSELECT COUNT(*) as test_clients FROM clients WHERE name LIKE '%測試%' OR name LIKE '%test%';\n\n-- 檢查 workers 表中的測試資料\nSELECT COUNT(*) as test_workers FROM workers WHERE name LIKE '%測試%' OR name LIKE '%test%';\n\n-- 檢查 demands 表中的測試資料\nSELECT COUNT(*) as test_demands FROM demands WHERE note LIKE '%測試%' OR location LIKE '%測試%';\n\n-- 檢查 assignments 表的總數\nSELECT COUNT(*) as total_assignments FROM assignments;\n\n-- 檢查 availability 表的總數\nSELECT COUNT(*) as total_availability FROM availability;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2iEKifVQ9gKtEas.9cbf5414b428 --database CMgr35KntT8tLtgpfJPejw --execute -- 檢查 clients 表中的測試資料\nSELECT COUNT(*) as test_clients FROM clients WHERE name LIKE '%測試%' OR name LIKE '%test%';\n\n-- 檢查 workers 表中的測試資料\nSELECT COUNT(*) as test_workers FROM workers WHERE name LIKE '%測試%' OR name LIKE '%test%';\n\n-- 檢查 demands 表中的測試資料\nSELECT COUNT(*) as test_demands FROM demands WHERE note LIKE '%測試%' OR location LIKE '%測試%';\n\n-- 檢查 assignments 表的總數\nSELECT COUNT(*) as total_assignments FROM assignments;\n\n-- 檢查 availability 表的總數\nSELECT COUNT(*) as total_availability FROM availability;",
+  "rows": [
+    {
+      "test_clients": "0"
+    },
+    {
+      "test_clients": "test_workers"
+    },
+    {
+      "test_clients": "0"
+    },
+    {
+      "test_clients": "test_demands"
+    },
+    {
+      "test_clients": "0"
+    },
+    {
+      "test_clients": "total_assignments"
+    },
+    {
+      "test_clients": "42"
+    },
+    {
+      "test_clients": "total_availability"
+    },
+    {
+      "test_clients": "29"
+    }
+  ],
+  "messages": [],
+  "stdout": "test_clients\n0\ntest_workers\n0\ntest_demands\n0\ntotal_assignments\n42\ntotal_availability\n29\n",
+  "stderr": "",
+  "execution_time_ms": 2413
+}

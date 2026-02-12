@@ -1,0 +1,9 @@
+{
+  "query": "-- 刪除所有與測試客戶相關的 assignments\nDELETE FROM assignments \nWHERE demandId IN (\n  SELECT d.id FROM demands d \n  JOIN clients c ON d.clientId = c.id \n  WHERE c.name LIKE '%測試%' OR c.name LIKE '%test%'\n);\n\n-- 刪除所有與測試員工相關的 assignments\nDELETE FROM assignments \nWHERE workerId IN (\n  SELECT id FROM workers \n  WHERE name LIKE '%測試%' OR name LIKE '%test%'\n);",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2iEKifVQ9gKtEas.9cbf5414b428 --database CMgr35KntT8tLtgpfJPejw --execute -- 刪除所有與測試客戶相關的 assignments\nDELETE FROM assignments \nWHERE demandId IN (\n  SELECT d.id FROM demands d \n  JOIN clients c ON d.clientId = c.id \n  WHERE c.name LIKE '%測試%' OR c.name LIKE '%test%'\n);\n\n-- 刪除所有與測試員工相關的 assignments\nDELETE FROM assignments \nWHERE workerId IN (\n  SELECT id FROM workers \n  WHERE name LIKE '%測試%' OR name LIKE '%test%'\n);",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 1748
+}

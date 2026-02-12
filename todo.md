@@ -678,3 +678,9 @@
   - [x] report-export.test.ts
   - [x] end-to-end-report.test.ts
 - [x] 測試結果：76/95 測試通過（14 個失敗，主要是 end-to-end-report.test.ts 的時間範圍過濾測試）
+
+## 清理測試資料（2026/02/12）
+
+- [x] 檢查資料庫中的測試資料（74 筆測試資料）
+- [x] 按照外鍵依賴順序清理測試資料（assignments → demands → availability → workers → clients）
+- [x] 驗證清理結果：所有測試資料已清空

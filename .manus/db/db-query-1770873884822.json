@@ -1,0 +1,9 @@
+{
+  "query": "-- 刪除所有與測試客戶相關的 demands\nDELETE FROM demands \nWHERE clientId IN (\n  SELECT id FROM clients \n  WHERE name LIKE '%測試%' OR name LIKE '%test%'\n);\n\n-- 刪除所有測試相關的 demands（根據 note 或 location）\nDELETE FROM demands \nWHERE note LIKE '%測試%' OR location LIKE '%測試%';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2iEKifVQ9gKtEas.9cbf5414b428 --database CMgr35KntT8tLtgpfJPejw --execute -- 刪除所有與測試客戶相關的 demands\nDELETE FROM demands \nWHERE clientId IN (\n  SELECT id FROM clients \n  WHERE name LIKE '%測試%' OR name LIKE '%test%'\n);\n\n-- 刪除所有測試相關的 demands（根據 note 或 location）\nDELETE FROM demands \nWHERE note LIKE '%測試%' OR location LIKE '%測試%';",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 1780
+}
