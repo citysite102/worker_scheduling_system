@@ -1,0 +1,30 @@
+{
+  "query": "\nSELECT \n  a.id,\n  a.demandId,\n  a.workerId,\n  a.scheduledStart,\n  a.scheduledEnd,\n  a.status,\n  d.date,\n  c.name AS clientName\nFROM assignments a\nLEFT JOIN demands d ON a.demandId = d.id\nLEFT JOIN clients c ON d.clientId = c.id\nWHERE a.workerId = (SELECT id FROM workers WHERE name = '宇軒' LIMIT 1)\n  AND d.date = '2026-02-20'\nORDER BY a.scheduledStart;\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2iEKifVQ9gKtEas.9cbf5414b428 --database CMgr35KntT8tLtgpfJPejw --execute \nSELECT \n  a.id,\n  a.demandId,\n  a.workerId,\n  a.scheduledStart,\n  a.scheduledEnd,\n  a.status,\n  d.date,\n  c.name AS clientName\nFROM assignments a\nLEFT JOIN demands d ON a.demandId = d.id\nLEFT JOIN clients c ON d.clientId = c.id\nWHERE a.workerId = (SELECT id FROM workers WHERE name = '宇軒' LIMIT 1)\n  AND d.date = '2026-02-20'\nORDER BY a.scheduledStart;\n",
+  "rows": [
+    {
+      "id": "330079",
+      "demandId": "390142",
+      "workerId": "330090",
+      "scheduledStart": "2026-02-20 01:00:00",
+      "scheduledEnd": "2026-02-20 09:00:00",
+      "status": "cancelled",
+      "date": "2026-02-20 00:00:00",
+      "clientName": "晶華國際酒店集團"
+    },
+    {
+      "id": "330080",
+      "demandId": "390131",
+      "workerId": "330090",
+      "scheduledStart": "2026-02-20 03:00:00",
+      "scheduledEnd": "2026-02-20 05:00:00",
+      "status": "assigned",
+      "date": "2026-02-20 00:00:00",
+      "clientName": "築間餐飲集團"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tdemandId\tworkerId\tscheduledStart\tscheduledEnd\tstatus\tdate\tclientName\n330079\t390142\t330090\t2026-02-20 01:00:00\t2026-02-20 09:00:00\tcancelled\t2026-02-20 00:00:00\t晶華國際酒店集團\n330080\t390131\t330090\t2026-02-20 03:00:00\t2026-02-20 05:00:00\tassigned\t2026-02-20 00:00:00\t築間餐飲集團\n",
+  "stderr": "",
+  "execution_time_ms": 1551
+}

@@ -276,11 +276,11 @@ export default function DemandDetail() {
     }
     const scheduledStart = new Date(demand.date);
     const [startHour, startMinute] = demand.startTime.split(":").map(Number);
-    scheduledStart.setHours(startHour, startMinute, 0, 0);
+    scheduledStart.setUTCHours(startHour, startMinute, 0, 0);
 
     const scheduledEnd = new Date(demand.date);
     const [endHour, endMinute] = demand.endTime.split(":").map(Number);
-    scheduledEnd.setHours(endHour, endMinute, 0, 0);
+    scheduledEnd.setUTCHours(endHour, endMinute, 0, 0);
 
     batchCreateMutation.mutate({
       demandId,
@@ -905,7 +905,7 @@ export default function DemandDetail() {
               {demand && (() => {
                 const demandDateTime = new Date(demand.date);
                 const [startHour, startMin] = demand.startTime.split(":").map(Number);
-                demandDateTime.setHours(startHour, startMin, 0, 0);
+                demandDateTime.setUTCHours(startHour, startMin, 0, 0);
                 const now = new Date();
                 const hasStarted = demandDateTime <= now;
 

@@ -1,0 +1,8 @@
+{
+  "query": "\nSELECT \n  d.id,\n  d.clientId,\n  c.name AS clientName,\n  d.date,\n  d.scheduledStart,\n  d.scheduledEnd,\n  d.status,\n  d.breakHours\nFROM demands d\nLEFT JOIN clients c ON d.clientId = c.id\nWHERE d.id = 390142;\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2iEKifVQ9gKtEas.9cbf5414b428 --database CMgr35KntT8tLtgpfJPejw --execute \nSELECT \n  d.id,\n  d.clientId,\n  c.name AS clientName,\n  d.date,\n  d.scheduledStart,\n  d.scheduledEnd,\n  d.status,\n  d.breakHours\nFROM demands d\nLEFT JOIN clients c ON d.clientId = c.id\nWHERE d.id = 390142;\n",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1054 (42S22) at line 2: Unknown column 'd.scheduledstart' in 'field list'"
+  ]
+}
