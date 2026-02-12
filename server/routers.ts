@@ -308,7 +308,41 @@ export const appRouter = router({
           confirmedAt: null, // 修改排班時清除確認狀態，要求使用者重新確認
         });
         
-        return { success: true };
+        // 檢查排班時間變更後的衝突：查詢該員工在該週的所有已指派需求單
+        const weekEndForQuery = new Date(weekEnd);
+        const assignments = await db.getAssignmentsByWorker(workerId, weekStart, weekEndForQuery);
+        const conflictingAssignments = [];
+        
+        for (const assignment of assignments) {
+          if (assignment.status === "cancelled") continue;
+          
+          // 取得需求單資訊
+          const demand = await db.getDemandById(assignment.demandId);
+          if (!demand) continue;
+          
+          // 檢查是否在新的排班時間內
+          const availabilityCheck = await logic.checkWorkerAvailability(
+            workerId,
+            new Date(demand.date),
+            demand.startTime,
+            demand.endTime
+          );
+          
+          if (!availabilityCheck.available) {
+            conflictingAssignments.push({
+              assignmentId: assignment.id,
+              demandId: demand.id,
+              date: demand.date,
+              time: `${demand.startTime}-${demand.endTime}`,
+              reason: availabilityCheck.reason,
+            });
+          }
+        }
+        
+        return { 
+          success: true, 
+          conflicts: conflictingAssignments.length > 0 ? conflictingAssignments : undefined,
+        };
       }),
 
     confirm: publicProcedure
@@ -663,6 +697,11 @@ export const appRouter = router({
         note: z.string().optional(),
       }))
       .mutation(async ({ input }) => {
+        // 驗證：結束時間必須晚於開始時間
+        if (input.scheduledEnd <= input.scheduledStart) {
+          throw new Error("結束時間必須晚於開始時間，請檢查時間設定。");
+        }
+        
         // 最終檢查：確認無衝突
         const conflicts = await logic.checkWorkerConflicts(
           input.workerId,
@@ -676,6 +715,11 @@ export const appRouter = router({
         }
         
         const scheduledHours = logic.calculateMinutesBetween(input.scheduledStart, input.scheduledEnd);
+        
+        // 驗證：工時不能為負數
+        if (scheduledHours < 0) {
+          throw new Error("工時計算錯誤：結束時間早於開始時間。請聯繫管理員。");
+        }
         
         await db.createAssignment({
           ...input,
@@ -693,6 +737,11 @@ export const appRouter = router({
         scheduledEnd: z.date(),
       }))
       .mutation(async ({ input }) => {
+        // 驗證：結束時間必須晚於開始時間
+        if (input.scheduledEnd <= input.scheduledStart) {
+          throw new Error("結束時間必須晚於開始時間，請檢查時間設定。");
+        }
+        
         const errors: string[] = [];
         const successCount = { value: 0 };
         
@@ -712,6 +761,13 @@ export const appRouter = router({
             }
             
             const scheduledHours = logic.calculateMinutesBetween(input.scheduledStart, input.scheduledEnd);
+            
+            // 驗證：工時不能為負數
+            if (scheduledHours < 0) {
+              const worker = await db.getWorkerById(workerId);
+              errors.push(`員工「${worker?.name}」工時計算錯誤`);
+              continue;
+            }
             
             await db.createAssignment({
               demandId: input.demandId,

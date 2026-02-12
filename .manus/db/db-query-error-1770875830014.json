@@ -1,0 +1,8 @@
+{
+  "query": "SELECT \n  a.id,\n  a.demandId,\n  a.workerId,\n  w.name as workerName,\n  d.date,\n  d.startTime,\n  d.endTime,\n  d.breakHours,\n  a.actualStartTime,\n  a.actualEndTime,\n  a.status\nFROM assignments a\nJOIN workers w ON a.workerId = w.id\nJOIN demands d ON a.demandId = d.id\nWHERE a.workerId = 330087\nORDER BY d.date DESC;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2iEKifVQ9gKtEas.9cbf5414b428 --database CMgr35KntT8tLtgpfJPejw --execute SELECT \n  a.id,\n  a.demandId,\n  a.workerId,\n  w.name as workerName,\n  d.date,\n  d.startTime,\n  d.endTime,\n  d.breakHours,\n  a.actualStartTime,\n  a.actualEndTime,\n  a.status\nFROM assignments a\nJOIN workers w ON a.workerId = w.id\nJOIN demands d ON a.demandId = d.id\nWHERE a.workerId = 330087\nORDER BY d.date DESC;",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1054 (42S22) at line 1: Unknown column 'a.actualstarttime' in 'field list'"
+  ]
+}

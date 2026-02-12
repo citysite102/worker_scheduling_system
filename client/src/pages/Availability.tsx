@@ -84,6 +84,19 @@ export default function Availability() {
   );
 
   const upsertMutation = trpc.availability.upsert.useMutation({
+    onSuccess: (data: any) => {
+      // 檢查是否有衝突
+      if (data.conflicts && data.conflicts.length > 0) {
+        const conflictMessages = data.conflicts.map((c: any) => 
+          `需求單 #${c.demandId}（${new Date(c.date).toLocaleDateString()} ${c.time}）：${c.reason}`
+        ).join("\n");
+        
+        toast.warning(
+          `排班時間已更新，但發現以下衝突：\n${conflictMessages}\n\n請至用工需求頁面重新指派員工。`,
+          { duration: 10000 }
+        );
+      }
+    },
     onError: (error: any) => {
       toast.error(`儲存失敗：${error.message}`);
       setSavingDay(null);

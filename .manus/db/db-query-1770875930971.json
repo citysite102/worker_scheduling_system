@@ -1,0 +1,24 @@
+{
+  "query": "-- 先查看需要修正的記錄\nSELECT \n  a.id,\n  a.scheduledStart,\n  a.scheduledEnd,\n  a.scheduledHours,\n  TIMESTAMPDIFF(MINUTE, a.scheduledStart, a.scheduledEnd) as correct_hours\nFROM assignments a\nWHERE a.workerId = 330087 AND a.scheduledHours < 0;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2iEKifVQ9gKtEas.9cbf5414b428 --database CMgr35KntT8tLtgpfJPejw --execute -- 先查看需要修正的記錄\nSELECT \n  a.id,\n  a.scheduledStart,\n  a.scheduledEnd,\n  a.scheduledHours,\n  TIMESTAMPDIFF(MINUTE, a.scheduledStart, a.scheduledEnd) as correct_hours\nFROM assignments a\nWHERE a.workerId = 330087 AND a.scheduledHours < 0;",
+  "rows": [
+    {
+      "id": "330085",
+      "scheduledStart": "2026-02-09 01:00:00",
+      "scheduledEnd": "2026-02-08 19:00:00",
+      "scheduledHours": "-360",
+      "correct_hours": "-360"
+    },
+    {
+      "id": "330092",
+      "scheduledStart": "2026-02-09 01:00:00",
+      "scheduledEnd": "2026-02-08 19:00:00",
+      "scheduledHours": "-360",
+      "correct_hours": "-360"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tscheduledStart\tscheduledEnd\tscheduledHours\tcorrect_hours\n330085\t2026-02-09 01:00:00\t2026-02-08 19:00:00\t-360\t-360\n330092\t2026-02-09 01:00:00\t2026-02-08 19:00:00\t-360\t-360\n",
+  "stderr": "",
+  "execution_time_ms": 1477
+}

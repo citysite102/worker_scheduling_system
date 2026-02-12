@@ -1,0 +1,30 @@
+{
+  "query": "SELECT \n  a.id,\n  a.demandId,\n  a.scheduledStart,\n  a.scheduledEnd,\n  a.scheduledHours,\n  d.date,\n  d.startTime,\n  d.endTime\nFROM assignments a\nJOIN demands d ON a.demandId = d.id\nWHERE a.workerId = 330087 \n  AND a.scheduledHours < 0\nORDER BY a.id;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2iEKifVQ9gKtEas.9cbf5414b428 --database CMgr35KntT8tLtgpfJPejw --execute SELECT \n  a.id,\n  a.demandId,\n  a.scheduledStart,\n  a.scheduledEnd,\n  a.scheduledHours,\n  d.date,\n  d.startTime,\n  d.endTime\nFROM assignments a\nJOIN demands d ON a.demandId = d.id\nWHERE a.workerId = 330087 \n  AND a.scheduledHours < 0\nORDER BY a.id;",
+  "rows": [
+    {
+      "id": "330085",
+      "demandId": "390145",
+      "scheduledStart": "2026-02-09 01:00:00",
+      "scheduledEnd": "2026-02-08 19:00:00",
+      "scheduledHours": "-360",
+      "date": "2026-02-09 00:00:00",
+      "startTime": "09:00",
+      "endTime": "15:00"
+    },
+    {
+      "id": "330092",
+      "demandId": "390146",
+      "scheduledStart": "2026-02-09 01:00:00",
+      "scheduledEnd": "2026-02-08 19:00:00",
+      "scheduledHours": "-360",
+      "date": "2026-02-09 00:00:00",
+      "startTime": "09:00",
+      "endTime": "15:00"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tdemandId\tscheduledStart\tscheduledEnd\tscheduledHours\tdate\tstartTime\tendTime\n330085\t390145\t2026-02-09 01:00:00\t2026-02-08 19:00:00\t-360\t2026-02-09 00:00:00\t09:00\t15:00\n330092\t390146\t2026-02-09 01:00:00\t2026-02-08 19:00:00\t-360\t2026-02-09 00:00:00\t09:00\t15:00\n",
+  "stderr": "",
+  "execution_time_ms": 1517
+}

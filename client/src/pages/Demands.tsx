@@ -124,11 +124,20 @@ export default function Demands() {
     const dateStr = formData.get("date") as string;
     const date = new Date(dateStr);
 
+    const startTime = formData.get("startTime") as string;
+    const endTime = formData.get("endTime") as string;
+
+    // 驗證結束時間不能於開始時間
+    if (startTime && endTime && endTime <= startTime) {
+      toast.error("結束時間必須晚於開始時間");
+      return;
+    }
+
     const data = {
       clientId: parseInt(formData.get("clientId") as string),
       date,
-      startTime: formData.get("startTime") as string,
-      endTime: formData.get("endTime") as string,
+      startTime,
+      endTime,
       requiredWorkers: parseInt(formData.get("requiredWorkers") as string),
       breakHours: parseFloat(formData.get("breakHours") as string) || 0,
       location: (formData.get("location") as string) || undefined,
@@ -232,18 +241,15 @@ export default function Demands() {
                 </div>
                 <div className="grid gap-2">
                   <Label htmlFor="breakHours">休息時間（小時）</Label>
-                  <Select name="breakHours" defaultValue={editingDemand?.breakHours ? (editingDemand.breakHours / 60).toString() : "0"}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="請選擇休息時間" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="0">0 小時（無休息）</SelectItem>
-                      <SelectItem value="0.5">0.5 小時</SelectItem>
-                      <SelectItem value="1">1 小時</SelectItem>
-                      <SelectItem value="1.5">1.5 小時</SelectItem>
-                      <SelectItem value="2">2 小時</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <Input 
+                    id="breakHours" 
+                    name="breakHours" 
+                    type="number" 
+                    step="0.25" 
+                    min="0" 
+                    placeholder="例如：0.75 小時 = 45 分鐘" 
+                    defaultValue={editingDemand?.breakHours ? (editingDemand.breakHours / 60).toString() : "0"} 
+                  />
                 </div>
                 <div className="grid gap-2">
                   <Label htmlFor="location">地點</Label>

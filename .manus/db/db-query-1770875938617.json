@@ -1,0 +1,9 @@
+{
+  "query": "-- 更新負數工時記錄\nUPDATE assignments \nSET scheduledHours = TIMESTAMPDIFF(MINUTE, scheduledStart, scheduledEnd),\n    actualHours = CASE \n      WHEN actualStart IS NOT NULL AND actualEnd IS NOT NULL \n      THEN TIMESTAMPDIFF(MINUTE, actualStart, actualEnd)\n      ELSE actualHours\n    END,\n    varianceHours = CASE \n      WHEN actualStart IS NOT NULL AND actualEnd IS NOT NULL \n      THEN TIMESTAMPDIFF(MINUTE, actualStart, actualEnd) - TIMESTAMPDIFF(MINUTE, scheduledStart, scheduledEnd)\n      ELSE varianceHours\n    END\nWHERE workerId = 330087 AND scheduledHours < 0;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2iEKifVQ9gKtEas.9cbf5414b428 --database CMgr35KntT8tLtgpfJPejw --execute -- 更新負數工時記錄\nUPDATE assignments \nSET scheduledHours = TIMESTAMPDIFF(MINUTE, scheduledStart, scheduledEnd),\n    actualHours = CASE \n      WHEN actualStart IS NOT NULL AND actualEnd IS NOT NULL \n      THEN TIMESTAMPDIFF(MINUTE, actualStart, actualEnd)\n      ELSE actualHours\n    END,\n    varianceHours = CASE \n      WHEN actualStart IS NOT NULL AND actualEnd IS NOT NULL \n      THEN TIMESTAMPDIFF(MINUTE, actualStart, actualEnd) - TIMESTAMPDIFF(MINUTE, scheduledStart, scheduledEnd)\n      ELSE varianceHours\n    END\nWHERE workerId = 330087 AND scheduledHours < 0;",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 1512
+}
