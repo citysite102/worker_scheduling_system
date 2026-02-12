@@ -465,6 +465,7 @@ export const appRouter = router({
           startTime: originalDemand.startTime,
           endTime: originalDemand.endTime,
           requiredWorkers: originalDemand.requiredWorkers,
+          breakHours: originalDemand.breakHours || 0, // 複製休息時間
           location: originalDemand.location || undefined,
           note: originalDemand.note ? `[複製] ${originalDemand.note}` : "[複製]",
           status: "draft",
@@ -596,6 +597,11 @@ export const appRouter = router({
         const assignment = await db.getAssignmentById(input.assignmentId);
         if (!assignment) throw new Error("排班記錄不存在");
         
+        // 防止重複回填：如果已經有實際工時，不允許再次回填
+        if (assignment.actualStart && assignment.actualEnd) {
+          throw new Error("該排班記錄已經回填過實際工時，不可重複回填。如需修改，請先刪除原有記錄。");
+        }
+        
         const demand = await db.getDemandById(assignment.demandId);
         if (!demand) throw new Error("需求單不存在");
         
@@ -607,6 +613,11 @@ export const appRouter = router({
         const actualEnd = new Date(demand.date);
         const [endHour, endMin] = input.actualEndTime.split(":").map(Number);
         actualEnd.setHours(endHour, endMin, 0, 0);
+        
+        // 驗證：結束時間必須晚於開始時間
+        if (actualEnd <= actualStart) {
+          throw new Error("結束時間必須晚於開始時間，請檢查時間設定。");
+        }
         
         const actualHours = logic.calculateMinutesBetween(actualStart, actualEnd);
         const varianceHours = actualHours - assignment.scheduledHours;
