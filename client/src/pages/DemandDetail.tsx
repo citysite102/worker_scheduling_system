@@ -43,7 +43,7 @@ export default function DemandDetail() {
 
   // 篩選狀態
   const [filterSchool, setFilterSchool] = useState("");
-  const [filterWorkPermit, setFilterWorkPermit] = useState<string>("all"); // "all" | "yes" | "no"
+  const [filterWorkPermit, setFilterWorkPermit] = useState<string>("all"); // "all" | "yes" | "no" | "within_validity"
   const [filterHealthCheck, setFilterHealthCheck] = useState<string>("all"); // "all" | "yes" | "no"
 
   const utils = trpc.useUtils();
@@ -190,6 +190,12 @@ export default function DemandDetail() {
       }
       if (filterWorkPermit === "yes" && !worker.hasWorkPermit) return false;
       if (filterWorkPermit === "no" && worker.hasWorkPermit) return false;
+      if (filterWorkPermit === "within_validity") {
+        if (!worker.hasWorkPermit || !worker.workPermitExpiryDate) return false;
+        const expiryDate = new Date(worker.workPermitExpiryDate);
+        const today = new Date();
+        if (expiryDate < today) return false;
+      }
       if (filterHealthCheck === "yes" && !worker.hasHealthCheck) return false;
       if (filterHealthCheck === "no" && worker.hasHealthCheck) return false;
       return true;
@@ -206,6 +212,12 @@ export default function DemandDetail() {
         }
         if (filterWorkPermit === "yes" && !uw.worker.hasWorkPermit) return false;
         if (filterWorkPermit === "no" && uw.worker.hasWorkPermit) return false;
+        if (filterWorkPermit === "within_validity") {
+          if (!uw.worker.hasWorkPermit || !uw.worker.workPermitExpiryDate) return false;
+          const expiryDate = new Date(uw.worker.workPermitExpiryDate);
+          const today = new Date();
+          if (expiryDate < today) return false;
+        }
         if (filterHealthCheck === "yes" && !uw.worker.hasHealthCheck) return false;
         if (filterHealthCheck === "no" && uw.worker.hasHealthCheck) return false;
         return true;
@@ -373,7 +385,7 @@ export default function DemandDetail() {
                   <span className="text-muted-foreground">日期：</span>
                   <span className="font-medium">
                     {new Date(demand.date).toLocaleDateString("zh-TW", {
-                      year: "numeric", month: "long", day: "numeric",
+                      year: "numeric", month: "long", day: "numeric", weekday: "long",
                     })}
                   </span>
                 </div>
@@ -500,6 +512,7 @@ export default function DemandDetail() {
                       <SelectItem value="all">不限</SelectItem>
                       <SelectItem value="yes">有簽證</SelectItem>
                       <SelectItem value="no">無簽證</SelectItem>
+                      <SelectItem value="within_validity">期限內</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
