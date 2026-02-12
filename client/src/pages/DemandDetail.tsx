@@ -552,24 +552,24 @@ export default function DemandDetail() {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
                         <span className="font-medium text-sm">{assignment.worker?.name}</span>
-                        {assignment.worker?.school && (
+                        {assignment.worker?.school ? (
                           <Badge variant="outline" className="text-xs px-1.5 py-0 bg-white">
                             <GraduationCap className="h-3 w-3 mr-0.5" />
                             {assignment.worker.school}
                           </Badge>
-                        )}
-                        {assignment.worker?.hasWorkPermit && (
+                        ) : null}
+                        {assignment.worker?.hasWorkPermit ? (
                           <Badge variant="outline" className="text-xs px-1.5 py-0 bg-emerald-50 text-emerald-700 border-emerald-200">
                             <FileCheck className="h-3 w-3 mr-0.5" />
                             簽證
                           </Badge>
-                        )}
-                        {assignment.worker?.hasHealthCheck && (
+                        ) : null}
+                        {assignment.worker?.hasHealthCheck ? (
                           <Badge variant="outline" className="text-xs px-1.5 py-0 bg-blue-50 text-blue-700 border-blue-200">
                             <Stethoscope className="h-3 w-3 mr-0.5" />
                             體檢
                           </Badge>
-                        )}
+                        ) : null}
                       </div>
                       <div className="text-xs text-muted-foreground mt-0.5">
                         {assignment.worker?.phone} · {assignment.worker?.email}

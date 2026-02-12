@@ -1,0 +1,27 @@
+{
+  "query": "\nSELECT *\nFROM workers\nWHERE name LIKE '%宇軒%'\nLIMIT 1;\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2iEKifVQ9gKtEas.9cbf5414b428 --database CMgr35KntT8tLtgpfJPejw --execute \nSELECT *\nFROM workers\nWHERE name LIKE '%宇軒%'\nLIMIT 1;\n",
+  "rows": [
+    {
+      "id": "330090",
+      "name": "宇軒",
+      "email": "NULL",
+      "phone": "88698333",
+      "status": "active",
+      "note": "NULL",
+      "createdAt": "2026-02-11 17:20:18",
+      "updatedAt": "2026-02-11 17:20:18",
+      "school": "NULL",
+      "hasWorkPermit": "0",
+      "hasHealthCheck": "0",
+      "workPermitExpiryDate": "2026-02-20 00:00:00",
+      "attendanceNotes": "NULL",
+      "lineId": "NULL",
+      "whatsappId": "NULL"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\temail\tphone\tstatus\tnote\tcreatedAt\tupdatedAt\tschool\thasWorkPermit\thasHealthCheck\tworkPermitExpiryDate\tattendanceNotes\tlineId\twhatsappId\n330090\t宇軒\tNULL\t88698333\tactive\tNULL\t2026-02-11 17:20:18\t2026-02-11 17:20:18\tNULL\t0\t0\t2026-02-20 00:00:00\tNULL\tNULL\tNULL\n",
+  "stderr": "",
+  "execution_time_ms": 1538
+}
