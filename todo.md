@@ -661,3 +661,20 @@
   - [x] 其他可能使用 setHours() 的地方：已修復 DemandDetail.tsx 第 908 行
 - [ ] 執行所有測試確保功能正常
 - [ ] 考慮是否需要修正現有的錯誤資料（可能需要資料移轉腳本）
+
+## 測試案例修復（2026/02/12）
+
+### 失敗的測試案例分析與修復
+- [x] 分析測試失敗的原因（13 個測試失敗）
+- [x] 修復 routers.ts 的 SQL 語法錯誤（第 757 行）
+- [x] 修復 auto-status-update.test.ts（testDemandId 賦值錯誤）
+- [x] 修復 test-availability-flow.test.ts（改為動態建立測試資料）
+- [x] 修復測試資料清理順序問題（外鍵約束錯誤）
+  - [x] core-workflow.test.ts
+  - [x] actual-time-fill.test.ts
+  - [x] auto-status-update.test.ts
+  - [x] cancelled-demand-release.test.ts
+  - [x] demand-workflows.test.ts
+  - [x] report-export.test.ts
+  - [x] end-to-end-report.test.ts
+- [x] 測試結果：76/95 測試通過（14 個失敗，主要是 end-to-end-report.test.ts 的時間範圍過濾測試）

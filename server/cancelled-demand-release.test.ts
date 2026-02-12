@@ -89,12 +89,17 @@ describe("已取消需求單的人力釋放", () => {
 
   afterAll(async () => {
     // 清理測試資料
+    const dbInstance = await db.getDb();
+    if (!dbInstance) return;
+    const { availability } = await import("../drizzle/schema");
+    const { eq } = await import("drizzle-orm");
+
+    // 1. 刪除 assignments
     if (testDemandId1) {
       const assignments1 = await db.getAssignmentsByDemand(testDemandId1);
       for (const assignment of assignments1) {
         await db.deleteAssignment(assignment.id);
       }
-      await db.deleteDemand(testDemandId1);
     }
 
     if (testDemandId2) {
@@ -102,9 +107,23 @@ describe("已取消需求單的人力釋放", () => {
       for (const assignment of assignments2) {
         await db.deleteAssignment(assignment.id);
       }
+    }
+
+    // 2. 刪除 demands
+    if (testDemandId1) {
+      await db.deleteDemand(testDemandId1);
+    }
+
+    if (testDemandId2) {
       await db.deleteDemand(testDemandId2);
     }
 
+    // 3. 刪除 availability
+    if (testWorkerId) {
+      await dbInstance.delete(availability).where(eq(availability.workerId, testWorkerId));
+    }
+
+    // 4. 刪除 workers 和 clients
     if (testWorkerId) {
       await db.deleteWorker(testWorkerId);
     }

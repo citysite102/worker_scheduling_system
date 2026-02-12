@@ -14,33 +14,40 @@ import * as db from "./db";
  */
 
 describe("排班設置與需求單指派完整流程測試", () => {
-  const workerId = 30001; // 慕伊娜Ina
-  const demandId = 30001; // 米窩-中山館
+  let workerId: number;
+  let demandId: number;
   const weekStart = new Date("2026-02-09T00:00:00.000Z");
   const demandDate = new Date("2026-02-13T00:00:00.000Z");
   const demandStartTime = "09:00";
   const demandEndTime = "16:00";
 
   beforeAll(async () => {
-    // 清除測試資料
+    // 建立測試員工
+    const worker = await db.createWorker({
+      name: "測試員工-排班流程",
+      phone: "0999-999-999",
+      status: "active",
+    });
+    workerId = worker.id;
+  });
+
+  afterAll(async () => {
+    // 清理測試資料
     const dbInstance = await db.getDb();
-    if (!dbInstance) throw new Error("Database not available");
+    if (!dbInstance) return;
     
     const { availability } = await import("../drizzle/schema");
-    const { and, eq, gte, lt } = await import("drizzle-orm");
+    const { eq } = await import("drizzle-orm");
     
-    const dayStart = new Date(weekStart);
-    dayStart.setHours(0, 0, 0, 0);
-    const dayEnd = new Date(dayStart);
-    dayEnd.setDate(dayEnd.getDate() + 7);
+    // 刪除 availability
+    if (workerId) {
+      await dbInstance.delete(availability).where(eq(availability.workerId, workerId));
+    }
     
-    await dbInstance.delete(availability).where(
-      and(
-        eq(availability.workerId, workerId),
-        gte(availability.weekStartDate, dayStart),
-        lt(availability.weekStartDate, dayEnd)
-      )
-    );
+    // 刪除 worker
+    if (workerId) {
+      await db.deleteWorker(workerId);
+    }
   });
 
   it("步驟 1：設定週一的排班時間", async () => {

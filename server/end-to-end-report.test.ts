@@ -106,10 +106,10 @@ describe("端到端測試：實際工時回填 → 報表輸出", () => {
     // 清理測試資料（依照外鍵約束順序）
     const database = await db.getDb();
     if (database) {
-      const { demands, assignments, workers, clients } = await import("../drizzle/schema");
+      const { demands, assignments, workers, clients, availability } = await import("../drizzle/schema");
       const { eq } = await import("drizzle-orm");
 
-      // 先刪除 assignments
+      // 1. 刪除 assignments
       if (testAssignment1Id) {
         await database.delete(assignments).where(eq(assignments.id, testAssignment1Id));
       }
@@ -120,7 +120,7 @@ describe("端到端測試：實際工時回填 → 報表輸出", () => {
         await database.delete(assignments).where(eq(assignments.id, testAssignment3Id));
       }
 
-      // 再刪除 demands
+      // 2. 刪除 demands
       if (testDemand1Id) {
         await database.delete(demands).where(eq(demands.id, testDemand1Id));
       }
@@ -128,7 +128,15 @@ describe("端到端測試：實際工時回填 → 報表輸出", () => {
         await database.delete(demands).where(eq(demands.id, testDemand2Id));
       }
 
-      // 最後刪除 workers 和 clients
+      // 3. 刪除 availability
+      if (testWorker1Id) {
+        await database.delete(availability).where(eq(availability.workerId, testWorker1Id));
+      }
+      if (testWorker2Id) {
+        await database.delete(availability).where(eq(availability.workerId, testWorker2Id));
+      }
+
+      // 4. 刪除 workers 和 clients
       if (testWorker1Id) {
         await database.delete(workers).where(eq(workers.id, testWorker1Id));
       }

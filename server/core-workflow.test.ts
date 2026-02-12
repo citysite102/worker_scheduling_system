@@ -42,30 +42,38 @@ describe("核心流程整合測試", () => {
     weekStart.setUTCHours(0, 0, 0, 0);
 
     // 設置員工 1 的排班時間（週一到週五 09:00-18:00）
+    const weekEnd1 = new Date(weekStart);
+    weekEnd1.setUTCDate(weekEnd1.getUTCDate() + 6);
     await db.upsertAvailability({
       workerId: testWorkerId1,
       weekStartDate: weekStart,
-      monday: "09:00-12:00,13:00-18:00",
-      tuesday: "09:00-12:00,13:00-18:00",
-      wednesday: "09:00-12:00,13:00-18:00",
-      thursday: "09:00-12:00,13:00-18:00",
-      friday: "09:00-12:00,13:00-18:00",
-      saturday: null,
-      sunday: null,
+      weekEndDate: weekEnd1,
+      timeBlocks: JSON.stringify([
+        { dayOfWeek: 1, timeSlots: [{ startTime: "09:00", endTime: "18:00" }] },
+        { dayOfWeek: 2, timeSlots: [{ startTime: "09:00", endTime: "18:00" }] },
+        { dayOfWeek: 3, timeSlots: [{ startTime: "09:00", endTime: "18:00" }] },
+        { dayOfWeek: 4, timeSlots: [{ startTime: "09:00", endTime: "18:00" }] },
+        { dayOfWeek: 5, timeSlots: [{ startTime: "09:00", endTime: "18:00" }] },
+      ]),
       confirmedAt: new Date(),
     });
 
     // 設置員工 2 的排班時間（週一到週日 08:00-20:00）
+    const weekEnd2 = new Date(weekStart);
+    weekEnd2.setUTCDate(weekEnd2.getUTCDate() + 6);
     await db.upsertAvailability({
       workerId: testWorkerId2,
       weekStartDate: weekStart,
-      monday: "08:00-20:00",
-      tuesday: "08:00-20:00",
-      wednesday: "08:00-20:00",
-      thursday: "08:00-20:00",
-      friday: "08:00-20:00",
-      saturday: "08:00-20:00",
-      sunday: "08:00-20:00",
+      weekEndDate: weekEnd2,
+      timeBlocks: JSON.stringify([
+        { dayOfWeek: 1, timeSlots: [{ startTime: "08:00", endTime: "20:00" }] },
+        { dayOfWeek: 2, timeSlots: [{ startTime: "08:00", endTime: "20:00" }] },
+        { dayOfWeek: 3, timeSlots: [{ startTime: "08:00", endTime: "20:00" }] },
+        { dayOfWeek: 4, timeSlots: [{ startTime: "08:00", endTime: "20:00" }] },
+        { dayOfWeek: 5, timeSlots: [{ startTime: "08:00", endTime: "20:00" }] },
+        { dayOfWeek: 6, timeSlots: [{ startTime: "08:00", endTime: "20:00" }] },
+        { dayOfWeek: 0, timeSlots: [{ startTime: "08:00", endTime: "20:00" }] },
+      ]),
       confirmedAt: new Date(),
     });
   });
@@ -73,9 +81,30 @@ describe("核心流程整合測試", () => {
   afterAll(async () => {
     // 清理測試資料（按照外鍵依賴順序）
     try {
+      const dbInstance = await db.getDb();
+      if (!dbInstance) return;
+      const { availability, assignments } = await import("../drizzle/schema");
+      const { eq } = await import("drizzle-orm");
+
+      // 1. 先刪除 assignments
+      if (testDemandId) {
+        await dbInstance.delete(assignments).where(eq(assignments.demandId, testDemandId));
+      }
+      
+      // 2. 再刪除 demands
       if (testDemandId) {
         await db.deleteDemand(testDemandId);
       }
+      
+      // 3. 刪除 availability
+      if (testWorkerId1) {
+        await dbInstance.delete(availability).where(eq(availability.workerId, testWorkerId1));
+      }
+      if (testWorkerId2) {
+        await dbInstance.delete(availability).where(eq(availability.workerId, testWorkerId2));
+      }
+      
+      // 4. 最後刪除 clients 和 workers
       if (testClientId) {
         await db.deleteClient(testClientId);
       }

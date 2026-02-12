@@ -65,15 +65,25 @@ describe("報表輸出測試", () => {
     // 清理測試資料
     const database = await db.getDb();
     if (database) {
-      const { demands, assignments, workers, clients } = await import("../drizzle/schema");
+      const { demands, assignments, workers, clients, availability } = await import("../drizzle/schema");
       const { eq } = await import("drizzle-orm");
 
+      // 1. 刪除 assignments
       if (testAssignmentId) {
         await database.delete(assignments).where(eq(assignments.id, testAssignmentId));
       }
+      
+      // 2. 刪除 demands
       if (testDemandId) {
         await database.delete(demands).where(eq(demands.id, testDemandId));
       }
+      
+      // 3. 刪除 availability
+      if (testWorkerId) {
+        await database.delete(availability).where(eq(availability.workerId, testWorkerId));
+      }
+      
+      // 4. 刪除 workers 和 clients
       if (testWorkerId) {
         await database.delete(workers).where(eq(workers.id, testWorkerId));
       }

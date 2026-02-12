@@ -37,19 +37,35 @@ describe("需求單自動狀態更新功能", () => {
       hourlyRate: 200,
       status: "draft",
     });
-    testDemandId = demand;
+    testDemandId = demand.id;
   });
 
   afterAll(async () => {
     // 清理測試資料
+    const dbInstance = await db.getDb();
+    if (!dbInstance) return;
+    const { availability } = await import("../drizzle/schema");
+    const { eq } = await import("drizzle-orm");
+
+    // 1. 刪除 assignments
     if (testDemandId) {
       const assignments = await db.getAssignmentsByDemand(testDemandId);
       for (const assignment of assignments) {
         await db.deleteAssignment(assignment.id);
       }
+    }
+
+    // 2. 刪除 demands
+    if (testDemandId) {
       await db.deleteDemand(testDemandId);
     }
 
+    // 3. 刪除 availability
+    for (const workerId of testWorkerIds) {
+      await dbInstance.delete(availability).where(eq(availability.workerId, workerId));
+    }
+
+    // 4. 刪除 workers 和 clients
     for (const workerId of testWorkerIds) {
       await db.deleteWorker(workerId);
     }

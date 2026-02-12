@@ -47,28 +47,37 @@ describe("用工需求單完整流程測試", () => {
     // 清理測試資料
     const database = await db.getDb();
     if (database) {
-      const { demands, assignments, workers, clients } = await import("../drizzle/schema");
+      const { demands, assignments, workers, clients, availability } = await import("../drizzle/schema");
       const { eq } = await import("drizzle-orm");
 
-      // 先刪除 assignments
+      // 1. 刪除 assignments
       if (testAssignmentId1) {
         await database.delete(assignments).where(eq(assignments.id, testAssignmentId1));
       }
       if (testAssignmentId2) {
         await database.delete(assignments).where(eq(assignments.id, testAssignmentId2));
       }
-      // 再刪除 demand
+      
+      // 2. 刪除 demands
       if (testDemandId) {
         await database.delete(demands).where(eq(demands.id, testDemandId));
       }
-      // 刪除 workers
+      
+      // 3. 刪除 availability
+      if (testWorkerId1) {
+        await database.delete(availability).where(eq(availability.workerId, testWorkerId1));
+      }
+      if (testWorkerId2) {
+        await database.delete(availability).where(eq(availability.workerId, testWorkerId2));
+      }
+      
+      // 4. 刪除 workers 和 clients
       if (testWorkerId1) {
         await database.delete(workers).where(eq(workers.id, testWorkerId1));
       }
       if (testWorkerId2) {
         await database.delete(workers).where(eq(workers.id, testWorkerId2));
       }
-      // 刪除 client
       if (testClientId) {
         await database.delete(clients).where(eq(clients.id, testClientId));
       }

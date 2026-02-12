@@ -754,16 +754,16 @@ export const appRouter = router({
         actualEnd: z.date(),
       }))
       .mutation(async ({ input }) => {
-        const assignment = await db.getAssignmentsByDemand(input.id);
+        const assignment = await db.getAssignmentById(input.id);
         if (!assignment) throw new Error("排班記錄不存在");
         
         const actualHours = logic.calculateMinutesBetween(input.actualStart, input.actualEnd);
-        const scheduledHours = assignment[0]?.scheduledHours || 0;
+        const scheduledHours = assignment.scheduledHours || 0;
         const varianceHours = actualHours - scheduledHours;
         
         // 檢查實際工時是否與其他排班重疊
         const conflicts = await logic.checkWorkerConflicts(
-          assignment[0]?.workerId || 0,
+          assignment.workerId || 0,
           input.actualStart,
           input.actualEnd,
           input.id
