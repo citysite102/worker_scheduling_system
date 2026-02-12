@@ -138,6 +138,14 @@ export default function DemandDetail() {
     },
     onError: (error) => {
       toast.error(`指派失敗：${error.message}`);
+      // 自動刷新可行性資料，確保顯示的是最新狀態
+      utils.demands.feasibility.invalidate({
+        demandId,
+        date: demand?.date || new Date(),
+        startTime: demand?.startTime || "00:00",
+        endTime: demand?.endTime || "00:00",
+        requiredWorkers: demand?.requiredWorkers || 0,
+      });
     },
   });
 

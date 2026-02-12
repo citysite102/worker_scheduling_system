@@ -1,0 +1,23 @@
+{
+  "query": "\n-- 查詢需求單詳情\nSELECT id, clientId, date, startTime, endTime, requiredWorkers, breakHours, status \nFROM demands \nWHERE id = 390142;\n\n-- 查詢員工宇軒在該日期的所有指派記錄\nSELECT a.id, a.demandId, a.workerId, a.scheduledStart, a.scheduledEnd, a.status, d.date, d.startTime, d.endTime, c.name as clientName\nFROM assignments a\nJOIN demands d ON a.demandId = d.id\nJOIN clients c ON d.clientId = c.id\nWHERE a.workerId IN (SELECT id FROM workers WHERE name LIKE '%宇軒%')\n  AND DATE(a.scheduledStart) = (SELECT DATE(date) FROM demands WHERE id = 390142)\n  AND a.status != 'cancelled'\nORDER BY a.scheduledStart;\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2iEKifVQ9gKtEas.9cbf5414b428 --database CMgr35KntT8tLtgpfJPejw --execute \n-- 查詢需求單詳情\nSELECT id, clientId, date, startTime, endTime, requiredWorkers, breakHours, status \nFROM demands \nWHERE id = 390142;\n\n-- 查詢員工宇軒在該日期的所有指派記錄\nSELECT a.id, a.demandId, a.workerId, a.scheduledStart, a.scheduledEnd, a.status, d.date, d.startTime, d.endTime, c.name as clientName\nFROM assignments a\nJOIN demands d ON a.demandId = d.id\nJOIN clients c ON d.clientId = c.id\nWHERE a.workerId IN (SELECT id FROM workers WHERE name LIKE '%宇軒%')\n  AND DATE(a.scheduledStart) = (SELECT DATE(date) FROM demands WHERE id = 390142)\n  AND a.status != 'cancelled'\nORDER BY a.scheduledStart;\n",
+  "rows": [
+    {
+      "id": "390142",
+      "clientId": "240001",
+      "date": "2026-02-20 00:00:00",
+      "startTime": "09:00",
+      "endTime": "17:00",
+      "requiredWorkers": "1",
+      "breakHours": "0",
+      "status": "draft"
+    }
+  ],
+  "messages": [
+    "id\tdemandId\tworkerId\tscheduledStart\tscheduledEnd\tstatus\tdate\tstartTime\tendTime\tclientName",
+    "330080\t390131\t330090\t2026-02-20 03:00:00\t2026-02-20 05:00:00\tassigned\t2026-02-20 00:00:00\t11:00\t13:00\t築間餐飲集團"
+  ],
+  "stdout": "id\tclientId\tdate\tstartTime\tendTime\trequiredWorkers\tbreakHours\tstatus\n390142\t240001\t2026-02-20 00:00:00\t09:00\t17:00\t1\t0\tdraft\nid\tdemandId\tworkerId\tscheduledStart\tscheduledEnd\tstatus\tdate\tstartTime\tendTime\tclientName\n330080\t390131\t330090\t2026-02-20 03:00:00\t2026-02-20 05:00:00\tassigned\t2026-02-20 00:00:00\t11:00\t13:00\t築間餐飲集團\n",
+  "stderr": "",
+  "execution_time_ms": 1759
+}

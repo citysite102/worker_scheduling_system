@@ -1,0 +1,15 @@
+{
+  "query": "SELECT id, name, phone FROM workers WHERE name LIKE '%宇軒%';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2iEKifVQ9gKtEas.9cbf5414b428 --database CMgr35KntT8tLtgpfJPejw --execute SELECT id, name, phone FROM workers WHERE name LIKE '%宇軒%';",
+  "rows": [
+    {
+      "id": "330090",
+      "name": "宇軒",
+      "phone": "88698333"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\tphone\n330090\t宇軒\t88698333\n",
+  "stderr": "",
+  "execution_time_ms": 1497
+}
