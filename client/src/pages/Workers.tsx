@@ -21,6 +21,7 @@ export default function Workers() {
   const [workPermitFilter, setWorkPermitFilter] = useState<boolean | undefined>(undefined);
   const [healthCheckFilter, setHealthCheckFilter] = useState<boolean | undefined>(undefined);
   const [showFilters, setShowFilters] = useState(false);
+  const [sortBy, setSortBy] = useState<"name" | "workPermitExpiry">("name");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingWorker, setEditingWorker] = useState<any>(null);
   const [confirmToggleWorker, setConfirmToggleWorker] = useState<any>(null);
@@ -260,7 +261,7 @@ export default function Workers() {
                   <SelectValue placeholder="工作簽證" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">簽證：全部</SelectItem>
+                  <SelectItem value="all">簽證</SelectItem>
                   <SelectItem value="yes">有簽證</SelectItem>
                   <SelectItem value="no">無簽證</SelectItem>
                 </SelectContent>
@@ -274,7 +275,7 @@ export default function Workers() {
                   <SelectValue placeholder="體檢" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">體檢：全部</SelectItem>
+                  <SelectItem value="all">體檢</SelectItem>
                   <SelectItem value="yes">有體檢</SelectItem>
                   <SelectItem value="no">無體檢</SelectItem>
                 </SelectContent>
@@ -303,7 +304,21 @@ export default function Workers() {
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
             <CardTitle className="text-base font-medium">員工列表</CardTitle>
-            <span className="text-xs text-muted-foreground">{workers?.length || 0} 位員工</span>
+            <div className="flex items-center gap-3">
+              <Select
+                value={sortBy}
+                onValueChange={(value) => setSortBy(value as "name" | "workPermitExpiry")}
+              >
+                <SelectTrigger className="w-[160px] h-8 text-xs">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="name">按姓名排序</SelectItem>
+                  <SelectItem value="workPermitExpiry">按簽證到期排序</SelectItem>
+                </SelectContent>
+              </Select>
+              <span className="text-xs text-muted-foreground">{workers?.length || 0} 位員工</span>
+            </div>
           </div>
         </CardHeader>
         <CardContent>
@@ -315,7 +330,22 @@ export default function Workers() {
             <div className="text-center py-10 text-muted-foreground text-sm">無員工資料</div>
           ) : (
             <div className="space-y-2">
-              {workers.map((worker) => (
+              {(() => {
+                // 排序邏輯
+                const sortedWorkers = [...workers].sort((a, b) => {
+                  if (sortBy === "workPermitExpiry") {
+                    // 按照簽證到期日排序（無到期日的排在最後）
+                    if (!a.workPermitExpiryDate && !b.workPermitExpiryDate) return 0;
+                    if (!a.workPermitExpiryDate) return 1;
+                    if (!b.workPermitExpiryDate) return -1;
+                    return new Date(a.workPermitExpiryDate).getTime() - new Date(b.workPermitExpiryDate).getTime();
+                  } else {
+                    // 按照姓名排序
+                    return a.name.localeCompare(b.name, 'zh-TW');
+                  }
+                });
+                return sortedWorkers;
+              })().map((worker) => (
                 <div
                   key={worker.id}
                   className="flex items-center justify-between p-4 rounded-lg border border-border/60 hover:bg-muted/40 transition-colors"
