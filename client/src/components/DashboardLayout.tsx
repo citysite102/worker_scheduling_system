@@ -64,7 +64,7 @@ export default function DashboardLayout({
 
   if (!user) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="flex items-center justify-center min-h-screen relative">
         <div className="flex flex-col items-center gap-8 p-8 max-w-md w-full">
           <div className="flex flex-col items-center gap-6">
             <h1 className="text-2xl font-semibold tracking-tight text-center">
@@ -83,6 +83,15 @@ export default function DashboardLayout({
           >
             Sign in
           </Button>
+        </div>
+        
+        {/* 版權聲明 */}
+        <div className="absolute bottom-8 left-0 right-0">
+          <p className="text-xs text-muted-foreground text-center leading-relaxed">
+            &copy; 2026 台灣長誠控股有限公司
+            <br />
+            All rights reserved.
+          </p>
         </div>
       </div>
     );
@@ -236,6 +245,15 @@ function DashboardLayoutContent({
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
+            
+            {/* 版權聲明 */}
+            <div className="mt-3 pt-3 border-t border-sidebar-border group-data-[collapsible=icon]:hidden">
+              <p className="text-xs text-muted-foreground text-center leading-relaxed">
+                &copy; 2026 台灣長誠控股有限公司
+                <br />
+                All rights reserved.
+              </p>
+            </div>
           </SidebarFooter>
         </Sidebar>
         <div
