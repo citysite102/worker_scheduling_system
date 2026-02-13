@@ -7,6 +7,8 @@ import { z } from "zod";
 import * as db from "./db";
 import * as logic from "./businessLogic";
 import crypto from "crypto";
+import { recognizeWorkPermit } from "./gemini-ocr";
+import { storagePut } from "./storage";
 
 export const appRouter = router({
   system: systemRouter,
@@ -48,6 +50,42 @@ export const appRouter = router({
         const worker = await db.getWorkerById(input.id);
         if (!worker) throw new Error("員工不存在");
         return worker;
+      }),
+
+    uploadWorkPermitImage: publicProcedure
+      .input(z.object({
+        imageBase64: z.string().min(1, "圖片資料不可為空"),
+        mimeType: z.string().min(1, "圖片類型不可為空"),
+      }))
+      .mutation(async ({ input }) => {
+        try {
+          // 1. 上傳圖片到 S3
+          const imageBuffer = Buffer.from(input.imageBase64, "base64");
+          const randomSuffix = crypto.randomBytes(8).toString("hex");
+          const fileKey = `work-permits/${Date.now()}-${randomSuffix}.jpg`;
+          
+          const { url: imageUrl } = await storagePut(
+            fileKey,
+            imageBuffer,
+            input.mimeType
+          );
+
+          // 2. 使用 OCR 辨識圖片
+          const ocrResult = await recognizeWorkPermit(imageUrl);
+
+          // 3. 返回 OCR 結果和圖片 URL
+          return {
+            success: true,
+            imageUrl,
+            ocrResult,
+          };
+        } catch (error) {
+          console.error("OCR 辨識錯誤：", error);
+          throw new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+            message: `OCR 辨識失敗：${error instanceof Error ? error.message : "未知錯誤"}`,
+          });
+        }
       }),
 
     create: publicProcedure

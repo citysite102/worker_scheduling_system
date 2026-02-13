@@ -13,6 +13,7 @@ import { Plus, Search, Edit, UserX, UserCheck, Loader2, Phone, Mail, GraduationC
 import { Link } from "wouter";
 import { useState } from "react";
 import { toast } from "sonner";
+import { WorkPermitUpload } from "@/components/WorkPermitUpload";
 
 export default function Workers() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -25,6 +26,8 @@ export default function Workers() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingWorker, setEditingWorker] = useState<any>(null);
   const [confirmToggleWorker, setConfirmToggleWorker] = useState<any>(null);
+  const [ocrData, setOcrData] = useState<any>(null);
+  const [showOCRUpload, setShowOCRUpload] = useState(false);
 
   const { data: workers, isLoading, refetch } = trpc.workers.list.useQuery({
     search: searchTerm,
@@ -121,10 +124,35 @@ export default function Workers() {
                 <DialogDescription>填寫員工基本資料</DialogDescription>
               </DialogHeader>
               <div className="grid gap-4 py-4">
+                {!editingWorker && (
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <Label className="text-sm font-medium">上傳工作許可證（可選）</Label>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setShowOCRUpload(!showOCRUpload)}
+                        className="h-7 text-xs"
+                      >
+                        {showOCRUpload ? "隱藏上傳" : "顯示上傳"}
+                      </Button>
+                    </div>
+                    {showOCRUpload && (
+                      <WorkPermitUpload
+                        onOCRSuccess={(data) => {
+                          setOcrData(data);
+                          setShowOCRUpload(false);
+                          toast.success("資料已自動填入，請確認後送出");
+                        }}
+                      />
+                    )}
+                  </div>
+                )}
                 <div className="grid grid-cols-2 gap-4">
                   <div className="grid gap-2">
                     <Label htmlFor="name">姓名 *</Label>
-                    <Input id="name" name="name" defaultValue={editingWorker?.name} required />
+                    <Input id="name" name="name" defaultValue={editingWorker?.name || ocrData?.name} required key={ocrData?.name} />
                   </div>
                   <div className="grid gap-2">
                     <Label htmlFor="phone">電話 *</Label>
@@ -138,7 +166,7 @@ export default function Workers() {
                   </div>
                   <div className="grid gap-2">
                     <Label htmlFor="school">學校</Label>
-                    <Input id="school" name="school" defaultValue={editingWorker?.school} placeholder="例：台大、政大" />
+                    <Input id="school" name="school" defaultValue={editingWorker?.school || ocrData?.school} placeholder="例：台大、政大" key={ocrData?.school} />
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-4">

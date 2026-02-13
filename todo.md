@@ -829,3 +829,24 @@
 - [x] 複製新的 Favicon 檔案到專案 public 目錄（包含 apple-touch-icon.png）
 - [x] 更新 index.html 加入 apple-touch-icon 連結
 - [x] 測試驗證 Favicon 在瀏覽器和手機桌面顯示正確
+
+## 員工新增功能：上傳圖片使用 Gemini OCR 提取資料（2026/02/13）
+
+### 使用者需求
+- 在新增員工時，可以上傳工作許可證圖片
+- 使用 Gemini API 進行 OCR 辨識，自動提取員工資料
+- OCR 辨識後可手動編輯修正資料
+- 需要辨識的欄位：姓名、國籍、護照號碼、許可期間、核發日期、許可文號、統一證號、就讀學校
+
+### 待辦事項
+- [ ] 設定 Gemini API 金鑰（使用 webdev_request_secrets）
+- [x] 建立 Gemini OCR 服務模組（server/gemini-ocr.ts）
+- [x] 建立圖片上傳到 S3 的功能
+- [x] 建立 tRPC procedure：uploadWorkPermitImage（上傳圖片並進行 OCR）
+- [x] 更新員工管理頁面：加入「上傳工作許可證」按鈕
+- [x] 建立圖片上傳元件（支援拖拉上傳）
+- [x] 建立 OCR 處理進度顯示
+- [x] 實作表單自動填入功能
+- [x] 加入手動編輯功能（OCR 後可修正）
+- [x] 撰寫 OCR 功能測試案例
+- [x] 測試驗證 OCR 辨識準確度（需要實際上傳圖片測試）
