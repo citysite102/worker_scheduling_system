@@ -23,7 +23,7 @@ export default function Workers() {
   const [workPermitFilter, setWorkPermitFilter] = useState<boolean | undefined>(undefined);
   const [healthCheckFilter, setHealthCheckFilter] = useState<boolean | undefined>(undefined);
   const [showFilters, setShowFilters] = useState(false);
-  const [sortBy, setSortBy] = useState<"name" | "workPermitExpiry">("name");
+  const [sortBy, setSortBy] = useState<"name" | "workPermitExpiry" | "createdAt">("createdAt");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingWorker, setEditingWorker] = useState<any>(null);
   const [confirmToggleWorker, setConfirmToggleWorker] = useState<any>(null);
@@ -144,7 +144,7 @@ export default function Workers() {
         </DropdownMenu>
 
         <Dialog open={isDialogOpen} onOpenChange={(open) => { setIsDialogOpen(open); if (!open) setEditingWorker(null); }}>
-          <DialogContent className="sm:max-w-lg">
+          <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
             <form onSubmit={handleSubmit}>
               <DialogHeader>
                 <DialogTitle>{editingWorker ? "編輯員工" : "新增員工"}</DialogTitle>
@@ -360,6 +360,7 @@ export default function Workers() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
+                  <SelectItem value="createdAt">按建立日期排序</SelectItem>
                   <SelectItem value="name">按姓名排序</SelectItem>
                   <SelectItem value="workPermitExpiry">按簽證到期排序</SelectItem>
                 </SelectContent>
@@ -380,7 +381,10 @@ export default function Workers() {
               {(() => {
                 // 排序邏輯
                 const sortedWorkers = [...workers].sort((a, b) => {
-                  if (sortBy === "workPermitExpiry") {
+                  if (sortBy === "createdAt") {
+                    // 按照建立日期排序（最新的在最前）
+                    return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+                  } else if (sortBy === "workPermitExpiry") {
                     // 按照簽證到期日排序（無到期日的排在最後）
                     if (!a.workPermitExpiryDate && !b.workPermitExpiryDate) return 0;
                     if (!a.workPermitExpiryDate) return 1;
