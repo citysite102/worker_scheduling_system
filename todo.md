@@ -819,3 +819,13 @@
 - [x] 更新 site.webmanifest 的 name 和 short_name
 - [x] 清理舊的 Favicon 檔案
 - [x] 測試驗證 Favicon 和標題顯示正確
+
+## Favicon 更新為日曆圖示（2026/02/13）
+
+### 使用者需求
+- 更換 Favicon 為新的日曆圖示（藍色日曆樣式）
+
+### 待辦事項
+- [x] 複製新的 Favicon 檔案到專案 public 目錄（包含 apple-touch-icon.png）
+- [x] 更新 index.html 加入 apple-touch-icon 連結
+- [x] 測試驗證 Favicon 在瀏覽器和手機桌面顯示正確
