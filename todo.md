@@ -806,3 +806,16 @@
 - [x] 在重試過程中顯示載入狀態，避免使用者困惑
 - [x] 加入錯誤邊界（Error Boundary）處理未預期的錯誤
 - [x] 測試錯誤提示優化功能
+
+## Favicon 和網站標題更新（2026/02/13）
+
+### 使用者需求
+- 更換網站 Favicon 為新的圖示
+- 將網站標題調整為「員工排班系統」
+
+### 待辦事項
+- [x] 複製新的 Favicon 檔案到專案 public 目錄
+- [x] 更新 index.html 的標題為「員工排班系統」
+- [x] 更新 site.webmanifest 的 name 和 short_name
+- [x] 清理舊的 Favicon 檔案
+- [x] 測試驗證 Favicon 和標題顯示正確
