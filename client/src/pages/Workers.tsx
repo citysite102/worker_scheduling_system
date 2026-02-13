@@ -150,48 +150,48 @@ export default function Workers() {
                 <DialogTitle>{editingWorker ? "編輯員工" : "新增員工"}</DialogTitle>
                 <DialogDescription>填寫員工基本資料</DialogDescription>
               </DialogHeader>
-              <div className="grid gap-4 py-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="grid gap-2">
+              <div className="grid gap-6 py-4">
+                <div className="grid grid-cols-2 gap-6">
+                  <div className="grid gap-2.5">
                     <Label htmlFor="name">姓名 *</Label>
                     <Input id="name" name="name" defaultValue={editingWorker?.name || ocrData?.name} required key={ocrData?.name} />
                   </div>
-                  <div className="grid gap-2">
+                  <div className="grid gap-2.5">
                     <Label htmlFor="phone">電話 *</Label>
                     <Input id="phone" name="phone" defaultValue={editingWorker?.phone} required />
                   </div>
                 </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="grid gap-2">
+                <div className="grid grid-cols-2 gap-6">
+                  <div className="grid gap-2.5">
                     <Label htmlFor="email">Email</Label>
                     <Input id="email" name="email" type="email" defaultValue={editingWorker?.email} />
                   </div>
-                  <div className="grid gap-2">
+                  <div className="grid gap-2.5">
                     <Label htmlFor="school">學校</Label>
                     <Input id="school" name="school" defaultValue={editingWorker?.school || ocrData?.school} placeholder="例：台大、政大" key={ocrData?.school} />
                   </div>
                 </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="grid gap-2">
+                <div className="grid grid-cols-2 gap-6">
+                  <div className="grid gap-2.5">
                     <Label htmlFor="nationality">國籍</Label>
                     <Input id="nationality" name="nationality" defaultValue={editingWorker?.nationality || ocrData?.nationality} placeholder="例：印尼、越南" key={ocrData?.nationality} />
                   </div>
-                  <div className="grid gap-2">
+                  <div className="grid gap-2.5">
                     <Label htmlFor="uiNumber">統一證號</Label>
                     <Input id="uiNumber" name="uiNumber" defaultValue={editingWorker?.uiNumber || ocrData?.uiNumber} placeholder="例：H801403696" key={ocrData?.uiNumber} />
                   </div>
                 </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="grid gap-2">
+                <div className="grid grid-cols-2 gap-6">
+                  <div className="grid gap-2.5">
                     <Label htmlFor="lineId">Line ID</Label>
                     <Input id="lineId" name="lineId" defaultValue={editingWorker?.lineId} placeholder="例：@username" />
                   </div>
-                  <div className="grid gap-2">
+                  <div className="grid gap-2.5">
                     <Label htmlFor="whatsappId">WhatsApp ID</Label>
                     <Input id="whatsappId" name="whatsappId" defaultValue={editingWorker?.whatsappId} placeholder="例：+886912345678" />
                   </div>
                 </div>
-                <div className="flex gap-6 pt-2">
+                <div className="flex gap-8 pt-3">
                   <div className="flex items-center gap-2">
                     <Checkbox
                       id="hasWorkPermit"
