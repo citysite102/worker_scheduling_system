@@ -788,5 +788,7 @@
 - [x] 執行所有測試（20/27 通過，7 個失敗）
 
 ### 5. 待修復問題
-- [ ] 修復 checkWorkerConflicts 返回值問題（應返回完整物件而不是 ID）
-- [ ] 修復 checkWorkerAvailability 邏輯問題（無法正確判斷員工是否在可排班時段內）
+- [x] 修復 checkWorkerConflicts 返回值問題（測試案例的斷言問題，已修正）
+- [x] 修復 checkWorkerAvailability 邏輯問題（時區處理不一致，已修正為 getUTCDay()）
+- [x] 修復測試清理邏輯（外鍵約束問題，已加入 availability 刪除）
+- [x] 執行所有測試確保全部通過（27/27 測試通過）

@@ -94,7 +94,7 @@ export async function checkWorkerAvailability(
   }
 
   // 取得需求日期是星期幾 (1=週一, 7=週日)
-  const dayOfWeek = demandDate.getDay() === 0 ? 7 : demandDate.getDay();
+  const dayOfWeek = demandDate.getUTCDay() === 0 ? 7 : demandDate.getUTCDay();
 
   // 找出該天的所有可排班時段
   const dayBlocks = timeBlocks.filter((block) => block.dayOfWeek === dayOfWeek);

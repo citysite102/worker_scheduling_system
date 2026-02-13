@@ -70,10 +70,20 @@ describe("時間邏輯全面測試", () => {
     // 2. 刪除 demand
     await db.deleteDemand(testDemandId);
     
-    // 3. 刪除 availability（由於沒有 deleteAvailability 函式，跳過）
-    // const weekStart = logic.getWeekStart(new Date("2026-02-16T00:00:00.000Z"));
-    // const avail1 = await db.getAvailabilityByWorkerAndWeek(testWorkerId1, weekStart);
-    // const avail2 = await db.getAvailabilityByWorkerAndWeek(testWorkerId2, weekStart);
+    // 3. 刪除 availability
+    const weekStart = logic.getWeekStart(new Date("2026-02-16T00:00:00.000Z"));
+    const avail1 = await db.getAvailabilityByWorkerAndWeek(testWorkerId1, weekStart);
+    const avail2 = await db.getAvailabilityByWorkerAndWeek(testWorkerId2, weekStart);
+    if (avail1 || avail2) {
+      const { getDb } = await import("./db.ts");
+      const { availability } = await import("../drizzle/schema.ts");
+      const { eq } = await import("drizzle-orm");
+      const dbConn = await getDb();
+      if (dbConn) {
+        if (avail1) await dbConn.delete(availability).where(eq(availability.id, avail1.id));
+        if (avail2) await dbConn.delete(availability).where(eq(availability.id, avail2.id));
+      }
+    }
     
     // 4. 刪除 workers
     await db.deleteWorker(testWorkerId1);
@@ -178,7 +188,7 @@ describe("時間邏輯全面測試", () => {
       // 建立第一個排班記錄（09:00-12:00）
       const scheduledStart1 = new Date("2026-02-16T09:00:00.000Z");
       const scheduledEnd1 = new Date("2026-02-16T12:00:00.000Z");
-      assignment1Id = await db.createAssignment({
+      const assignment1 = await db.createAssignment({
         demandId: testDemandId,
         workerId: testWorkerId1,
         scheduledStart: scheduledStart1,
@@ -186,11 +196,12 @@ describe("時間邏輯全面測試", () => {
         scheduledHours: logic.calculateMinutesBetween(scheduledStart1, scheduledEnd1),
         status: "assigned",
       });
+      assignment1Id = assignment1.id;
 
       // 建立第二個排班記錄（14:00-17:00）
       const scheduledStart2 = new Date("2026-02-16T14:00:00.000Z");
       const scheduledEnd2 = new Date("2026-02-16T17:00:00.000Z");
-      assignment2Id = await db.createAssignment({
+      const assignment2 = await db.createAssignment({
         demandId: testDemandId,
         workerId: testWorkerId1,
         scheduledStart: scheduledStart2,
@@ -198,6 +209,7 @@ describe("時間邏輯全面測試", () => {
         scheduledHours: logic.calculateMinutesBetween(scheduledStart2, scheduledEnd2),
         status: "assigned",
       });
+      assignment2Id = assignment2.id;
     });
 
     afterAll(async () => {
@@ -215,6 +227,7 @@ describe("時間邏輯全面測試", () => {
       );
       expect(conflicts.length).toBeGreaterThan(0);
       expect(conflicts[0].id).toBe(assignment1Id);
+      expect(conflicts[0].workerId).toBe(testWorkerId1);
     });
 
     it("應檢測到與第二個排班記錄的衝突（13:00-15:00 vs 14:00-17:00）", async () => {
@@ -227,6 +240,7 @@ describe("時間邏輯全面測試", () => {
       );
       expect(conflicts.length).toBeGreaterThan(0);
       expect(conflicts[0].id).toBe(assignment2Id);
+      expect(conflicts[0].workerId).toBe(testWorkerId1);
     });
 
     it("應不檢測到衝突（12:00-14:00 不與任何排班重疊）", async () => {
