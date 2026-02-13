@@ -88,10 +88,63 @@ export const appRouter = router({
         }
       }),
 
+    batchUploadWorkPermitImages: publicProcedure
+      .input(z.object({
+        images: z.array(z.object({
+          imageBase64: z.string().min(1, "圖片資料不可為空"),
+          mimeType: z.string().min(1, "圖片類型不可為空"),
+        })),
+      }))
+      .mutation(async ({ input }) => {
+        const results = [];
+        
+        for (let i = 0; i < input.images.length; i++) {
+          const image = input.images[i];
+          try {
+            // 1. 上傳圖片到 S3
+            const imageBuffer = Buffer.from(image.imageBase64, "base64");
+            const randomSuffix = crypto.randomBytes(8).toString("hex");
+            const fileKey = `work-permits/${Date.now()}-${randomSuffix}.jpg`;
+            
+            const { url: imageUrl } = await storagePut(
+              fileKey,
+              imageBuffer,
+              image.mimeType
+            );
+
+            // 2. 使用 OCR 辨識圖片
+            const ocrResult = await recognizeWorkPermit(imageUrl);
+
+            // 3. 記錄成功結果
+            results.push({
+              success: true,
+              imageUrl,
+              ocrResult,
+              index: i,
+            });
+          } catch (error) {
+            console.error(`OCR 辨識錯誤（第 ${i + 1} 張）：`, error);
+            // 記錄失敗結果
+            results.push({
+              success: false,
+              error: error instanceof Error ? error.message : "未知錯誤",
+              index: i,
+            });
+          }
+        }
+
+        return {
+          results,
+          totalCount: input.images.length,
+          successCount: results.filter(r => r.success).length,
+          failureCount: results.filter(r => !r.success).length,
+        };
+      }),
+
     create: publicProcedure
       .input(z.object({
         name: z.string().min(1, "姓名不可為空"),
-        phone: z.string().min(1, "電話不可為空"),
+        phone: z.string().optional(),
         email: z.string().email("Email 格式不正確").optional(),
         school: z.string().optional(),
         nationality: z.string().optional(),
@@ -99,6 +152,9 @@ export const appRouter = router({
         hasWorkPermit: z.boolean().optional(),
         hasHealthCheck: z.boolean().optional(),
         workPermitExpiryDate: z.date().optional(),
+        attendanceNotes: z.string().optional(),
+        lineId: z.string().optional(),
+        whatsappId: z.string().optional(),
         note: z.string().optional(),
       }))
       .mutation(async ({ input }) => {
@@ -109,6 +165,60 @@ export const appRouter = router({
           hasHealthCheck: hasHealthCheck ? 1 : 0,
         });
         return { success: true };
+      }),
+
+    batchCreate: publicProcedure
+      .input(z.object({
+        workers: z.array(z.object({
+          name: z.string().min(1, "姓名不可為空"),
+          phone: z.string().optional(),
+          email: z.string().email("Email 格式不正確").optional(),
+          school: z.string().optional(),
+          nationality: z.string().optional(),
+          uiNumber: z.string().optional(),
+          hasWorkPermit: z.boolean().optional(),
+          hasHealthCheck: z.boolean().optional(),
+          workPermitExpiryDate: z.date().optional(),
+          attendanceNotes: z.string().optional(),
+          lineId: z.string().optional(),
+          whatsappId: z.string().optional(),
+          note: z.string().optional(),
+        })),
+      }))
+      .mutation(async ({ input }) => {
+        const results = [];
+        
+        for (let i = 0; i < input.workers.length; i++) {
+          const worker = input.workers[i];
+          try {
+            const { hasWorkPermit, hasHealthCheck, ...rest } = worker;
+            await db.createWorker({
+              ...rest,
+              hasWorkPermit: hasWorkPermit ? 1 : 0,
+              hasHealthCheck: hasHealthCheck ? 1 : 0,
+            });
+            results.push({
+              success: true,
+              index: i,
+              name: worker.name,
+            });
+          } catch (error) {
+            console.error(`建立員工錯誤（${worker.name}）：`, error);
+            results.push({
+              success: false,
+              index: i,
+              name: worker.name,
+              error: error instanceof Error ? error.message : "未知錯誤",
+            });
+          }
+        }
+
+        return {
+          results,
+          totalCount: input.workers.length,
+          successCount: results.filter(r => r.success).length,
+          failureCount: results.filter(r => !r.success).length,
+        };
       }),
 
     update: publicProcedure

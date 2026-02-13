@@ -146,7 +146,7 @@ export async function getWorkerById(id: number) {
   return result[0];
 }
 
-export async function createWorker(data: { name: string; phone: string; email?: string; school?: string; hasWorkPermit?: number; hasHealthCheck?: number; status?: "active" | "inactive"; note?: string; lineId?: string; whatsappId?: string }) {
+export async function createWorker(data: { name: string; phone?: string; email?: string; school?: string; nationality?: string; uiNumber?: string; hasWorkPermit?: number; hasHealthCheck?: number; workPermitExpiryDate?: Date; attendanceNotes?: string; status?: "active" | "inactive"; note?: string; lineId?: string; whatsappId?: string }) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   await db.insert(workers).values(data);
@@ -155,7 +155,7 @@ export async function createWorker(data: { name: string; phone: string; email?: 
   return newWorker;
 }
 
-export async function updateWorker(id: number, data: Partial<{ name: string; phone: string; email?: string; school?: string; hasWorkPermit?: number; hasHealthCheck?: number; status: "active" | "inactive"; note?: string; lineId?: string; whatsappId?: string }>) {
+export async function updateWorker(id: number, data: Partial<{ name: string; phone?: string; email?: string; school?: string; nationality?: string; uiNumber?: string; hasWorkPermit?: number; hasHealthCheck?: number; workPermitExpiryDate?: Date; attendanceNotes?: string; status: "active" | "inactive"; note?: string; lineId?: string; whatsappId?: string }>) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   await db.update(workers).set(data).where(eq(workers.id, id));

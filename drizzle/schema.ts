@@ -32,7 +32,7 @@ export const workers = mysqlTable("workers", {
   id: int("id").autoincrement().primaryKey(),
   name: varchar("name", { length: 100 }).notNull(),
   email: varchar("email", { length: 320 }),
-  phone: varchar("phone", { length: 20 }).notNull(),
+  phone: varchar("phone", { length: 20 }),
   school: varchar("school", { length: 200 }),
   nationality: varchar("nationality", { length: 100 }), // 國籍
   uiNumber: varchar("uiNumber", { length: 50 }), // 統一證號

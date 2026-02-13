@@ -10,11 +10,13 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Plus, Search, Edit, UserX, UserCheck, Loader2, Phone, Mail, GraduationCap, ShieldCheck, HeartPulse, Filter, ChevronDown, Upload, UserPlus } from "lucide-react";
+import { Plus, Search, Edit, UserX, UserCheck, Loader2, Phone, Mail, GraduationCap, ShieldCheck, HeartPulse, Filter, ChevronDown, Upload, UserPlus, Download } from "lucide-react";
 import { Link } from "wouter";
 import { useState } from "react";
 import { toast } from "sonner";
 import { WorkPermitOCRDialog } from "@/components/WorkPermitOCRDialog";
+import { BatchWorkPermitUpload } from "@/components/BatchWorkPermitUpload";
+import { exportWorkersToCSV } from "@/lib/exportWorkers";
 
 export default function Workers() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -29,6 +31,8 @@ export default function Workers() {
   const [confirmToggleWorker, setConfirmToggleWorker] = useState<any>(null);
   const [ocrData, setOcrData] = useState<any>(null);
   const [showOCRDialog, setShowOCRDialog] = useState(false);
+  const [showBatchUploadDialog, setShowBatchUploadDialog] = useState(false);
+  const [selectedWorkerIds, setSelectedWorkerIds] = useState<Set<number>>(new Set());
 
   const { data: workers, isLoading, refetch } = trpc.workers.list.useQuery({
     search: searchTerm,
@@ -132,9 +136,13 @@ export default function Workers() {
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
+            <DropdownMenuItem onClick={() => setShowBatchUploadDialog(true)}>
+              <Upload className="mr-2 h-4 w-4" />
+              批次上傳許可證
+            </DropdownMenuItem>
             <DropdownMenuItem onClick={() => setShowOCRDialog(true)}>
               <Upload className="mr-2 h-4 w-4" />
-              圖片新增（OCR）
+              單張圖片新增
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => { setEditingWorker(null); setOcrData(null); setIsDialogOpen(true); }}>
               <UserPlus className="mr-2 h-4 w-4" />
@@ -157,8 +165,8 @@ export default function Workers() {
                     <Input id="name" name="name" defaultValue={editingWorker?.name || ocrData?.name} required key={ocrData?.name} />
                   </div>
                   <div className="grid gap-2.5">
-                    <Label htmlFor="phone">電話 *</Label>
-                    <Input id="phone" name="phone" defaultValue={editingWorker?.phone} required />
+                    <Label htmlFor="phone">電話</Label>
+                    <Input id="phone" name="phone" defaultValue={editingWorker?.phone} />
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-6">
@@ -350,8 +358,42 @@ export default function Workers() {
       <Card className="shadow-sm border-border/60">
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
-            <CardTitle className="text-base font-medium">員工列表</CardTitle>
             <div className="flex items-center gap-3">
+              <CardTitle className="text-base font-medium">員工列表</CardTitle>
+              {selectedWorkerIds.size > 0 && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-8 text-xs"
+                  onClick={() => {
+                    if (!workers) return;
+                    const selectedWorkers = workers.filter(w => selectedWorkerIds.has(w.id));
+                    exportWorkersToCSV(selectedWorkers);
+                    toast.success(`已匯出 ${selectedWorkers.length} 位員工資料`);
+                  }}
+                >
+                  <Download className="h-3.5 w-3.5 mr-1.5" />
+                  匯出選定員工 ({selectedWorkerIds.size})
+                </Button>
+              )}
+            </div>
+            <div className="flex items-center gap-3">
+              {workers && workers.length > 0 && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-8 text-xs"
+                  onClick={() => {
+                    if (selectedWorkerIds.size === workers.length) {
+                      setSelectedWorkerIds(new Set());
+                    } else {
+                      setSelectedWorkerIds(new Set(workers.map(w => w.id)));
+                    }
+                  }}
+                >
+                  {selectedWorkerIds.size === workers.length ? "取消全選" : "全選"}
+                </Button>
+              )}
               <Select
                 value={sortBy}
                 onValueChange={(value) => setSortBy(value as "name" | "workPermitExpiry")}
@@ -399,8 +441,21 @@ export default function Workers() {
               })().map((worker) => (
                 <div
                   key={worker.id}
-                  className="flex items-center justify-between p-4 rounded-lg border border-border/60 hover:bg-muted/40 transition-colors"
+                  className="flex items-center gap-3 p-4 rounded-lg border border-border/60 hover:bg-muted/40 transition-colors"
                 >
+                  <Checkbox
+                    checked={selectedWorkerIds.has(worker.id)}
+                    onCheckedChange={(checked) => {
+                      const newSet = new Set(selectedWorkerIds);
+                      if (checked) {
+                        newSet.add(worker.id);
+                      } else {
+                        newSet.delete(worker.id);
+                      }
+                      setSelectedWorkerIds(newSet);
+                    }}
+                    onClick={(e) => e.stopPropagation()}
+                  />
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
                       <Link href={`/workers/${worker.id}`} className="font-medium text-sm text-blue-600 hover:text-blue-800 hover:underline cursor-pointer">{worker.name}</Link>
@@ -547,6 +602,15 @@ export default function Workers() {
           setEditingWorker(null);
           setIsDialogOpen(true);
           toast.success("資料已自動填入，請確認後送出");
+        }}
+      />
+
+      <BatchWorkPermitUpload
+        open={showBatchUploadDialog}
+        onClose={() => setShowBatchUploadDialog(false)}
+        onSuccess={() => {
+          refetch();
+          setSelectedWorkerIds(new Set());
         }}
       />
     </div>
