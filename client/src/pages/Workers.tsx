@@ -68,6 +68,16 @@ export default function Workers() {
     },
   });
 
+  // 民國年轉西元年函式（例：115/9/16 → 2026-09-16）
+  const convertROCToAD = (rocDate: string): string | null => {
+    if (!rocDate) return null;
+    const match = rocDate.match(/(\d+)\/(\d+)\/(\d+)/);
+    if (!match) return null;
+    const [, rocYear, month, day] = match;
+    const adYear = parseInt(rocYear) + 1911;
+    return `${adYear}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+  };
+
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
@@ -77,6 +87,8 @@ export default function Workers() {
       phone: formData.get("phone") as string,
       email: (formData.get("email") as string) || undefined,
       school: (formData.get("school") as string) || undefined,
+      nationality: (formData.get("nationality") as string) || undefined,
+      uiNumber: (formData.get("uiNumber") as string) || undefined,
       lineId: (formData.get("lineId") as string) || undefined,
       whatsappId: (formData.get("whatsappId") as string) || undefined,
       hasWorkPermit: formData.get("hasWorkPermit") === "on",
@@ -161,6 +173,16 @@ export default function Workers() {
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="grid gap-2">
+                    <Label htmlFor="nationality">國籍</Label>
+                    <Input id="nationality" name="nationality" defaultValue={editingWorker?.nationality || ocrData?.nationality} placeholder="例：印尼、越南" key={ocrData?.nationality} />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="uiNumber">統一證號</Label>
+                    <Input id="uiNumber" name="uiNumber" defaultValue={editingWorker?.uiNumber || ocrData?.uiNumber} placeholder="例：H801403696" key={ocrData?.uiNumber} />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="grid gap-2">
                     <Label htmlFor="lineId">Line ID</Label>
                     <Input id="lineId" name="lineId" defaultValue={editingWorker?.lineId} placeholder="例：@username" />
                   </div>
@@ -193,7 +215,14 @@ export default function Workers() {
                     id="workPermitExpiryDate" 
                     name="workPermitExpiryDate" 
                     type="date" 
-                    defaultValue={editingWorker?.workPermitExpiryDate ? new Date(editingWorker.workPermitExpiryDate).toISOString().split('T')[0] : ''} 
+                    defaultValue={
+                      editingWorker?.workPermitExpiryDate 
+                        ? new Date(editingWorker.workPermitExpiryDate).toISOString().split('T')[0] 
+                        : ocrData?.validityPeriodEnd 
+                          ? convertROCToAD(ocrData.validityPeriodEnd) || ''
+                          : ''
+                    }
+                    key={ocrData?.validityPeriodEnd}
                   />
                   <p className="text-xs text-muted-foreground">留空表示無期限</p>
                 </div>

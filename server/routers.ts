@@ -94,6 +94,8 @@ export const appRouter = router({
         phone: z.string().min(1, "電話不可為空"),
         email: z.string().email("Email 格式不正確").optional(),
         school: z.string().optional(),
+        nationality: z.string().optional(),
+        uiNumber: z.string().optional(),
         hasWorkPermit: z.boolean().optional(),
         hasHealthCheck: z.boolean().optional(),
         workPermitExpiryDate: z.date().optional(),

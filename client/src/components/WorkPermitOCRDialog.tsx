@@ -12,7 +12,7 @@ interface WorkPermitOCRDialogProps {
     validityPeriodEnd: string;
     issuedDate: string;
     documentNo: string;
-    uiNo: string;
+    uiNumber: string;
     school: string;
     imageUrl: string;
   }) => void;

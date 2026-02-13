@@ -34,6 +34,8 @@ export const workers = mysqlTable("workers", {
   email: varchar("email", { length: 320 }),
   phone: varchar("phone", { length: 20 }).notNull(),
   school: varchar("school", { length: 200 }),
+  nationality: varchar("nationality", { length: 100 }), // 國籍
+  uiNumber: varchar("uiNumber", { length: 50 }), // 統一證號
   hasWorkPermit: int("hasWorkPermit").default(0).notNull(), // 0=無, 1=有工作簽證
   hasHealthCheck: int("hasHealthCheck").default(0).notNull(), // 0=無, 1=有體檢
   workPermitExpiryDate: timestamp("workPermitExpiryDate"), // 工作許可到期日，可為 null 表示無期限

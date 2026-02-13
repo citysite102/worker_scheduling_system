@@ -11,7 +11,7 @@ export interface WorkPermitOCRResult {
   validityPeriodEnd: string; // 許可期間結束（民國年月日，例如：115/9/16）
   issuedDate: string; // 核發日期（民國年月日，例如：114/9/23）
   documentNo: string; // 許可文號
-  uiNo: string; // 統一證號
+  uiNumber: string; // 統一證號
   school: string; // 就讀學校
 }
 
@@ -56,7 +56,7 @@ export async function recognizeWorkPermit(
   "validityPeriodEnd": "許可期間結束日期（民國年月日）",
   "issuedDate": "核發日期（民國年月日）",
   "documentNo": "許可文號",
-  "uiNo": "統一證號",
+  "uiNumber": "統一證號",
   "school": "就讀學校"
 }
 
@@ -109,7 +109,7 @@ export async function recognizeWorkPermit(
                 type: "string",
                 description: "許可文號",
               },
-              uiNo: {
+              uiNumber: {
                 type: "string",
                 description: "統一證號",
               },
@@ -126,7 +126,7 @@ export async function recognizeWorkPermit(
               "validityPeriodEnd",
               "issuedDate",
               "documentNo",
-              "uiNo",
+              "uiNumber",
               "school",
             ],
             additionalProperties: false,

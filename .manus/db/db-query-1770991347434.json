@@ -1,0 +1,9 @@
+{
+  "query": "ALTER TABLE `workers` ADD `nationality` varchar(100);\nALTER TABLE `workers` ADD `uiNumber` varchar(50);",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2iEKifVQ9gKtEas.9cbf5414b428 --database CMgr35KntT8tLtgpfJPejw --execute ALTER TABLE `workers` ADD `nationality` varchar(100);\nALTER TABLE `workers` ADD `uiNumber` varchar(50);",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 2624
+}
