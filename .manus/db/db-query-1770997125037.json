@@ -1,0 +1,208 @@
+{
+  "query": "SELECT id, name, contactName, contactPhone, contactEmail, address, createdAt FROM clients ORDER BY createdAt DESC;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2iEKifVQ9gKtEas.9cbf5414b428 --database CMgr35KntT8tLtgpfJPejw --execute SELECT id, name, contactName, contactPhone, contactEmail, address, createdAt FROM clients ORDER BY createdAt DESC;",
+  "rows": [
+    {
+      "id": "420003",
+      "name": "時間邏輯測試客戶",
+      "contactName": "測試聯絡人",
+      "contactPhone": "0912345678",
+      "contactEmail": "NULL",
+      "address": "NULL",
+      "createdAt": "2026-02-13 01:35:47"
+    },
+    {
+      "id": "420002",
+      "name": "時間邏輯測試客戶",
+      "contactName": "測試聯絡人",
+      "contactPhone": "0912345678",
+      "contactEmail": "NULL",
+      "address": "NULL",
+      "createdAt": "2026-02-13 01:34:54"
+    },
+    {
+      "id": "420001",
+      "name": "時間邏輯測試客戶",
+      "contactName": "測試聯絡人",
+      "contactPhone": "0912345678",
+      "contactEmail": "NULL",
+      "address": "NULL",
+      "createdAt": "2026-02-13 01:34:18"
+    },
+    {
+      "id": "390004",
+      "name": "時間邏輯測試客戶",
+      "contactName": "測試聯絡人",
+      "contactPhone": "0912345678",
+      "contactEmail": "NULL",
+      "address": "NULL",
+      "createdAt": "2026-02-13 01:16:26"
+    },
+    {
+      "id": "390002",
+      "name": "時間邏輯測試客戶",
+      "contactName": "NULL",
+      "contactPhone": "NULL",
+      "contactEmail": "NULL",
+      "address": "NULL",
+      "createdAt": "2026-02-13 01:15:02"
+    },
+    {
+      "id": "390001",
+      "name": "時間邏輯測試客戶",
+      "contactName": "NULL",
+      "contactPhone": "NULL",
+      "contactEmail": "NULL",
+      "address": "NULL",
+      "createdAt": "2026-02-13 01:13:40"
+    },
+    {
+      "id": "360001",
+      "name": "米窩-中山店",
+      "contactName": "翁小姐",
+      "contactPhone": "NULL",
+      "contactEmail": "NULL",
+      "address": "臺北市中山區中山北路二段183巷30號3樓",
+      "createdAt": "2026-02-12 07:00:56"
+    },
+    {
+      "id": "330052",
+      "name": "測試客戶 - 時間驗證",
+      "contactName": "測試聯絡人",
+      "contactPhone": "0912345678",
+      "contactEmail": "NULL",
+      "address": "NULL",
+      "createdAt": "2026-02-12 06:04:44"
+    },
+    {
+      "id": "330051",
+      "name": "測試客戶 - 時間驗證",
+      "contactName": "測試聯絡人",
+      "contactPhone": "0912345678",
+      "contactEmail": "NULL",
+      "address": "NULL",
+      "createdAt": "2026-02-12 06:04:13"
+    },
+    {
+      "id": "330050",
+      "name": "測試客戶 - 時間驗證",
+      "contactName": "測試聯絡人",
+      "contactPhone": "0912345678",
+      "contactEmail": "NULL",
+      "address": "NULL",
+      "createdAt": "2026-02-12 06:03:26"
+    },
+    {
+      "id": "330049",
+      "name": "測試客戶 - 時間驗證",
+      "contactName": "測試聯絡人",
+      "contactPhone": "0912345678",
+      "contactEmail": "NULL",
+      "address": "NULL",
+      "createdAt": "2026-02-12 06:02:47"
+    },
+    {
+      "id": "240048",
+      "name": "築間餐飲集團",
+      "contactName": "林楷傑",
+      "contactPhone": "NULL",
+      "contactEmail": "NULL",
+      "address": "NULL",
+      "createdAt": "2026-02-11 17:08:19"
+    },
+    {
+      "id": "240047",
+      "name": "瓦城泰統集團",
+      "contactName": "許仁傑",
+      "contactPhone": "NULL",
+      "contactEmail": "NULL",
+      "address": "NULL",
+      "createdAt": "2026-02-11 17:07:58"
+    },
+    {
+      "id": "240046",
+      "name": "MOS Burger",
+      "contactName": "櫻田慧",
+      "contactPhone": "NULL",
+      "contactEmail": "NULL",
+      "address": "NULL",
+      "createdAt": "2026-02-11 17:07:43"
+    },
+    {
+      "id": "240045",
+      "name": "饗賓餐旅事業",
+      "contactName": "陳啟昌",
+      "contactPhone": "NULL",
+      "contactEmail": "NULL",
+      "address": "NULL",
+      "createdAt": "2026-02-11 17:07:16"
+    },
+    {
+      "id": "240004",
+      "name": "寒舍艾麗",
+      "contactName": "陳美玲",
+      "contactPhone": "NULL",
+      "contactEmail": "NULL",
+      "address": "NULL",
+      "createdAt": "2026-02-11 15:50:23"
+    },
+    {
+      "id": "240003",
+      "name": "永安棧 Westgate Hotel",
+      "contactName": "許孆元",
+      "contactPhone": "NULL",
+      "contactEmail": "NULL",
+      "address": "NULL",
+      "createdAt": "2026-02-11 15:48:19"
+    },
+    {
+      "id": "240002",
+      "name": "台北福華大飯店",
+      "contactName": "曾明慧",
+      "contactPhone": "NULL",
+      "contactEmail": "NULL",
+      "address": "NULL",
+      "createdAt": "2026-02-11 15:47:59"
+    },
+    {
+      "id": "240001",
+      "name": "晶華國際酒店集團",
+      "contactName": "李靖文",
+      "contactPhone": "NULL",
+      "contactEmail": "NULL",
+      "address": "NULL",
+      "createdAt": "2026-02-11 15:47:09"
+    },
+    {
+      "id": "3",
+      "name": "全聯新竹店",
+      "contactName": "王主任",
+      "contactPhone": "03-9876543",
+      "contactEmail": "NULL",
+      "address": "新竹市東區光復路789號",
+      "createdAt": "2026-02-09 15:45:20"
+    },
+    {
+      "id": "2",
+      "name": "家樂福台北店",
+      "contactName": "陳店長",
+      "contactPhone": "02-2345678",
+      "contactEmail": "NULL",
+      "address": "台北市信義區忠孝東路456號",
+      "createdAt": "2026-02-09 15:45:20"
+    },
+    {
+      "id": "1",
+      "name": "大潤發桃園店",
+      "contactName": "林經理",
+      "contactPhone": "03-1234567",
+      "contactEmail": "NULL",
+      "address": "桃園市中壢區中山路123號",
+      "createdAt": "2026-02-09 15:45:19"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\tcontactName\tcontactPhone\tcontactEmail\taddress\tcreatedAt\n420003\t時間邏輯測試客戶\t測試聯絡人\t0912345678\tNULL\tNULL\t2026-02-13 01:35:47\n420002\t時間邏輯測試客戶\t測試聯絡人\t0912345678\tNULL\tNULL\t2026-02-13 01:34:54\n420001\t時間邏輯測試客戶\t測試聯絡人\t0912345678\tNULL\tNULL\t2026-02-13 01:34:18\n390004\t時間邏輯測試客戶\t測試聯絡人\t0912345678\tNULL\tNULL\t2026-02-13 01:16:26\n390002\t時間邏輯測試客戶\tNULL\tNULL\tNULL\tNULL\t2026-02-13 01:15:02\n390001\t時間邏輯測試客戶\tNULL\tNULL\tNULL\tNULL\t2026-02-13 01:13:40\n360001\t米窩-中山店\t翁小姐\tNULL\tNULL\t臺北市中山區中山北路二段183巷30號3樓\t2026-02-12 07:00:56\n330052\t測試客戶 - 時間驗證\t測試聯絡人\t0912345678\tNULL\tNULL\t2026-02-12 06:04:44\n330051\t測試客戶 - 時間驗證\t測試聯絡人\t0912345678\tNULL\tNULL\t2026-02-12 06:04:13\n330050\t測試客戶 - 時間驗證\t測試聯絡人\t0912345678\tNULL\tNULL\t2026-02-12 06:03:26\n330049\t測試客戶 - 時間驗證\t測試聯絡人\t0912345678\tNULL\tNULL\t2026-02-12 06:02:47\n240048\t築間餐飲集團\t林楷傑\tNULL\tNULL\tNULL\t2026-02-11 17:08:19\n240047\t瓦城泰統集團\t許仁傑\tNULL\tNULL\tNULL\t2026-02-11 17:07:58\n240046\tMOS Burger\t櫻田慧\tNULL\tNULL\tNULL\t2026-02-11 17:07:43\n240045\t饗賓餐旅事業\t陳啟昌\tNULL\tNULL\tNULL\t2026-02-11 17:07:16\n240004\t寒舍艾麗\t陳美玲\tNULL\tNULL\tNULL\t2026-02-11 15:50:23\n240003\t永安棧 Westgate Hotel\t許孆元\tNULL\tNULL\tNULL\t2026-02-11 15:48:19\n240002\t台北福華大飯店\t曾明慧\tNULL\tNULL\tNULL\t2026-02-11 15:47:59\n240001\t晶華國際酒店集團\t李靖文\tNULL\tNULL\tNULL\t2026-02-11 15:47:09\n3\t全聯新竹店\t王主任\t03-9876543\tNULL\t新竹市東區光復路789號\t2026-02-09 15:45:20\n2\t家樂福台北店\t陳店長\t02-2345678\tNULL\t台北市信義區忠孝東路456號\t2026-02-09 15:45:20\n1\t大潤發桃園店\t林經理\t03-1234567\tNULL\t桃園市中壢區中山路123號\t2026-02-09 15:45:19\n",
+  "stderr": "",
+  "execution_time_ms": 1534
+}

@@ -1,0 +1,82 @@
+{
+  "query": "SELECT id, name, contactName, contactPhone FROM clients ORDER BY createdAt DESC;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2iEKifVQ9gKtEas.9cbf5414b428 --database CMgr35KntT8tLtgpfJPejw --execute SELECT id, name, contactName, contactPhone FROM clients ORDER BY createdAt DESC;",
+  "rows": [
+    {
+      "id": "360001",
+      "name": "米窩-中山店",
+      "contactName": "翁小姐",
+      "contactPhone": "NULL"
+    },
+    {
+      "id": "240048",
+      "name": "築間餐飲集團",
+      "contactName": "林楷傑",
+      "contactPhone": "NULL"
+    },
+    {
+      "id": "240047",
+      "name": "瓦城泰統集團",
+      "contactName": "許仁傑",
+      "contactPhone": "NULL"
+    },
+    {
+      "id": "240046",
+      "name": "MOS Burger",
+      "contactName": "櫻田慧",
+      "contactPhone": "NULL"
+    },
+    {
+      "id": "240045",
+      "name": "饗賓餐旅事業",
+      "contactName": "陳啟昌",
+      "contactPhone": "NULL"
+    },
+    {
+      "id": "240004",
+      "name": "寒舍艾麗",
+      "contactName": "陳美玲",
+      "contactPhone": "NULL"
+    },
+    {
+      "id": "240003",
+      "name": "永安棧 Westgate Hotel",
+      "contactName": "許孆元",
+      "contactPhone": "NULL"
+    },
+    {
+      "id": "240002",
+      "name": "台北福華大飯店",
+      "contactName": "曾明慧",
+      "contactPhone": "NULL"
+    },
+    {
+      "id": "240001",
+      "name": "晶華國際酒店集團",
+      "contactName": "李靖文",
+      "contactPhone": "NULL"
+    },
+    {
+      "id": "2",
+      "name": "家樂福台北店",
+      "contactName": "陳店長",
+      "contactPhone": "02-2345678"
+    },
+    {
+      "id": "3",
+      "name": "全聯新竹店",
+      "contactName": "王主任",
+      "contactPhone": "03-9876543"
+    },
+    {
+      "id": "1",
+      "name": "大潤發桃園店",
+      "contactName": "林經理",
+      "contactPhone": "03-1234567"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\tcontactName\tcontactPhone\n360001\t米窩-中山店\t翁小姐\tNULL\n240048\t築間餐飲集團\t林楷傑\tNULL\n240047\t瓦城泰統集團\t許仁傑\tNULL\n240046\tMOS Burger\t櫻田慧\tNULL\n240045\t饗賓餐旅事業\t陳啟昌\tNULL\n240004\t寒舍艾麗\t陳美玲\tNULL\n240003\t永安棧 Westgate Hotel\t許孆元\tNULL\n240002\t台北福華大飯店\t曾明慧\tNULL\n240001\t晶華國際酒店集團\t李靖文\tNULL\n2\t家樂福台北店\t陳店長\t02-2345678\n3\t全聯新竹店\t王主任\t03-9876543\n1\t大潤發桃園店\t林經理\t03-1234567\n",
+  "stderr": "",
+  "execution_time_ms": 1501
+}
