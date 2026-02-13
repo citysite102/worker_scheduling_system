@@ -1,0 +1,28 @@
+{
+  "query": "SELECT id, name, phone, email, school, nationality, uiNumber FROM workers ORDER BY createdAt DESC;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2iEKifVQ9gKtEas.9cbf5414b428 --database CMgr35KntT8tLtgpfJPejw --execute SELECT id, name, phone, email, school, nationality, uiNumber FROM workers ORDER BY createdAt DESC;",
+  "rows": [
+    {
+      "id": "540001",
+      "name": "SAI TUN KHAM",
+      "phone": "111",
+      "email": "NULL",
+      "school": "國立臺灣師範大學",
+      "nationality": "NULL",
+      "uiNumber": "NULL"
+    },
+    {
+      "id": "1",
+      "name": "李金珠",
+      "phone": "0972303849",
+      "email": "wang@example.com",
+      "school": "台中科技大學",
+      "nationality": "NULL",
+      "uiNumber": "NULL"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\tphone\temail\tschool\tnationality\tuiNumber\n540001\tSAI TUN KHAM\t111\tNULL\t國立臺灣師範大學\tNULL\tNULL\n1\t李金珠\t0972303849\twang@example.com\t台中科技大學\tNULL\tNULL\n",
+  "stderr": "",
+  "execution_time_ms": 1490
+}

@@ -1,0 +1,330 @@
+{
+  "query": "SELECT id, name, phone, email, school, nationality, uiNumber, createdAt FROM workers ORDER BY createdAt DESC;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2iEKifVQ9gKtEas.9cbf5414b428 --database CMgr35KntT8tLtgpfJPejw --execute SELECT id, name, phone, email, school, nationality, uiNumber, createdAt FROM workers ORDER BY createdAt DESC;",
+  "rows": [
+    {
+      "id": "540001",
+      "name": "SAI TUN KHAM",
+      "phone": "111",
+      "email": "NULL",
+      "school": "國立臺灣師範大學",
+      "nationality": "NULL",
+      "uiNumber": "NULL",
+      "createdAt": "2026-02-13 11:50:34"
+    },
+    {
+      "id": "510006",
+      "name": "時間測試員工2",
+      "phone": "0987654322",
+      "email": "time-test2@example.com",
+      "school": "測試學校",
+      "nationality": "NULL",
+      "uiNumber": "NULL",
+      "createdAt": "2026-02-13 01:35:47"
+    },
+    {
+      "id": "510005",
+      "name": "時間測試員工1",
+      "phone": "0987654321",
+      "email": "time-test1@example.com",
+      "school": "測試學校",
+      "nationality": "NULL",
+      "uiNumber": "NULL",
+      "createdAt": "2026-02-13 01:35:47"
+    },
+    {
+      "id": "510003",
+      "name": "時間測試員工1",
+      "phone": "0987654321",
+      "email": "time-test1@example.com",
+      "school": "測試學校",
+      "nationality": "NULL",
+      "uiNumber": "NULL",
+      "createdAt": "2026-02-13 01:34:55"
+    },
+    {
+      "id": "510004",
+      "name": "時間測試員工2",
+      "phone": "0987654322",
+      "email": "time-test2@example.com",
+      "school": "測試學校",
+      "nationality": "NULL",
+      "uiNumber": "NULL",
+      "createdAt": "2026-02-13 01:34:55"
+    },
+    {
+      "id": "510002",
+      "name": "時間測試員工2",
+      "phone": "0987654322",
+      "email": "time-test2@example.com",
+      "school": "測試學校",
+      "nationality": "NULL",
+      "uiNumber": "NULL",
+      "createdAt": "2026-02-13 01:34:19"
+    },
+    {
+      "id": "510001",
+      "name": "時間測試員工1",
+      "phone": "0987654321",
+      "email": "time-test1@example.com",
+      "school": "測試學校",
+      "nationality": "NULL",
+      "uiNumber": "NULL",
+      "createdAt": "2026-02-13 01:34:18"
+    },
+    {
+      "id": "480008",
+      "name": "時間測試員工2",
+      "phone": "0987654322",
+      "email": "time-test2@example.com",
+      "school": "測試學校",
+      "nationality": "NULL",
+      "uiNumber": "NULL",
+      "createdAt": "2026-02-13 01:16:27"
+    },
+    {
+      "id": "480007",
+      "name": "時間測試員工1",
+      "phone": "0987654321",
+      "email": "time-test1@example.com",
+      "school": "測試學校",
+      "nationality": "NULL",
+      "uiNumber": "NULL",
+      "createdAt": "2026-02-13 01:16:26"
+    },
+    {
+      "id": "480004",
+      "name": "時間測試員工2",
+      "phone": "0987654322",
+      "email": "time-test2@example.com",
+      "school": "測試學校",
+      "nationality": "NULL",
+      "uiNumber": "NULL",
+      "createdAt": "2026-02-13 01:15:03"
+    },
+    {
+      "id": "480003",
+      "name": "時間測試員工1",
+      "phone": "0987654321",
+      "email": "time-test1@example.com",
+      "school": "測試學校",
+      "nationality": "NULL",
+      "uiNumber": "NULL",
+      "createdAt": "2026-02-13 01:15:02"
+    },
+    {
+      "id": "480002",
+      "name": "時間測試員工2",
+      "phone": "0987654322",
+      "email": "time-test2@example.com",
+      "school": "測試學校",
+      "nationality": "NULL",
+      "uiNumber": "NULL",
+      "createdAt": "2026-02-13 01:13:41"
+    },
+    {
+      "id": "480001",
+      "name": "時間測試員工1",
+      "phone": "0987654321",
+      "email": "time-test1@example.com",
+      "school": "測試學校",
+      "nationality": "NULL",
+      "uiNumber": "NULL",
+      "createdAt": "2026-02-13 01:13:41"
+    },
+    {
+      "id": "450001",
+      "name": "wu",
+      "phone": "124",
+      "email": "NULL",
+      "school": "北大",
+      "nationality": "NULL",
+      "uiNumber": "NULL",
+      "createdAt": "2026-02-12 09:55:51"
+    },
+    {
+      "id": "420072",
+      "name": "測試員工 - 時間驗證",
+      "phone": "0987654321",
+      "email": "NULL",
+      "school": "NULL",
+      "nationality": "NULL",
+      "uiNumber": "NULL",
+      "createdAt": "2026-02-12 06:04:44"
+    },
+    {
+      "id": "420071",
+      "name": "測試員工 - 時間驗證",
+      "phone": "0987654321",
+      "email": "NULL",
+      "school": "NULL",
+      "nationality": "NULL",
+      "uiNumber": "NULL",
+      "createdAt": "2026-02-12 06:04:14"
+    },
+    {
+      "id": "420070",
+      "name": "測試員工 - 時間驗證",
+      "phone": "0987654321",
+      "email": "NULL",
+      "school": "NULL",
+      "nationality": "NULL",
+      "uiNumber": "NULL",
+      "createdAt": "2026-02-12 06:03:27"
+    },
+    {
+      "id": "420069",
+      "name": "測試員工 - 時間驗證",
+      "phone": "0987654321",
+      "email": "NULL",
+      "school": "NULL",
+      "nationality": "NULL",
+      "uiNumber": "NULL",
+      "createdAt": "2026-02-12 06:02:48"
+    },
+    {
+      "id": "330094",
+      "name": "若彤",
+      "phone": "9999",
+      "email": "NULL",
+      "school": "NULL",
+      "nationality": "NULL",
+      "uiNumber": "NULL",
+      "createdAt": "2026-02-11 17:21:35"
+    },
+    {
+      "id": "330093",
+      "name": "欣妍",
+      "phone": "+886978746530",
+      "email": "NULL",
+      "school": "北市大",
+      "nationality": "NULL",
+      "uiNumber": "NULL",
+      "createdAt": "2026-02-11 17:21:21"
+    },
+    {
+      "id": "330092",
+      "name": "亦辰",
+      "phone": "09878787",
+      "email": "NULL",
+      "school": "成大",
+      "nationality": "NULL",
+      "uiNumber": "NULL",
+      "createdAt": "2026-02-11 17:20:59"
+    },
+    {
+      "id": "330091",
+      "name": "子宸",
+      "phone": "665312",
+      "email": "NULL",
+      "school": "成大",
+      "nationality": "NULL",
+      "uiNumber": "NULL",
+      "createdAt": "2026-02-11 17:20:41"
+    },
+    {
+      "id": "330090",
+      "name": "宇軒",
+      "phone": "88698333",
+      "email": "NULL",
+      "school": "NULL",
+      "nationality": "NULL",
+      "uiNumber": "NULL",
+      "createdAt": "2026-02-11 17:20:18"
+    },
+    {
+      "id": "330089",
+      "name": "雨晴",
+      "phone": "888665",
+      "email": "NULL",
+      "school": "NULL",
+      "nationality": "NULL",
+      "uiNumber": "NULL",
+      "createdAt": "2026-02-11 17:19:56"
+    },
+    {
+      "id": "330088",
+      "name": "詩涵",
+      "phone": "09878787",
+      "email": "NULL",
+      "school": "輔大",
+      "nationality": "NULL",
+      "uiNumber": "NULL",
+      "createdAt": "2026-02-11 17:19:39"
+    },
+    {
+      "id": "330087",
+      "name": "子涵",
+      "phone": "09878787",
+      "email": "NULL",
+      "school": "輔大",
+      "nationality": "NULL",
+      "uiNumber": "NULL",
+      "createdAt": "2026-02-11 17:19:22"
+    },
+    {
+      "id": "6",
+      "name": "周芷若",
+      "phone": "0966-890-123",
+      "email": "zhou@example.com",
+      "school": "NULL",
+      "nationality": "NULL",
+      "uiNumber": "NULL",
+      "createdAt": "2026-02-09 15:45:19"
+    },
+    {
+      "id": "5",
+      "name": "張三豐",
+      "phone": "0955-789-012",
+      "email": "zhang@example.com",
+      "school": "NULL",
+      "nationality": "NULL",
+      "uiNumber": "NULL",
+      "createdAt": "2026-02-09 15:45:18"
+    },
+    {
+      "id": "4",
+      "name": "李四",
+      "phone": "0944-678-901",
+      "email": "li@example.com",
+      "school": "NULL",
+      "nationality": "NULL",
+      "uiNumber": "NULL",
+      "createdAt": "2026-02-09 15:45:18"
+    },
+    {
+      "id": "3",
+      "name": "林志玲",
+      "phone": "0933-567-890",
+      "email": "lin@example.com",
+      "school": "NULL",
+      "nationality": "NULL",
+      "uiNumber": "NULL",
+      "createdAt": "2026-02-09 15:45:18"
+    },
+    {
+      "id": "2",
+      "name": "陳小春",
+      "phone": "0922-456-789",
+      "email": "chen@example.com",
+      "school": "NULL",
+      "nationality": "NULL",
+      "uiNumber": "NULL",
+      "createdAt": "2026-02-09 15:45:18"
+    },
+    {
+      "id": "1",
+      "name": "李金珠",
+      "phone": "0972303849",
+      "email": "wang@example.com",
+      "school": "台中科技大學",
+      "nationality": "NULL",
+      "uiNumber": "NULL",
+      "createdAt": "2026-02-09 15:45:17"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\tphone\temail\tschool\tnationality\tuiNumber\tcreatedAt\n540001\tSAI TUN KHAM\t111\tNULL\t國立臺灣師範大學\tNULL\tNULL\t2026-02-13 11:50:34\n510006\t時間測試員工2\t0987654322\ttime-test2@example.com\t測試學校\tNULL\tNULL\t2026-02-13 01:35:47\n510005\t時間測試員工1\t0987654321\ttime-test1@example.com\t測試學校\tNULL\tNULL\t2026-02-13 01:35:47\n510003\t時間測試員工1\t0987654321\ttime-test1@example.com\t測試學校\tNULL\tNULL\t2026-02-13 01:34:55\n510004\t時間測試員工2\t0987654322\ttime-test2@example.com\t測試學校\tNULL\tNULL\t2026-02-13 01:34:55\n510002\t時間測試員工2\t0987654322\ttime-test2@example.com\t測試學校\tNULL\tNULL\t2026-02-13 01:34:19\n510001\t時間測試員工1\t0987654321\ttime-test1@example.com\t測試學校\tNULL\tNULL\t2026-02-13 01:34:18\n480008\t時間測試員工2\t0987654322\ttime-test2@example.com\t測試學校\tNULL\tNULL\t2026-02-13 01:16:27\n480007\t時間測試員工1\t0987654321\ttime-test1@example.com\t測試學校\tNULL\tNULL\t2026-02-13 01:16:26\n480004\t時間測試員工2\t0987654322\ttime-test2@example.com\t測試學校\tNULL\tNULL\t2026-02-13 01:15:03\n480003\t時間測試員工1\t0987654321\ttime-test1@example.com\t測試學校\tNULL\tNULL\t2026-02-13 01:15:02\n480002\t時間測試員工2\t0987654322\ttime-test2@example.com\t測試學校\tNULL\tNULL\t2026-02-13 01:13:41\n480001\t時間測試員工1\t0987654321\ttime-test1@example.com\t測試學校\tNULL\tNULL\t2026-02-13 01:13:41\n450001\twu\t124\tNULL\t北大\tNULL\tNULL\t2026-02-12 09:55:51\n420072\t測試員工 - 時間驗證\t0987654321\tNULL\tNULL\tNULL\tNULL\t2026-02-12 06:04:44\n420071\t測試員工 - 時間驗證\t0987654321\tNULL\tNULL\tNULL\tNULL\t2026-02-12 06:04:14\n420070\t測試員工 - 時間驗證\t0987654321\tNULL\tNULL\tNULL\tNULL\t2026-02-12 06:03:27\n420069\t測試員工 - 時間驗證\t0987654321\tNULL\tNULL\tNULL\tNULL\t2026-02-12 06:02:48\n330094\t若彤\t9999\tNULL\tNULL\tNULL\tNULL\t2026-02-11 17:21:35\n330093\t欣妍\t+886978746530\tNULL\t北市大\tNULL\tNULL\t2026-02-11 17:21:21\n330092\t亦辰\t09878787\tNULL\t成大\tNULL\tNULL\t2026-02-11 17:20:59\n330091\t子宸\t665312\tNULL\t成大\tNULL\tNULL\t2026-02-11 17:20:41\n330090\t宇軒\t88698333\tNULL\tNULL\tNULL\tNULL\t2026-02-11 17:20:18\n330089\t雨晴\t888665\tNULL\tNULL\tNULL\tNULL\t2026-02-11 17:19:56\n330088\t詩涵\t09878787\tNULL\t輔大\tNULL\tNULL\t2026-02-11 17:19:39\n330087\t子涵\t09878787\tNULL\t輔大\tNULL\tNULL\t2026-02-11 17:19:22\n6\t周芷若\t0966-890-123\tzhou@example.com\tNULL\tNULL\tNULL\t2026-02-09 15:45:19\n5\t張三豐\t0955-789-012\tzhang@example.com\tNULL\tNULL\tNULL\t2026-02-09 15:45:18\n4\t李四\t0944-678-901\tli@example.com\tNULL\tNULL\tNULL\t2026-02-09 15:45:18\n3\t林志玲\t0933-567-890\tlin@example.com\tNULL\tNULL\tNULL\t2026-02-09 15:45:18\n2\t陳小春\t0922-456-789\tchen@example.com\tNULL\tNULL\tNULL\t2026-02-09 15:45:18\n1\t李金珠\t0972303849\twang@example.com\t台中科技大學\tNULL\tNULL\t2026-02-09 15:45:17\n",
+  "stderr": "",
+  "execution_time_ms": 1540
+}

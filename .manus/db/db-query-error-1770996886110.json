@@ -1,0 +1,8 @@
+{
+  "query": "-- 刪除姓名包含「測試」或「時間」的員工\nDELETE FROM workers WHERE name LIKE '%測試%' OR name LIKE '%時間%';\n\n-- 刪除明顯的測試假名\nDELETE FROM workers WHERE name IN ('周芷若', '陳小春', '林志玲', '李四', '張三豐', 'wu', '若彤', '欣妍', '亦辰', '子宸', '宇軒', '雨晴', '詩涵', '子涵');",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2iEKifVQ9gKtEas.9cbf5414b428 --database CMgr35KntT8tLtgpfJPejw --execute -- 刪除姓名包含「測試」或「時間」的員工\nDELETE FROM workers WHERE name LIKE '%測試%' OR name LIKE '%時間%';\n\n-- 刪除明顯的測試假名\nDELETE FROM workers WHERE name IN ('周芷若', '陳小春', '林志玲', '李四', '張三豐', 'wu', '若彤', '欣妍', '亦辰', '子宸', '宇軒', '雨晴', '詩涵', '子涵');",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1451 (23000) at line 2: Cannot delete or update a parent row: a foreign key constraint fails (`cmgr35kntt8tltgpfjpejw`.`availability`, CONSTRAINT `availability_workerId_workers_id_fk` FOREIGN KEY (`workerId`) REFERENCES `workers` (`id`) ON DELETE NO ACTION ON UPDATE NO ACTION)"
+  ]
+}

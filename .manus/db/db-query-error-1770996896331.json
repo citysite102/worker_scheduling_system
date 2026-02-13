@@ -1,0 +1,8 @@
+{
+  "query": "-- 先刪除測試員工的 availability 記錄\nDELETE FROM availability WHERE workerId IN (\n  SELECT id FROM workers WHERE name LIKE '%測試%' OR name LIKE '%時間%' \n  OR name IN ('周芷若', '陳小春', '林志玲', '李四', '張三豐', 'wu', '若彤', '欣妍', '亦辰', '子宸', '宇軒', '雨晴', '詩涵', '子涵')\n);\n\n-- 刪除測試員工記錄\nDELETE FROM workers WHERE name LIKE '%測試%' OR name LIKE '%時間%';\nDELETE FROM workers WHERE name IN ('周芷若', '陳小春', '林志玲', '李四', '張三豐', 'wu', '若彤', '欣妍', '亦辰', '子宸', '宇軒', '雨晴', '詩涵', '子涵');",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2iEKifVQ9gKtEas.9cbf5414b428 --database CMgr35KntT8tLtgpfJPejw --execute -- 先刪除測試員工的 availability 記錄\nDELETE FROM availability WHERE workerId IN (\n  SELECT id FROM workers WHERE name LIKE '%測試%' OR name LIKE '%時間%' \n  OR name IN ('周芷若', '陳小春', '林志玲', '李四', '張三豐', 'wu', '若彤', '欣妍', '亦辰', '子宸', '宇軒', '雨晴', '詩涵', '子涵')\n);\n\n-- 刪除測試員工記錄\nDELETE FROM workers WHERE name LIKE '%測試%' OR name LIKE '%時間%';\nDELETE FROM workers WHERE name IN ('周芷若', '陳小春', '林志玲', '李四', '張三豐', 'wu', '若彤', '欣妍', '亦辰', '子宸', '宇軒', '雨晴', '詩涵', '子涵');",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1451 (23000) at line 9: Cannot delete or update a parent row: a foreign key constraint fails (`cmgr35kntt8tltgpfjpejw`.`assignments`, CONSTRAINT `assignments_workerId_workers_id_fk` FOREIGN KEY (`workerId`) REFERENCES `workers` (`id`) ON DELETE NO ACTION ON UPDATE NO ACTION)"
+  ]
+}
