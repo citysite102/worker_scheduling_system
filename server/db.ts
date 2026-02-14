@@ -131,15 +131,19 @@ export async function getAllWorkers(filters?: {
       conditions.push(
         and(
           eq(workers.hasWorkPermit, 1),
+          sql`${workers.workPermitExpiryDate} IS NOT NULL`,
           sql`${workers.workPermitExpiryDate} > ${now}`
         )
       );
     } else if (filters.workPermitStatus === "invalid") {
-      // 簽證無效：有簽證 且 到期日 <= 今天
+      // 簽證無效：有簽證 且 (到期日 <= 今天 或 無到期日)
       conditions.push(
         and(
           eq(workers.hasWorkPermit, 1),
-          sql`${workers.workPermitExpiryDate} <= ${now}`
+          or(
+            sql`${workers.workPermitExpiryDate} IS NULL`,
+            sql`${workers.workPermitExpiryDate} <= ${now}`
+          )
         )
       );
     } else if (filters.workPermitStatus === "none") {

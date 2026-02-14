@@ -1,0 +1,16 @@
+{
+  "query": "SELECT id, name, hasWorkPermit, workPermitExpiryDate FROM workers WHERE name LIKE '%KHAM%' LIMIT 5;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2iEKifVQ9gKtEas.9cbf5414b428 --database CMgr35KntT8tLtgpfJPejw --execute SELECT id, name, hasWorkPermit, workPermitExpiryDate FROM workers WHERE name LIKE '%KHAM%' LIMIT 5;",
+  "rows": [
+    {
+      "id": "540001",
+      "name": "SAI TUN KHAM",
+      "hasWorkPermit": "0",
+      "workPermitExpiryDate": "2026-02-13 00:00:00"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\thasWorkPermit\tworkPermitExpiryDate\n540001\tSAI TUN KHAM\t0\t2026-02-13 00:00:00\n",
+  "stderr": "",
+  "execution_time_ms": 1496
+}

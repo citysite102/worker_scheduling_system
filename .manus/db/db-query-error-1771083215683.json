@@ -1,0 +1,8 @@
+{
+  "query": "SELECT id, name, hasWorkPermit, workPermitExpiryDate, DATE(workPermitExpiryDate) as expiry_date, NOW() as current_time FROM workers ORDER BY id DESC LIMIT 10;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2iEKifVQ9gKtEas.9cbf5414b428 --database CMgr35KntT8tLtgpfJPejw --execute SELECT id, name, hasWorkPermit, workPermitExpiryDate, DATE(workPermitExpiryDate) as expiry_date, NOW() as current_time FROM workers ORDER BY id DESC LIMIT 10;",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1064 (42000) at line 1: You have an error in your SQL syntax; check the manual that corresponds to your TiDB version for the right syntax to use line 1 column 118 near \"current_time FROM workers ORDER BY id DESC LIMIT 10\""
+  ]
+}

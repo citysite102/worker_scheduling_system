@@ -1,0 +1,28 @@
+{
+  "query": "SELECT id, name, hasWorkPermit, workPermitExpiryDate FROM workers ORDER BY id DESC LIMIT 10;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2iEKifVQ9gKtEas.9cbf5414b428 --database CMgr35KntT8tLtgpfJPejw --execute SELECT id, name, hasWorkPermit, workPermitExpiryDate FROM workers ORDER BY id DESC LIMIT 10;",
+  "rows": [
+    {
+      "id": "570001",
+      "name": "王小名",
+      "hasWorkPermit": "1",
+      "workPermitExpiryDate": "2026-04-14 00:00:00"
+    },
+    {
+      "id": "540001",
+      "name": "SAI TUN KHAM",
+      "hasWorkPermit": "0",
+      "workPermitExpiryDate": "2026-02-13 00:00:00"
+    },
+    {
+      "id": "1",
+      "name": "李金珠",
+      "hasWorkPermit": "1",
+      "workPermitExpiryDate": "NULL"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\thasWorkPermit\tworkPermitExpiryDate\n570001\t王小名\t1\t2026-04-14 00:00:00\n540001\tSAI TUN KHAM\t0\t2026-02-13 00:00:00\n1\t李金珠\t1\tNULL\n",
+  "stderr": "",
+  "execution_time_ms": 1490
+}
