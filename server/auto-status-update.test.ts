@@ -1,9 +1,16 @@
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import * as db from "./db";
+import { cleanupTestData, TestDataIds } from "./test-utils";
 
 describe("需求單自動狀態更新功能", () => {
-  let testClientId: number;
-  let testWorkerIds: number[] = [];
+  const testDataIds: TestDataIds = {
+    assignments: [],
+    demands: [],
+    availability: [],
+    workers: [],
+    clients: [],
+  };
+
   let testDemandId: number;
 
   beforeAll(async () => {
@@ -13,7 +20,7 @@ describe("需求單自動狀態更新功能", () => {
       contactPerson: "測試聯絡人",
       phone: "0912345678",
     });
-    testClientId = client.id;
+    testDataIds.clients!.push(client.id);
 
     // 建立測試員工（2 位）
     for (let i = 1; i <= 2; i++) {
@@ -24,12 +31,12 @@ describe("需求單自動狀態更新功能", () => {
         hasWorkPermit: 1,
         hasHealthCheck: 1,
       });
-      testWorkerIds.push(worker.id);
+      testDataIds.workers!.push(worker.id);
     }
 
     // 建立測試需求單（需要 2 位員工）
     const demand = await db.createDemand({
-      clientId: testClientId,
+      clientId: testDataIds.clients![0],
       date: new Date("2026-02-09T00:00:00Z"), // 星期一
       startTime: "10:00",
       endTime: "16:00",
@@ -38,41 +45,11 @@ describe("需求單自動狀態更新功能", () => {
       status: "draft",
     });
     testDemandId = demand.id;
+    testDataIds.demands!.push(demand.id);
   });
 
   afterAll(async () => {
-    // 清理測試資料
-    const dbInstance = await db.getDb();
-    if (!dbInstance) return;
-    const { availability } = await import("../drizzle/schema");
-    const { eq } = await import("drizzle-orm");
-
-    // 1. 刪除 assignments
-    if (testDemandId) {
-      const assignments = await db.getAssignmentsByDemand(testDemandId);
-      for (const assignment of assignments) {
-        await db.deleteAssignment(assignment.id);
-      }
-    }
-
-    // 2. 刪除 demands
-    if (testDemandId) {
-      await db.deleteDemand(testDemandId);
-    }
-
-    // 3. 刪除 availability
-    for (const workerId of testWorkerIds) {
-      await dbInstance.delete(availability).where(eq(availability.workerId, workerId));
-    }
-
-    // 4. 刪除 workers 和 clients
-    for (const workerId of testWorkerIds) {
-      await db.deleteWorker(workerId);
-    }
-
-    if (testClientId) {
-      await db.deleteClient(testClientId);
-    }
+    await cleanupTestData(testDataIds);
   });
 
   it("指派第 1 位員工時，需求單狀態應保持為 draft", async () => {
@@ -83,7 +60,7 @@ describe("需求單自動狀態更新功能", () => {
     
     await db.createAssignment({
       demandId: testDemandId,
-      workerId: testWorkerIds[0],
+      workerId: testDataIds.workers![0],
       status: "assigned",
       scheduledStart,
       scheduledEnd,
@@ -140,7 +117,7 @@ describe("需求單自動狀態更新功能", () => {
   it("取消 1 位員工的指派時，需求單狀態應保持為 confirmed", async () => {
     // 取得第 1 位員工的指派記錄
     const assignments = await db.getAssignmentsByDemand(testDemandId);
-    const firstAssignment = assignments.find(a => a.workerId === testWorkerIds[0]);
+    const firstAssignment = assignments.find(a => a.workerId === testDataIds.workers![0]);
     expect(firstAssignment).toBeDefined();
 
     // 取消第 1 位員工的指派
@@ -165,7 +142,7 @@ describe("需求單自動狀態更新功能", () => {
   it("取消所有員工的指派時，需求單狀態應自動改回 draft", async () => {
     // 取得第 2 位員工的指派記錄
     const assignments = await db.getAssignmentsByDemand(testDemandId);
-    const secondAssignment = assignments.find(a => a.workerId === testWorkerIds[1] && a.status !== "cancelled");
+    const secondAssignment = assignments.find(a => a.workerId === testDataIds.workers![1] && a.status !== "cancelled");
     expect(secondAssignment).toBeDefined();
 
     // 取消第 2 位員工的指派

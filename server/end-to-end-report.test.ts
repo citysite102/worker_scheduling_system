@@ -11,6 +11,12 @@ describe("端到端測試：實際工時回填 → 報表輸出", () => {
     clients: [],
   };
 
+  let testWorker1Id: number;
+  let testWorker2Id: number;
+  let testDemandId: number;
+  let testAssignment1Id: number;
+  let testAssignment2Id: number;
+
 
 
 

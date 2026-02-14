@@ -12,6 +12,9 @@ describe("排班衝突檢測測試", () => {
     clients: [],
   };
 
+  let testDemand1Id: number;
+  let testDemand2Id: number;
+
 
 
 
