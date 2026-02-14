@@ -25,6 +25,7 @@ import { LayoutDashboard, LogOut, PanelLeft, Users, Building2, Calendar, Clipboa
 import { CSSProperties, useEffect, useRef, useState } from "react";
 import { useLocation } from "wouter";
 import { DashboardLayoutSkeleton } from './DashboardLayoutSkeleton';
+import { LoadingScreen } from './LoadingScreen';
 import { Button } from "./ui/button";
 
 const menuItems = [
@@ -123,6 +124,19 @@ function DashboardLayoutContent({
 }: DashboardLayoutContentProps) {
   const { user, logout } = useAuth();
   const [location, setLocation] = useLocation();
+  const [isPageLoading, setIsPageLoading] = useState(false);
+  const prevLocation = useRef(location);
+
+  useEffect(() => {
+    if (prevLocation.current !== location) {
+      setIsPageLoading(true);
+      const timer = setTimeout(() => {
+        setIsPageLoading(false);
+        prevLocation.current = location;
+      }, 300);
+      return () => clearTimeout(timer);
+    }
+  }, [location]);
   const { state, toggleSidebar } = useSidebar();
   const isCollapsed = state === "collapsed";
   const [isResizing, setIsResizing] = useState(false);
@@ -168,6 +182,7 @@ function DashboardLayoutContent({
 
   return (
     <>
+      <LoadingScreen isLoading={isPageLoading} />
       <div className="relative" ref={sidebarRef}>
         <Sidebar
           collapsible="icon"

@@ -1063,3 +1063,9 @@
 ## 強制 Favicon 重新載入（2026/02/14）
 - [x] 修改 index.html 加上 favicon 版本參數（?v=2）
 - [x] 重啟開發伺服器並驗證
+
+## 載入動畫優化（2026/02/14）
+- [x] 設計並建立全域載入動畫元件（LoadingScreen.tsx）
+- [x] 整合載入動畫到應用程式初始化流程（App.tsx）
+- [x] 優化頁面切換時的載入體驗（DashboardLayout.tsx）
+- [x] 驗證載入動畫顯示效果（開發伺服器運行正常，TypeScript 無錯誤）
