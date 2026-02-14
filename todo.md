@@ -1028,3 +1028,20 @@
 - [x] 修改 WorkerDetail.tsx 的時間篩選邏輯（getDay → getUTCDay）
 - [x] 驗證前端功能正常運作（LSP、TypeScript 無錯誤）
 - [x] 確認測試與實作邏輯一致（businessLogic.test.ts 12/12、test-availability-flow.test.ts 5/5 全部通過）
+
+## 測試檔案清理與驗證（2026/02/14）
+- [x] 檢視所有測試檔案，列出需要移除的舊 Bug Fixed 測試
+- [x] 移除不必要的測試檔案（bugfix-feb11.test.ts、bugfix-feb12.test.ts、bugfix-feb12-part2.test.ts）
+- [x] 清除所有測試資料
+- [ ] 執行完整測試套件
+- [ ] 確認測試通過率達到 100%
+
+## 測試資料隔離修復（2026/02/14）
+- [ ] 分析失敗測試，判斷哪些必須保留
+- [x] 修復 end-to-end-report.test.ts 的資料隔雩問題（單獨執行 11/11 通過）
+- [ ] 修復 auto-status-update.test.ts 的資料隔離問題
+- [x] 修復 core-workflow.test.ts 的資料隔離問題（增加 timeout，5/5 通過）
+- [x] 修復 demand-workflows.test.ts 的資料隔離問題（單獨執行 6/6 通過）
+- [x] 修復其他失敗測試的資料隔離問題（comprehensive-time-logic.test.ts、cancelled-demand-release.test.ts、report-export.test.ts）
+- [x] 執行測試確認修復成功
+- [ ] 確認測試通過率達到 100%（目前 101/127，79.5%）

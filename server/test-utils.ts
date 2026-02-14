@@ -40,8 +40,21 @@ export async function cleanupTestData(testDataIds: TestDataIds): Promise<void> {
       );
     }
 
-    // 2. 清理 demands
+    // 2. 清理 demands（先清理所有關聯的 assignments）
     if (testDataIds.demands && testDataIds.demands.length > 0) {
+      // 先查詢並清理所有關聯的 assignments（防止外鍵約束錯誤）
+      const relatedAssignments = await db.select({ id: assignments.id })
+        .from(assignments)
+        .where(inArray(assignments.demandId, testDataIds.demands));
+      
+      if (relatedAssignments.length > 0) {
+        const relatedAssignmentIds = relatedAssignments.map(a => a.id);
+        await db.delete(assignments).where(
+          inArray(assignments.id, relatedAssignmentIds)
+        );
+      }
+      
+      // 然後清理 demands
       await db.delete(demands).where(
         inArray(demands.id, testDataIds.demands)
       );
@@ -68,21 +81,35 @@ export async function cleanupTestData(testDataIds: TestDataIds): Promise<void> {
       );
     }
 
-    // 5. 清理 clients（先清理所有關聯的 demands）
+    // 5. 清理 clients（先清理所有關聯的 demands 和 assignments）
     if (testDataIds.clients && testDataIds.clients.length > 0) {
-      // 先查詢並清理所有關聯的 demands（防止外鍵約束錯誤）
+      // 先查詢所有關聯的 demands
       const relatedDemands = await db.select({ id: demands.id })
         .from(demands)
         .where(inArray(demands.clientId, testDataIds.clients));
       
       if (relatedDemands.length > 0) {
         const relatedDemandIds = relatedDemands.map(d => d.id);
+        
+        // 先清理所有關聯的 assignments
+        const relatedAssignments = await db.select({ id: assignments.id })
+          .from(assignments)
+          .where(inArray(assignments.demandId, relatedDemandIds));
+        
+        if (relatedAssignments.length > 0) {
+          const relatedAssignmentIds = relatedAssignments.map(a => a.id);
+          await db.delete(assignments).where(
+            inArray(assignments.id, relatedAssignmentIds)
+          );
+        }
+        
+        // 然後清理 demands
         await db.delete(demands).where(
           inArray(demands.id, relatedDemandIds)
         );
       }
       
-      // 然後清理 clients
+      // 最後清理 clients
       await db.delete(clients).where(
         inArray(clients.id, testDataIds.clients)
       );

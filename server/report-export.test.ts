@@ -1,8 +1,16 @@
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import * as db from "./db";
 import * as logic from "./businessLogic";
+import { cleanupTestData, TestDataIds } from "./test-utils";
 
 describe("報表輸出測試", () => {
+  const testDataIds: TestDataIds = {
+    assignments: [],
+    demands: [],
+    availability: [],
+    workers: [],
+    clients: [],
+  };
   let testClientId: number;
   let testWorkerId: number;
   let testDemandId: number;
@@ -18,6 +26,7 @@ describe("報表輸出測試", () => {
       status: "active",
     });
     testClientId = client.id;
+    testDataIds.clients!.push(client.id);
 
     // 建立測試員工
     const worker = await db.createWorker({
@@ -29,6 +38,7 @@ describe("報表輸出測試", () => {
       status: "active",
     });
     testWorkerId = worker.id;
+    testDataIds.workers!.push(worker.id);
 
     // 建立測試需求單
     const demand = await db.createDemand({
@@ -41,6 +51,7 @@ describe("報表輸出測試", () => {
       status: "confirmed",
     });
     testDemandId = demand.id;
+    testDataIds.demands!.push(demand.id);
 
     // 建立測試指派
     const assignment = await db.createAssignment({
@@ -52,6 +63,7 @@ describe("報表輸出測試", () => {
       status: "completed",
     });
     testAssignmentId = assignment.id;
+    testDataIds.assignments!.push(assignment.id);
 
     // 填寫實際工時
     await db.updateAssignment(testAssignmentId, {
@@ -62,35 +74,7 @@ describe("報表輸出測試", () => {
   });
 
   afterAll(async () => {
-    // 清理測試資料
-    const database = await db.getDb();
-    if (database) {
-      const { demands, assignments, workers, clients, availability } = await import("../drizzle/schema");
-      const { eq } = await import("drizzle-orm");
-
-      // 1. 刪除 assignments
-      if (testAssignmentId) {
-        await database.delete(assignments).where(eq(assignments.id, testAssignmentId));
-      }
-      
-      // 2. 刪除 demands
-      if (testDemandId) {
-        await database.delete(demands).where(eq(demands.id, testDemandId));
-      }
-      
-      // 3. 刪除 availability
-      if (testWorkerId) {
-        await database.delete(availability).where(eq(availability.workerId, testWorkerId));
-      }
-      
-      // 4. 刪除 workers 和 clients
-      if (testWorkerId) {
-        await database.delete(workers).where(eq(workers.id, testWorkerId));
-      }
-      if (testClientId) {
-        await database.delete(clients).where(eq(clients.id, testClientId));
-      }
-    }
+    await cleanupTestData(testDataIds);
   });
 
   it("1. 時間格式化 → formatTime 應正確格式化時間", () => {

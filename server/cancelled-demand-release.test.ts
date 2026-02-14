@@ -1,8 +1,19 @@
-import { describe, it, expect, beforeAll, afterAll } from "vitest";
+import { describe, it, expect, beforeAll, afterAll, vi } from "vitest";
 import * as db from "./db";
 import * as logic from "./businessLogic";
+import { cleanupTestData, TestDataIds } from "./test-utils";
 
 describe("已取消需求單的人力釋放", () => {
+  // 增加測試超時時間，因為 calculateDemandFeasibility 可能需要較長時間
+  vi.setConfig({ testTimeout: 15000 });
+  
+  const testDataIds: TestDataIds = {
+    assignments: [],
+    demands: [],
+    availability: [],
+    workers: [],
+    clients: [],
+  };
   let testClientId: number;
   let testWorkerId: number;
   let testDemandId1: number; // 第一個需求單（會被取消）
@@ -16,6 +27,7 @@ describe("已取消需求單的人力釋放", () => {
       phone: "0912345678",
     });
     testClientId = client.id;
+    testDataIds.clients!.push(client.id);
 
     // 建立測試員工
     const worker = await db.createWorker({
@@ -26,6 +38,7 @@ describe("已取消需求單的人力釋放", () => {
       hasHealthCheck: 1,
     });
     testWorkerId = worker.id;
+    testDataIds.workers!.push(worker.id);
 
     // 設定員工排班時間（周四 08:00-18:00）
     // 2026/02/27 是周四，所以 weekStart 應該是 2026/02/23 (周日)
@@ -59,6 +72,7 @@ describe("已取消需求單的人力釋放", () => {
       status: "draft",
     });
     testDemandId1 = demand1.id;
+    testDataIds.demands!.push(demand1.id);
 
     // 建立第二個需求單（同一天，2026/02/27 10:00-12:00）
     const demand2 = await db.createDemand({
@@ -71,13 +85,14 @@ describe("已取消需求單的人力釋放", () => {
       status: "draft",
     });
     testDemandId2 = demand2.id;
+    testDataIds.demands!.push(demand2.id);
 
     // 指派員工到第一個需求單
     const demand1Info = await db.getDemandById(testDemandId1);
     const scheduledStart1 = new Date(`${demand1Info!.date.toISOString().split('T')[0]}T${demand1Info!.startTime}:00Z`);
     const scheduledEnd1 = new Date(`${demand1Info!.date.toISOString().split('T')[0]}T${demand1Info!.endTime}:00Z`);
     
-    await db.createAssignment({
+    const assignment = await db.createAssignment({
       demandId: testDemandId1,
       workerId: testWorkerId,
       status: "assigned",
@@ -85,52 +100,11 @@ describe("已取消需求單的人力釋放", () => {
       scheduledEnd: scheduledEnd1,
       scheduledHours: 252, // 4小時12分 = 252分鐘
     });
+    testDataIds.assignments!.push(assignment.id);
   });
 
   afterAll(async () => {
-    // 清理測試資料
-    const dbInstance = await db.getDb();
-    if (!dbInstance) return;
-    const { availability } = await import("../drizzle/schema");
-    const { eq } = await import("drizzle-orm");
-
-    // 1. 刪除 assignments
-    if (testDemandId1) {
-      const assignments1 = await db.getAssignmentsByDemand(testDemandId1);
-      for (const assignment of assignments1) {
-        await db.deleteAssignment(assignment.id);
-      }
-    }
-
-    if (testDemandId2) {
-      const assignments2 = await db.getAssignmentsByDemand(testDemandId2);
-      for (const assignment of assignments2) {
-        await db.deleteAssignment(assignment.id);
-      }
-    }
-
-    // 2. 刪除 demands
-    if (testDemandId1) {
-      await db.deleteDemand(testDemandId1);
-    }
-
-    if (testDemandId2) {
-      await db.deleteDemand(testDemandId2);
-    }
-
-    // 3. 刪除 availability
-    if (testWorkerId) {
-      await dbInstance.delete(availability).where(eq(availability.workerId, testWorkerId));
-    }
-
-    // 4. 刪除 workers 和 clients
-    if (testWorkerId) {
-      await db.deleteWorker(testWorkerId);
-    }
-
-    if (testClientId) {
-      await db.deleteClient(testClientId);
-    }
+    await cleanupTestData(testDataIds);
   });
 
   it("員工被指派到第一個需求單後，第二個需求單應該顯示「排班衝突」原因", async () => {

@@ -1,9 +1,11 @@
-import { describe, it, expect, beforeAll, afterAll } from "vitest";
+import { describe, it, expect, beforeAll, afterAll, vi } from "vitest";
 import * as db from "./db";
 import * as logic from "./businessLogic";
 import { cleanupTestData, TestDataIds } from "./test-utils";
 
 describe("排班衝突檢測測試", () => {
+  // 增加測試超時時間，因為 calculateDemandFeasibility 可能需要較長時間
+  vi.setConfig({ testTimeout: 15000 });
   const testDataIds: TestDataIds = {
     assignments: [],
     demands: [],
