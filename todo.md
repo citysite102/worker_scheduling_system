@@ -1059,3 +1059,7 @@
 - [x] 更新 index.html 中的 favicon 引用（已存在正確設定）
 - [x] 更新 site.webmanifest 加入應用程式名稱
 - [x] 驗證 favicon 顯示正確（開發伺服器運行正常）
+
+## 強制 Favicon 重新載入（2026/02/14）
+- [x] 修改 index.html 加上 favicon 版本參數（?v=2）
+- [x] 重啟開發伺服器並驗證
