@@ -22,7 +22,7 @@ export default function Workers() {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<"active" | "inactive" | undefined>(undefined);
   const [schoolFilter, setSchoolFilter] = useState("");
-  const [workPermitFilter, setWorkPermitFilter] = useState<boolean | undefined>(undefined);
+  const [workPermitFilter, setWorkPermitFilter] = useState<"valid" | "invalid" | "none" | undefined>(undefined);
   const [healthCheckFilter, setHealthCheckFilter] = useState<boolean | undefined>(undefined);
   const [showFilters, setShowFilters] = useState(false);
   const [sortBy, setSortBy] = useState<"name" | "workPermitExpiry" | "createdAt">("createdAt");
@@ -38,7 +38,7 @@ export default function Workers() {
     search: searchTerm,
     status: statusFilter,
     school: schoolFilter || undefined,
-    hasWorkPermit: workPermitFilter,
+    workPermitStatus: workPermitFilter,
     hasHealthCheck: healthCheckFilter,
   });
 
@@ -308,8 +308,8 @@ export default function Workers() {
                 />
               </div>
               <Select
-                value={workPermitFilter === undefined ? "all" : workPermitFilter ? "yes" : "no"}
-                onValueChange={(value) => setWorkPermitFilter(value === "all" ? undefined : value === "yes")}
+                value={workPermitFilter || "all"}
+                onValueChange={(value) => setWorkPermitFilter(value === "all" ? undefined : value as "valid" | "invalid" | "none")}
               >
                 <SelectTrigger className="w-[140px] h-8 text-sm">
                   <ShieldCheck className="h-3.5 w-3.5 mr-1.5 text-muted-foreground" />
@@ -317,8 +317,9 @@ export default function Workers() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">簽證</SelectItem>
-                  <SelectItem value="yes">有簽證</SelectItem>
-                  <SelectItem value="no">無簽證</SelectItem>
+                  <SelectItem value="valid">簽證有效</SelectItem>
+                  <SelectItem value="invalid">簽證無效</SelectItem>
+                  <SelectItem value="none">無簽證</SelectItem>
                 </SelectContent>
               </Select>
               <Select

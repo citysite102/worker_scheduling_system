@@ -30,7 +30,7 @@ export const appRouter = router({
         status: z.enum(["active", "inactive"]).optional(),
         search: z.string().optional(),
         school: z.string().optional(),
-        hasWorkPermit: z.boolean().optional(),
+        workPermitStatus: z.enum(["valid", "invalid", "none"]).optional(),
         hasHealthCheck: z.boolean().optional(),
       }).optional())
       .query(async ({ input }) => {
@@ -38,7 +38,7 @@ export const appRouter = router({
           status: input.status,
           search: input.search,
           school: input.school,
-          hasWorkPermit: input.hasWorkPermit,
+          workPermitStatus: input.workPermitStatus,
           hasHealthCheck: input.hasHealthCheck,
         } : undefined);
         return workers;

@@ -96,7 +96,7 @@ export async function getAllWorkers(filters?: {
   status?: "active" | "inactive";
   search?: string;
   school?: string;
-  hasWorkPermit?: boolean;
+  workPermitStatus?: "valid" | "invalid" | "none";
   hasHealthCheck?: boolean;
 }) {
   const db = await getDb();
@@ -124,8 +124,28 @@ export async function getAllWorkers(filters?: {
     conditions.push(sql`${workers.school} LIKE ${`%${filters.school}%`}`);
   }
 
-  if (filters?.hasWorkPermit !== undefined) {
-    conditions.push(eq(workers.hasWorkPermit, filters.hasWorkPermit ? 1 : 0));
+  if (filters?.workPermitStatus) {
+    const now = new Date();
+    if (filters.workPermitStatus === "valid") {
+      // 簽證有效：有簽證 且 到期日 > 今天
+      conditions.push(
+        and(
+          eq(workers.hasWorkPermit, 1),
+          sql`${workers.workPermitExpiryDate} > ${now}`
+        )
+      );
+    } else if (filters.workPermitStatus === "invalid") {
+      // 簽證無效：有簽證 且 到期日 <= 今天
+      conditions.push(
+        and(
+          eq(workers.hasWorkPermit, 1),
+          sql`${workers.workPermitExpiryDate} <= ${now}`
+        )
+      );
+    } else if (filters.workPermitStatus === "none") {
+      // 無簽證
+      conditions.push(eq(workers.hasWorkPermit, 0));
+    }
   }
 
   if (filters?.hasHealthCheck !== undefined) {
