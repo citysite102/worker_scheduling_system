@@ -48,9 +48,16 @@ export async function cleanupTestData(testDataIds: TestDataIds): Promise<void> {
     }
 
     // 3. 清理 availability
+    // 如果有指定 ID，按 ID 清理
     if (testDataIds.availability && testDataIds.availability.length > 0) {
       await db.delete(availability).where(
         inArray(availability.id, testDataIds.availability)
+      );
+    }
+    // 否則根據 workerId 清理（因為 upsertAvailability 不返回 ID）
+    else if (testDataIds.workers && testDataIds.workers.length > 0) {
+      await db.delete(availability).where(
+        inArray(availability.workerId, testDataIds.workers)
       );
     }
 
