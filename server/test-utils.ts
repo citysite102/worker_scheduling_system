@@ -68,8 +68,21 @@ export async function cleanupTestData(testDataIds: TestDataIds): Promise<void> {
       );
     }
 
-    // 5. 清理 clients
+    // 5. 清理 clients（先清理所有關聯的 demands）
     if (testDataIds.clients && testDataIds.clients.length > 0) {
+      // 先查詢並清理所有關聯的 demands（防止外鍵約束錯誤）
+      const relatedDemands = await db.select({ id: demands.id })
+        .from(demands)
+        .where(inArray(demands.clientId, testDataIds.clients));
+      
+      if (relatedDemands.length > 0) {
+        const relatedDemandIds = relatedDemands.map(d => d.id);
+        await db.delete(demands).where(
+          inArray(demands.id, relatedDemandIds)
+        );
+      }
+      
+      // 然後清理 clients
       await db.delete(clients).where(
         inArray(clients.id, testDataIds.clients)
       );

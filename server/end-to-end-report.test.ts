@@ -13,9 +13,11 @@ describe("端到端測試：實際工時回填 → 報表輸出", () => {
 
   let testWorker1Id: number;
   let testWorker2Id: number;
-  let testDemandId: number;
+  let testDemand1Id: number;
+  let testDemand2Id: number;
   let testAssignment1Id: number;
   let testAssignment2Id: number;
+  let testAssignment3Id: number;
 
 
 
@@ -46,6 +48,7 @@ describe("端到端測試：實際工時回填 → 報表輸出", () => {
       status: "active",
     });
     testWorker1Id = worker1.id;
+    testDataIds.workers!.push(testWorker1Id);
 
     // 建立測試員工 2
     const worker2 = await db.createWorker({
@@ -57,6 +60,7 @@ describe("端到端測試：實際工時回填 → 報表輸出", () => {
       status: "active",
     });
     testWorker2Id = worker2.id;
+    testDataIds.workers!.push(testWorker2Id);
 
     // 建立測試需求單 1（2026/02/15）
     const demand1 = await db.createDemand({
@@ -69,6 +73,7 @@ describe("端到端測試：實際工時回填 → 報表輸出", () => {
       status: "confirmed",
     });
     testDemand1Id = demand1.id;
+    testDataIds.demands!.push(testDemand1Id);
 
     // 建立測試需求單 2（2026/02/20）
     const demand2 = await db.createDemand({
@@ -81,6 +86,7 @@ describe("端到端測試：實際工時回填 → 報表輸出", () => {
       status: "confirmed",
     });
     testDemand2Id = demand2.id;
+    testDataIds.demands!.push(testDemand2Id);
 
     // 建立測試指派 1（員工1 → 需求單1）
     const assignment1 = await db.createAssignment({
@@ -92,6 +98,7 @@ describe("端到端測試：實際工時回填 → 報表輸出", () => {
       status: "assigned",
     });
     testAssignment1Id = assignment1.id;
+    testDataIds.assignments!.push(testAssignment1Id);
 
     // 建立測試指派 2（員工2 → 需求單1）
     const assignment2 = await db.createAssignment({
@@ -103,6 +110,7 @@ describe("端到端測試：實際工時回填 → 報表輸出", () => {
       status: "assigned",
     });
     testAssignment2Id = assignment2.id;
+    testDataIds.assignments!.push(testAssignment2Id);
 
     // 建立測試指派 3（員工1 → 需求單2）
     const assignment3 = await db.createAssignment({
@@ -114,53 +122,11 @@ describe("端到端測試：實際工時回填 → 報表輸出", () => {
       status: "assigned",
     });
     testAssignment3Id = assignment3.id;
+    testDataIds.assignments!.push(testAssignment3Id);
   });
 
   afterAll(async () => {
-    // 清理測試資料（依照外鍵約束順序）
-    const database = await db.getDb();
-    if (database) {
-      const { demands, assignments, workers, clients, availability } = await import("../drizzle/schema");
-      const { eq } = await import("drizzle-orm");
-
-      // 1. 刪除 assignments
-      if (testAssignment1Id) {
-        await database.delete(assignments).where(eq(assignments.id, testAssignment1Id));
-      }
-      if (testAssignment2Id) {
-        await database.delete(assignments).where(eq(assignments.id, testAssignment2Id));
-      }
-      if (testAssignment3Id) {
-        await database.delete(assignments).where(eq(assignments.id, testAssignment3Id));
-      }
-
-      // 2. 刪除 demands
-      if (testDemand1Id) {
-        await database.delete(demands).where(eq(demands.id, testDemand1Id));
-      }
-      if (testDemand2Id) {
-        await database.delete(demands).where(eq(demands.id, testDemand2Id));
-      }
-
-      // 3. 刪除 availability
-      if (testWorker1Id) {
-        await database.delete(availability).where(eq(availability.workerId, testWorker1Id));
-      }
-      if (testWorker2Id) {
-        await database.delete(availability).where(eq(availability.workerId, testWorker2Id));
-      }
-
-      // 4. 刪除 workers 和 clients
-      if (testWorker1Id) {
-        await database.delete(workers).where(eq(workers.id, testWorker1Id));
-      }
-      if (testWorker2Id) {
-        await database.delete(workers).where(eq(workers.id, testWorker2Id));
-      }
-      if (testDataIds.clients![0]) {
-        await database.delete(clients).where(eq(clients.id, testDataIds.clients![0]));
-      }
-    }
+    await cleanupTestData(testDataIds);
   });
 
   // ==================== 測試案例 1：實際工時回填 → 員工薪資報表輸出 ====================

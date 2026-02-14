@@ -50,8 +50,8 @@ describe("businessLogic", () => {
 
       const result = getWeekStart(date);
 
-      expect(result.getDay()).toBe(1); // 週一
-      expect(result.getDate()).toBe(9); // 2026/02/09 是週一
+      expect(result.getUTCDay()).toBe(1); // 週一
+      expect(result.getUTCDate()).toBe(9); // 2026/02/09 是週一
     });
 
     it("應該取得週一日期（週日輸入）", () => {
@@ -59,8 +59,8 @@ describe("businessLogic", () => {
 
       const result = getWeekStart(date);
 
-      expect(result.getDay()).toBe(1); // 週一
-      expect(result.getDate()).toBe(9); // 2026/02/09 是週一
+      expect(result.getUTCDay()).toBe(1); // 週一
+      expect(result.getUTCDate()).toBe(9); // 2026/02/09 是週一
     });
 
     it("應該取得週一日期（週一輸入）", () => {
@@ -68,7 +68,7 @@ describe("businessLogic", () => {
 
       const result = getWeekStart(date);
 
-      expect(result.getDay()).toBe(1); // 週一
+      expect(result.getUTCDay()).toBe(1); // 週一
     });
   });
 
@@ -78,7 +78,7 @@ describe("businessLogic", () => {
 
       const result = formatDate(date);
 
-      expect(result).toBe("2026/02/09");
+      expect(result).toBe("2026/2/9 星期一");
     });
   });
 

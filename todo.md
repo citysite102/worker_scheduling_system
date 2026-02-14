@@ -1007,3 +1007,18 @@
 - [x] 修復 auto-status-update.test.ts 的測試預期值（4/4 通過）
 - [x] demand-workflows.test.ts 已全部通過（6/6）
 - [x] 執行測試（114/142 通過，80.3%）
+
+## 快速修復日期格式測試（2026/02/14）
+- [x] 分析 businessLogic.test.ts 的 4 個測試案例失敗原因
+- [x] 分析 test-availability-flow.test.ts 的 1 個測試案例失敗原因
+- [x] 修復 businessLogic.test.ts 的日期格式測試
+- [x] 修復 test-availability-flow.test.ts 的員工可用性測試
+- [ ] 執行測試確認修復成功
+
+## 快速修復日期格式測試（2026/02/14）
+- [x] 分析 businessLogic.test.ts 的 4 個測試案例失敗原因
+- [x] 分析 test-availability-flow.test.ts 的 1 個測試案例失敗原因
+- [x] 修復 businessLogic.test.ts 的日期格式測試
+- [x] 修復 test-availability-flow.test.ts 的員工可用性測試
+- [x] 執行測試確認修復成功（businessLogic.test.ts 12/12、test-availability-flow.test.ts 5/5）
+- [ ] 完整測試套件：120/142 通過（84.5%），還有 6 個測試失敗

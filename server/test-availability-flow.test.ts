@@ -7,9 +7,9 @@ import * as db from "./db";
  * 測試場景：
  * 1. 為員工「慕伊娜Ina」設定本週（2026/02/09 - 2026/02/15）的排班時間
  *    - 週一（02/09）：09:00 - 17:00
- *    - 週四（02/13）：09:00 - 17:00
+ *    - 週五（02/13 UTC）：09:00 - 17:00
  * 2. 確認本週排班
- * 3. 檢查需求單「米窩-中山館」（2026/2/13 週四 09:00 - 16:00）的員工可用性
+ * 3. 檢查需求單「米窩-中山館」（2026/2/13 UTC 週五 09:00 - 16:00）的員工可用性
  * 4. 驗證慕伊娜應該可以被指派
  */
 
@@ -78,7 +78,7 @@ describe("排班設置與需求單指派完整流程測試", () => {
     expect(blocks[0].dayOfWeek).toBe(1);
   });
 
-  it("步驟 2：設定週四的排班時間", async () => {
+  it("步驟 2：設定週五的排班時間（UTC）", async () => {
     const weekEnd = new Date(weekStart);
     weekEnd.setDate(weekEnd.getDate() + 6);
     
@@ -86,11 +86,11 @@ describe("排班設置與需求單指派完整流程測試", () => {
     const existing = await db.getAvailabilityByWorkerAndWeek(workerId, weekStart);
     const existingBlocks = JSON.parse(existing?.timeBlocks || "[]");
     
-    // 加入週四的排班
+    // 加入週五的排班（UTC 時區）
     const timeBlocks = [
       ...existingBlocks,
       {
-        dayOfWeek: 4, // 週四
+        dayOfWeek: 5, // 週五（UTC）
         timeSlots: [{ startTime: "09:00", endTime: "17:00" }],
       },
     ];
@@ -106,7 +106,7 @@ describe("排班設置與需求單指派完整流程測試", () => {
     const result = await db.getAvailabilityByWorkerAndWeek(workerId, weekStart);
     const blocks = JSON.parse(result?.timeBlocks || "[]");
     expect(blocks).toHaveLength(2);
-    expect(blocks.find((b: any) => b.dayOfWeek === 4)).toBeDefined();
+    expect(blocks.find((b: any) => b.dayOfWeek === 5)).toBeDefined();
   });
 
   it("步驟 3：確認本週排班（應該更新所有記錄的 confirmedAt）", async () => {

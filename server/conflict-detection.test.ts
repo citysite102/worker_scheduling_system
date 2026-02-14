@@ -14,6 +14,7 @@ describe("排班衝突檢測測試", () => {
 
   let testDemand1Id: number;
   let testDemand2Id: number;
+  let testAssignment1Id: number;
 
 
 
