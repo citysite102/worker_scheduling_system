@@ -1,0 +1,16 @@
+{
+  "query": "SELECT \n  a.id, \n  a.demandId, \n  a.workerId, \n  w.name as workerName, \n  datetime(a.scheduledStart/1000, 'unixepoch') as scheduledStart_readable,\n  datetime(a.scheduledEnd/1000, 'unixepoch') as scheduledEnd_readable,\n  a.scheduledStart,\n  a.scheduledEnd,\n  a.status \nFROM assignments a \nLEFT JOIN workers w ON a.workerId = w.id \nWHERE date(a.scheduledStart/1000, 'unixepoch') = '2026-02-14' \nORDER BY a.scheduledStart;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2iEKifVQ9gKtEas.9cbf5414b428 --database CMgr35KntT8tLtgpfJPejw --execute SELECT \n  a.id, \n  a.demandId, \n  a.workerId, \n  w.name as workerName, \n  datetime(a.scheduledStart/1000, 'unixepoch') as scheduledStart_readable,\n  datetime(a.scheduledEnd/1000, 'unixepoch') as scheduledEnd_readable,\n  a.scheduledStart,\n  a.scheduledEnd,\n  a.status \nFROM assignments a \nLEFT JOIN workers w ON a.workerId = w.id \nWHERE date(a.scheduledStart/1000, 'unixepoch') = '2026-02-14' \nORDER BY a.scheduledStart;",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1064 (42000) at line 1: You have an error in your SQL syntax; check the manual that corresponds to your TiDB version for the right syntax to use line 6 column 12 near \"(a.scheduledStart/1000, 'unixepoch') as scheduledStart_readable,",
+    "  datetime(a.scheduledEnd/1000, 'unixepoch') as scheduledEnd_readable,",
+    "  a.scheduledStart,",
+    "  a.scheduledEnd,",
+    "  a.status ",
+    "FROM assignments a ",
+    "LEFT JOIN workers w ON a.workerId = w.id ",
+    "WHERE date(a.scheduledStart/1000, 'unixepoch') = '2026-02-14' ",
+    "ORDER BY a.scheduledStart\""
+  ]
+}

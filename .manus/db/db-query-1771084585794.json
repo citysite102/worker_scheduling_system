@@ -1,0 +1,19 @@
+{
+  "query": "SELECT a.id, a.demandId, a.workerId, w.name as workerName, a.scheduledStart, a.scheduledEnd, a.status \nFROM assignments a \nLEFT JOIN workers w ON a.workerId = w.id \nWHERE date(a.scheduledStart) = '2026-02-14' \nORDER BY a.scheduledStart;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2iEKifVQ9gKtEas.9cbf5414b428 --database CMgr35KntT8tLtgpfJPejw --execute SELECT a.id, a.demandId, a.workerId, w.name as workerName, a.scheduledStart, a.scheduledEnd, a.status \nFROM assignments a \nLEFT JOIN workers w ON a.workerId = w.id \nWHERE date(a.scheduledStart) = '2026-02-14' \nORDER BY a.scheduledStart;",
+  "rows": [
+    {
+      "id": "570376",
+      "demandId": "690471",
+      "workerId": "1",
+      "workerName": "李金珠",
+      "scheduledStart": "2026-02-14 15:52:00",
+      "scheduledEnd": "2026-02-14 17:52:00",
+      "status": "assigned"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tdemandId\tworkerId\tworkerName\tscheduledStart\tscheduledEnd\tstatus\n570376\t690471\t1\t李金珠\t2026-02-14 15:52:00\t2026-02-14 17:52:00\tassigned\n",
+  "stderr": "",
+  "execution_time_ms": 1513
+}

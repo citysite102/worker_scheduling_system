@@ -1,0 +1,18 @@
+{
+  "query": "SELECT \n  id, \n  demandId, \n  workerId, \n  scheduledStart,\n  scheduledEnd,\n  status\nFROM assignments \nWHERE DATE(scheduledStart) = '2026-02-14'\nLIMIT 10;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2iEKifVQ9gKtEas.9cbf5414b428 --database CMgr35KntT8tLtgpfJPejw --execute SELECT \n  id, \n  demandId, \n  workerId, \n  scheduledStart,\n  scheduledEnd,\n  status\nFROM assignments \nWHERE DATE(scheduledStart) = '2026-02-14'\nLIMIT 10;",
+  "rows": [
+    {
+      "id": "570376",
+      "demandId": "690471",
+      "workerId": "1",
+      "scheduledStart": "2026-02-14 15:52:00",
+      "scheduledEnd": "2026-02-14 17:52:00",
+      "status": "assigned"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tdemandId\tworkerId\tscheduledStart\tscheduledEnd\tstatus\n570376\t690471\t1\t2026-02-14 15:52:00\t2026-02-14 17:52:00\tassigned\n",
+  "stderr": "",
+  "execution_time_ms": 1556
+}

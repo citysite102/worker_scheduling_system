@@ -768,10 +768,19 @@ export const appRouter = router({
     listByDate: publicProcedure
       .input(z.object({ date: z.date() }))
       .query(async ({ input }) => {
-        const startOfDay = new Date(input.date);
-        startOfDay.setHours(0, 0, 0, 0);
-        const endOfDay = new Date(input.date);
-        endOfDay.setHours(23, 59, 59, 999);
+        // 使用 UTC 方法設定日期範圍，避免時區問題
+        const startOfDay = new Date(Date.UTC(
+          input.date.getUTCFullYear(),
+          input.date.getUTCMonth(),
+          input.date.getUTCDate(),
+          0, 0, 0, 0
+        ));
+        const endOfDay = new Date(Date.UTC(
+          input.date.getUTCFullYear(),
+          input.date.getUTCMonth(),
+          input.date.getUTCDate(),
+          23, 59, 59, 999
+        ));
         
         const assignments = await db.getAssignmentsByDateRange(startOfDay, endOfDay);
         
