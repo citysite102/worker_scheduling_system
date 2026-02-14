@@ -1,11 +1,19 @@
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import * as db from "./db";
+import { cleanupTestData, TestDataIds } from "./test-utils";
 
 describe("用工需求單完整流程測試", () => {
-  let testClientId: number;
+  const testDataIds: TestDataIds = {
+    assignments: [],
+    demands: [],
+    availability: [],
+    workers: [],
+    clients: [],
+  };
+
   let testWorkerId1: number;
   let testWorkerId2: number;
-  let testDemandId: number;
+
   let testAssignmentId1: number;
   let testAssignmentId2: number;
 
@@ -18,7 +26,7 @@ describe("用工需求單完整流程測試", () => {
       billingType: "hourly",
       status: "active",
     });
-    testClientId = client.id;
+    testDataIds.clients!.push(client.id);
 
     // 建立測試員工 1
     const worker1 = await db.createWorker({
@@ -59,8 +67,8 @@ describe("用工需求單完整流程測試", () => {
       }
       
       // 2. 刪除 demands
-      if (testDemandId) {
-        await database.delete(demands).where(eq(demands.id, testDemandId));
+      if (testDataIds.demands![0]) {
+        await database.delete(demands).where(eq(demands.id, testDataIds.demands![0]));
       }
       
       // 3. 刪除 availability
@@ -78,8 +86,8 @@ describe("用工需求單完整流程測試", () => {
       if (testWorkerId2) {
         await database.delete(workers).where(eq(workers.id, testWorkerId2));
       }
-      if (testClientId) {
-        await database.delete(clients).where(eq(clients.id, testClientId));
+      if (testDataIds.clients![0]) {
+        await database.delete(clients).where(eq(clients.id, testDataIds.clients![0]));
       }
     }
   });
@@ -87,7 +95,7 @@ describe("用工需求單完整流程測試", () => {
   it("1. 建立需求單 → 狀態應為 draft，createdAt 應存在", async () => {
     const demandDate = new Date("2026-03-01T10:00:00Z");
     const demand = await db.createDemand({
-      clientId: testClientId,
+      clientId: testDataIds.clients![0],
       date: demandDate,
       startTime: "09:00",
       endTime: "17:00",
@@ -96,7 +104,7 @@ describe("用工需求單完整流程測試", () => {
       status: "draft",
     });
 
-    testDemandId = demand.id;
+    testDataIds.demands!.push(demand.id);
 
     expect(demand.status).toBe("draft");
     expect(demand.requiredWorkers).toBe(2);
@@ -109,7 +117,7 @@ describe("用工需求單完整流程測試", () => {
     const scheduledEnd = new Date("2026-03-01T17:00:00Z");
 
     const assignment1 = await db.createAssignment({
-      demandId: testDemandId,
+      demandId: testDataIds.demands![0],
       workerId: testWorkerId1,
       scheduledStart,
       scheduledEnd,
@@ -125,13 +133,13 @@ describe("用工需求單完整流程測試", () => {
   });
 
   it("3. 編輯需求單 → 時間和人數應正確更新", async () => {
-    await db.updateDemand(testDemandId, {
+    await db.updateDemand(testDataIds.demands![0], {
       requiredWorkers: 3,
       startTime: "10:00",
       endTime: "18:00",
     });
 
-    const demand = await db.getDemandById(testDemandId);
+    const demand = await db.getDemandById(testDataIds.demands![0]);
     expect(demand?.requiredWorkers).toBe(3);
     expect(demand?.startTime).toBe("10:00");
     expect(demand?.endTime).toBe("18:00");
@@ -146,9 +154,9 @@ describe("用工需求單完整流程測試", () => {
   });
 
   it("5. 取消需求單 → 狀態應變為 cancelled", async () => {
-    await db.updateDemand(testDemandId, { status: "cancelled" });
+    await db.updateDemand(testDataIds.demands![0], { status: "cancelled" });
 
-    const demand = await db.getDemandById(testDemandId);
+    const demand = await db.getDemandById(testDataIds.demands![0]);
     expect(demand?.status).toBe("cancelled");
   });
 

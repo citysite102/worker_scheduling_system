@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import * as db from "./db";
 import * as logic from "./businessLogic";
+import { cleanupTestData, TestDataIds } from "./test-utils";
 
 /**
  * 測試 2026/02/12 的四項修復：
@@ -11,10 +12,17 @@ import * as logic from "./businessLogic";
  */
 
 describe("2026/02/12 Bug Fixes - Part 2", () => {
-  let testClientId: number;
-  let testWorkerId: number;
-  let testDemandId: number;
-  let testAssignmentId: number;
+  const testDataIds: TestDataIds = {
+    assignments: [],
+    demands: [],
+    availability: [],
+    workers: [],
+    clients: [],
+  };
+
+
+
+
 
   beforeAll(async () => {
     // 建立測試客戶
@@ -25,7 +33,7 @@ describe("2026/02/12 Bug Fixes - Part 2", () => {
       billingType: "hourly",
       status: "active",
     });
-    testClientId = client.id;
+    testDataIds.clients!.push(client.id);
 
     // 建立測試員工
     const worker = await db.createWorker({
@@ -35,11 +43,11 @@ describe("2026/02/12 Bug Fixes - Part 2", () => {
       hasHealthCheck: 1,
       status: "active",
     });
-    testWorkerId = worker.id;
+    testDataIds.workers!.push(worker.id);
 
     // 建立測試需求單
     const demand = await db.createDemand({
-      clientId: testClientId,
+      clientId: testDataIds.clients![0],
       date: new Date("2026-03-10T00:00:00Z"),
       startTime: "09:00",
       endTime: "17:00",
@@ -47,13 +55,13 @@ describe("2026/02/12 Bug Fixes - Part 2", () => {
       breakHours: 60, // 1 小時休息時間（以分鐘為單位）
       status: "draft",
     });
-    testDemandId = demand.id;
+    testDataIds.demands!.push(demand.id);
 
     // 建立測試排班時間設置（週二 08:00-19:00，包含 09:00-17:00）
     const weekStart = new Date("2026-03-09T00:00:00Z"); // 週一
     const weekEnd = new Date("2026-03-15T23:59:59Z"); // 週日
     await db.upsertAvailability({
-      workerId: testWorkerId,
+      workerId: testDataIds.workers![0],
       weekStartDate: weekStart,
       weekEndDate: weekEnd,
       timeBlocks: JSON.stringify([
@@ -69,23 +77,23 @@ describe("2026/02/12 Bug Fixes - Part 2", () => {
   afterAll(async () => {
     // 清理測試資料
     try {
-      if (testAssignmentId) {
-        await db.deleteAssignment(testAssignmentId);
+      if (testDataIds.assignments![0]) {
+        await db.deleteAssignment(testDataIds.assignments![0]);
       }
-      if (testDemandId) {
-        await db.deleteDemand(testDemandId);
+      if (testDataIds.demands![0]) {
+        await db.deleteDemand(testDataIds.demands![0]);
       }
       // 清理 availability 資料
       const weekStart = new Date("2026-03-09T00:00:00Z");
-      const avail = await db.getAvailabilityByWorkerAndWeek(testWorkerId, weekStart);
+      const avail = await db.getAvailabilityByWorkerAndWeek(testDataIds.workers![0], weekStart);
       if (avail) {
         await db.deleteAvailability(avail.id);
       }
-      if (testWorkerId) {
-        await db.deleteWorker(testWorkerId);
+      if (testDataIds.workers![0]) {
+        await db.deleteWorker(testDataIds.workers![0]);
       }
-      if (testClientId) {
-        await db.deleteClient(testClientId);
+      if (testDataIds.clients![0]) {
+        await db.deleteClient(testDataIds.clients![0]);
       }
     } catch (error) {
       console.error("清理測試資料失敗:", error);
@@ -128,7 +136,7 @@ describe("2026/02/12 Bug Fixes - Part 2", () => {
 
       // 建立需求單時應該正確儲存
       const demand = await db.createDemand({
-        clientId: testClientId,
+        clientId: testDataIds.clients![0],
         date: new Date("2026-03-11T00:00:00Z"),
         startTime: "09:00",
         endTime: "17:00",
@@ -184,14 +192,14 @@ describe("2026/02/12 Bug Fixes - Part 2", () => {
       const scheduledHours = logic.calculateMinutesBetween(scheduledStart, scheduledEnd);
 
       const assignment = await db.createAssignment({
-        demandId: testDemandId,
-        workerId: testWorkerId,
+        demandId: testDataIds.demands![0],
+        workerId: testDataIds.workers![0],
         scheduledStart,
         scheduledEnd,
         scheduledHours,
         status: "assigned",
       });
-      testAssignmentId = assignment.id;
+      testDataIds.assignments!.push(assignment.id);
 
       // 驗證：指派已建立
       expect(assignment.id).toBeGreaterThan(0);
@@ -201,7 +209,7 @@ describe("2026/02/12 Bug Fixes - Part 2", () => {
       const weekStart = new Date("2026-03-09T00:00:00Z");
       const weekEnd = new Date("2026-03-15T23:59:59Z");
       await db.upsertAvailability({
-        workerId: testWorkerId,
+        workerId: testDataIds.workers![0],
         weekStartDate: weekStart,
         weekEndDate: weekEnd,
         timeBlocks: JSON.stringify([
@@ -215,7 +223,7 @@ describe("2026/02/12 Bug Fixes - Part 2", () => {
 
       // 驗證：員工在週二 09:00-17:00 不可排班（因為排班時間改為 13:00-18:00）
       const availabilityCheck = await logic.checkWorkerAvailability(
-        testWorkerId,
+        testDataIds.workers![0],
         new Date("2026-03-10T00:00:00Z"),
         "09:00",
         "17:00"

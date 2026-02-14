@@ -1,12 +1,16 @@
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import * as db from "./db";
 import * as logic from "./businessLogic";
+import { cleanupTestData, TestDataIds } from "./test-utils";
 
 describe("2026/02/11 問題修正測試", () => {
-  let testClientId: number;
-  let testWorkerId: number;
-  let testDemandId: number;
-  let testAssignmentId: number;
+  const testDataIds: TestDataIds = {
+    assignments: [],
+    demands: [],
+    availability: [],
+    workers: [],
+    clients: [],
+  };
 
   beforeAll(async () => {
     // 建立測試客戶
@@ -15,7 +19,7 @@ describe("2026/02/11 問題修正測試", () => {
       contactPerson: "測試聯絡人",
       phone: "0912345678",
     });
-    testClientId = client.id;
+    testDataIds.clients!.push(client.id);
 
     // 建立測試員工
     const worker = await db.createWorker({
@@ -26,72 +30,43 @@ describe("2026/02/11 問題修正測試", () => {
       hasHealthCheck: 1,
       workPermitExpiryDate: new Date("2026-12-31T00:00:00Z"),
     });
-    testWorkerId = worker.id;
+    testDataIds.workers!.push(worker.id);
 
     // 建立測試需求單
-    const demandId = await db.createDemand({
-      clientId: testClientId,
+    const demand = await db.createDemand({
+      clientId: testDataIds.clients![0],
       date: new Date("2026-02-27T00:00:00Z"),
       startTime: "09:00",
       endTime: "17:00",
       requiredWorkers: 1,
-      hourlyRate: 200,
       status: "draft",
     });
-    testDemandId = demandId;
+    testDataIds.demands!.push(demand.id);
 
     // 建立測試指派
-    const demand = await db.getDemandById(testDemandId);
-    const scheduledStart = new Date(`${demand!.date.toISOString().split('T')[0]}T${demand!.startTime}:00Z`);
-    const scheduledEnd = new Date(`${demand!.date.toISOString().split('T')[0]}T${demand!.endTime}:00Z`);
+    const demandForAssignment = await db.getDemandById(testDataIds.demands![0]);
+    const scheduledStart = new Date(`${demandForAssignment!.date.toISOString().split('T')[0]}T${demandForAssignment!.startTime}:00Z`);
+    const scheduledEnd = new Date(`${demandForAssignment!.date.toISOString().split('T')[0]}T${demandForAssignment!.endTime}:00Z`);
     
     const assignment = await db.createAssignment({
-      demandId: testDemandId,
-      workerId: testWorkerId,
+      demandId: testDataIds.demands![0],
+      workerId: testDataIds.workers![0],
       status: "assigned",
       scheduledStart: scheduledStart,
       scheduledEnd: scheduledEnd,
       scheduledHours: 480, // 8小時 = 480分鐘
     });
-    testAssignmentId = assignment.id;
+    testDataIds.assignments!.push(assignment.id);
   });
 
   afterAll(async () => {
-    // 清理測試資料（注意順序：先刪除 assignment，再刪除 demand）
-    if (testAssignmentId) {
-      try {
-        await db.deleteAssignment(testAssignmentId);
-      } catch (e) {
-        console.error("Failed to delete assignment:", e);
-      }
-    }
-    if (testDemandId) {
-      try {
-        await db.deleteDemand(testDemandId);
-      } catch (e) {
-        console.error("Failed to delete demand:", e);
-      }
-    }
-    if (testWorkerId) {
-      try {
-        await db.deleteWorker(testWorkerId);
-      } catch (e) {
-        console.error("Failed to delete worker:", e);
-      }
-    }
-    if (testClientId) {
-      try {
-        await db.deleteClient(testClientId);
-      } catch (e) {
-        console.error("Failed to delete client:", e);
-      }
-    }
+    await cleanupTestData(testDataIds);
   });
 
   describe("1. 報表時間 NaN 問題修正", () => {
     it("填寫實際工時後，actualStart 和 actualEnd 應該正確儲存為 timestamp", async () => {
       // 取得需求單日期
-      const demand = await db.getDemandById(testDemandId);
+      const demand = await db.getDemandById(testDataIds.demands![0]);
       expect(demand).toBeDefined();
 
       // 計算實際開始和結束時間
@@ -104,7 +79,7 @@ describe("2026/02/11 問題修正測試", () => {
       const actualHours = logic.calculateMinutesBetween(actualStart, actualEnd);
 
       // 更新指派記錄
-      await db.updateAssignment(testAssignmentId, {
+      await db.updateAssignment(testDataIds.assignments![0], {
         actualStart: actualStart,
         actualEnd: actualEnd,
         actualHours: actualHours,
@@ -136,6 +111,7 @@ describe("2026/02/11 問題修正測試", () => {
         hasHealthCheck: 1,
         workPermitExpiryDate: expiryDate,
       });
+      testDataIds.workers!.push(worker.id); // 加入清理列表
 
       const savedWorker = await db.getWorkerById(worker.id);
       expect(savedWorker).toBeDefined();
@@ -146,19 +122,16 @@ describe("2026/02/11 問題修正測試", () => {
       expect(savedDate.getUTCFullYear()).toBe(2027);
       expect(savedDate.getUTCMonth()).toBe(5); // 0-based，5 = 6月
       expect(savedDate.getUTCDate()).toBe(30);
-
-      // 清理
-      await db.deleteWorker(worker.id);
     });
 
     it("更新員工時，workPermitExpiryDate 應該正確儲存", async () => {
       const newExpiryDate = new Date("2028-12-31T00:00:00Z");
       
-      await db.updateWorker(testWorkerId, {
+      await db.updateWorker(testDataIds.workers![0], {
         workPermitExpiryDate: newExpiryDate,
       });
 
-      const updatedWorker = await db.getWorkerById(testWorkerId);
+      const updatedWorker = await db.getWorkerById(testDataIds.workers![0]);
       expect(updatedWorker).toBeDefined();
       expect(updatedWorker!.workPermitExpiryDate).toBeInstanceOf(Date);
       

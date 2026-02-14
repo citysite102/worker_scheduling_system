@@ -1,12 +1,20 @@
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import * as db from "./db";
 import * as logic from "./businessLogic";
+import { cleanupTestData, TestDataIds } from "./test-utils";
 
 describe("2026/02/12 Bug 修復測試", () => {
-  let testClientId: number;
-  let testWorkerId: number;
-  let testDemandId: number;
-  let testAssignmentId: number;
+  const testDataIds: TestDataIds = {
+    assignments: [],
+    demands: [],
+    availability: [],
+    workers: [],
+    clients: [],
+  };
+
+
+
+
 
   beforeAll(async () => {
     // 建立測試客戶
@@ -15,7 +23,7 @@ describe("2026/02/12 Bug 修復測試", () => {
       contactPerson: "測試聯絡人",
       phone: "0912345678",
     });
-    testClientId = client.id;
+    testDataIds.clients!.push(client.id);
 
     // 建立測試員工
     const worker = await db.createWorker({
@@ -25,11 +33,11 @@ describe("2026/02/12 Bug 修復測試", () => {
       hasWorkPermit: 1,
       hasHealthCheck: 1,
     });
-    testWorkerId = worker.id;
+    testDataIds.workers!.push(worker.id);
 
     // 建立測試需求單（2026/03/01 09:00-17:00，休息時間 1 小時）
     const demand = await db.createDemand({
-      clientId: testClientId,
+      clientId: testDataIds.clients![0],
       date: new Date("2026-03-01T00:00:00Z"),
       startTime: "09:00",
       endTime: "17:00",
@@ -37,7 +45,7 @@ describe("2026/02/12 Bug 修復測試", () => {
       breakHours: 60, // 1 小時 = 60 分鐘
       status: "confirmed",
     });
-    testDemandId = demand.id;
+    testDataIds.demands!.push(demand.id);
 
     // 指派員工
     const scheduledStart = new Date("2026-03-01T09:00:00Z");
@@ -45,30 +53,30 @@ describe("2026/02/12 Bug 修復測試", () => {
     const scheduledHours = logic.calculateMinutesBetween(scheduledStart, scheduledEnd);
 
     const assignment = await db.createAssignment({
-      demandId: testDemandId,
-      workerId: testWorkerId,
+      demandId: testDataIds.demands![0],
+      workerId: testDataIds.workers![0],
       scheduledStart,
       scheduledEnd,
       scheduledHours,
       status: "assigned",
     });
-    testAssignmentId = assignment.id;
+    testDataIds.assignments!.push(assignment.id);
   });
 
   afterAll(async () => {
     // 清理測試資料
     try {
-      if (testAssignmentId) {
-        await db.deleteAssignment(testAssignmentId);
+      if (testDataIds.assignments![0]) {
+        await db.deleteAssignment(testDataIds.assignments![0]);
       }
-      if (testDemandId) {
-        await db.deleteDemand(testDemandId);
+      if (testDataIds.demands![0]) {
+        await db.deleteDemand(testDataIds.demands![0]);
       }
-      if (testClientId) {
-        await db.deleteClient(testClientId);
+      if (testDataIds.clients![0]) {
+        await db.deleteClient(testDataIds.clients![0]);
       }
-      if (testWorkerId) {
-        await db.deleteWorker(testWorkerId);
+      if (testDataIds.workers![0]) {
+        await db.deleteWorker(testDataIds.workers![0]);
       }
     } catch (e) {
       console.error("清理測試資料失敗：", e);
@@ -94,7 +102,7 @@ describe("2026/02/12 Bug 修復測試", () => {
       const caller = appRouter.createCaller({ req: {} as any, res: {} as any, user: null });
 
       // 複製需求單
-      const result = await caller.demands.duplicate({ id: testDemandId });
+      const result = await caller.demands.duplicate({ id: testDataIds.demands![0] });
       expect(result.success).toBe(true);
       expect(result.newDemandId).toBeDefined();
 
@@ -115,7 +123,7 @@ describe("2026/02/12 Bug 修復測試", () => {
       // 嘗試回填負數工時（結束時間早於開始時間）
       await expect(
         caller.assignments.fillActualTime({
-          assignmentId: testAssignmentId,
+          assignmentId: testDataIds.assignments![0],
           actualStartTime: "17:00",
           actualEndTime: "09:00", // 結束時間早於開始時間
         })
@@ -128,7 +136,7 @@ describe("2026/02/12 Bug 修復測試", () => {
 
       // 第一次回填實際工時
       await caller.assignments.fillActualTime({
-        assignmentId: testAssignmentId,
+        assignmentId: testDataIds.assignments![0],
         actualStartTime: "09:00",
         actualEndTime: "17:00",
       });
@@ -136,7 +144,7 @@ describe("2026/02/12 Bug 修復測試", () => {
       // 嘗試第二次回填實際工時
       await expect(
         caller.assignments.fillActualTime({
-          assignmentId: testAssignmentId,
+          assignmentId: testDataIds.assignments![0],
           actualStartTime: "09:00",
           actualEndTime: "18:00",
         })

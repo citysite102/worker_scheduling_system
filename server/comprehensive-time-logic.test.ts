@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import * as db from "./db";
 import * as logic from "./businessLogic";
+import { cleanupTestData, TestDataIds } from "./test-utils";
 
 /**
  * 時間邏輯全面測試
@@ -8,10 +9,17 @@ import * as logic from "./businessLogic";
  */
 
 describe("時間邏輯全面測試", () => {
-  let testClientId: number;
+  const testDataIds: TestDataIds = {
+    assignments: [],
+    demands: [],
+    availability: [],
+    workers: [],
+    clients: [],
+  };
+
   let testWorkerId1: number;
   let testWorkerId2: number;
-  let testDemandId: number;
+
 
   beforeAll(async () => {
     // 建立測試客戶
@@ -20,7 +28,7 @@ describe("時間邏輯全面測試", () => {
       contactName: "測試聯絡人",
       contactPhone: "0912345678",
     });
-    testClientId = client.id;
+    testDataIds.clients!.push(client.id);
 
     // 建立測試員工
     const worker1 = await db.createWorker({
@@ -48,7 +56,7 @@ describe("時間邏輯全面測試", () => {
     // 建立測試需求單
     const testDate = new Date("2026-02-16T00:00:00.000Z"); // 2026-02-16 (週一)
     const demand = await db.createDemand({
-      clientId: testClientId,
+      clientId: testDataIds.clients![0],
       date: testDate,
       startTime: "09:00",
       endTime: "17:00",
@@ -56,19 +64,19 @@ describe("時間邏輯全面測試", () => {
       breakHours: 60, // 1小時休息時間（以分鐘儲存）
       status: "draft",
     });
-    testDemandId = demand.id;
+    testDataIds.demands!.push(demand.id);
   });
 
   afterAll(async () => {
     // 清理測試資料（按照外鍵依賴順序）
     // 1. 先刪除 assignments
-    const assignments = await db.getAssignmentsByDemand(testDemandId);
+    const assignments = await db.getAssignmentsByDemand(testDataIds.demands![0]);
     for (const assignment of assignments) {
       await db.deleteAssignment(assignment.id);
     }
     
     // 2. 刪除 demand
-    await db.deleteDemand(testDemandId);
+    await db.deleteDemand(testDataIds.demands![0]);
     
     // 3. 刪除 availability
     const weekStart = logic.getWeekStart(new Date("2026-02-16T00:00:00.000Z"));
@@ -90,7 +98,7 @@ describe("時間邏輯全面測試", () => {
     await db.deleteWorker(testWorkerId2);
     
     // 5. 刪除 client
-    await db.deleteClient(testClientId);
+    await db.deleteClient(testDataIds.clients![0]);
   });
 
   describe("1. 工時計算測試", () => {
@@ -189,7 +197,7 @@ describe("時間邏輯全面測試", () => {
       const scheduledStart1 = new Date("2026-02-16T09:00:00.000Z");
       const scheduledEnd1 = new Date("2026-02-16T12:00:00.000Z");
       const assignment1 = await db.createAssignment({
-        demandId: testDemandId,
+        demandId: testDataIds.demands![0],
         workerId: testWorkerId1,
         scheduledStart: scheduledStart1,
         scheduledEnd: scheduledEnd1,
@@ -202,7 +210,7 @@ describe("時間邏輯全面測試", () => {
       const scheduledStart2 = new Date("2026-02-16T14:00:00.000Z");
       const scheduledEnd2 = new Date("2026-02-16T17:00:00.000Z");
       const assignment2 = await db.createAssignment({
-        demandId: testDemandId,
+        demandId: testDataIds.demands![0],
         workerId: testWorkerId1,
         scheduledStart: scheduledStart2,
         scheduledEnd: scheduledEnd2,
@@ -213,9 +221,8 @@ describe("時間邏輯全面測試", () => {
     });
 
     afterAll(async () => {
-      await db.deleteAssignment(assignment1Id);
-      await db.deleteAssignment(assignment2Id);
-    });
+    await cleanupTestData(testDataIds);
+  });
 
     it("應檢測到與第一個排班記錄的衝突（10:00-13:00 vs 09:00-12:00）", async () => {
       const scheduledStart = new Date("2026-02-16T10:00:00.000Z");

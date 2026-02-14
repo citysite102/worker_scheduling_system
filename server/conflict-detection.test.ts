@@ -1,13 +1,21 @@
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import * as db from "./db";
 import * as logic from "./businessLogic";
+import { cleanupTestData, TestDataIds } from "./test-utils";
 
 describe("排班衝突檢測測試", () => {
-  let testClientId: number;
-  let testWorkerId: number;
-  let testDemand1Id: number;
-  let testDemand2Id: number;
-  let testAssignment1Id: number;
+  const testDataIds: TestDataIds = {
+    assignments: [],
+    demands: [],
+    availability: [],
+    workers: [],
+    clients: [],
+  };
+
+
+
+
+
 
   beforeAll(async () => {
     // 建立測試客戶
@@ -16,7 +24,7 @@ describe("排班衝突檢測測試", () => {
       contactPerson: "測試聯絡人",
       phone: "0912345678",
     });
-    testClientId = client.id;
+    testDataIds.clients!.push(client.id);
 
     // 建立測試員工
     const worker = await db.createWorker({
@@ -26,11 +34,11 @@ describe("排班衝突檢測測試", () => {
       hasWorkPermit: 1,
       hasHealthCheck: 1,
     });
-    testWorkerId = worker.id;
+    testDataIds.workers!.push(worker.id);
 
     // 建立第一個需求單（2026-03-15 11:00-13:00）
     const demand1 = await db.createDemand({
-      clientId: testClientId,
+      clientId: testDataIds.clients![0],
       date: new Date("2026-03-15T00:00:00Z"),
       startTime: "11:00",
       endTime: "13:00",
@@ -46,7 +54,7 @@ describe("排班衝突檢測測試", () => {
 
     const assignment1 = await db.createAssignment({
       demandId: testDemand1Id,
-      workerId: testWorkerId,
+      workerId: testDataIds.workers![0],
       scheduledStart: scheduledStart1,
       scheduledEnd: scheduledEnd1,
       scheduledHours: scheduledHours1,
@@ -56,7 +64,7 @@ describe("排班衝突檢測測試", () => {
 
     // 建立第二個需求單（2026-03-15 11:00-13:00，與第一個完全重疊）
     const demand2 = await db.createDemand({
-      clientId: testClientId,
+      clientId: testDataIds.clients![0],
       date: new Date("2026-03-15T00:00:00Z"),
       startTime: "11:00",
       endTime: "13:00",
@@ -78,11 +86,11 @@ describe("排班衝突檢測測試", () => {
       if (testDemand2Id) {
         await db.deleteDemand(testDemand2Id);
       }
-      if (testClientId) {
-        await db.deleteClient(testClientId);
+      if (testDataIds.clients![0]) {
+        await db.deleteClient(testDataIds.clients![0]);
       }
-      if (testWorkerId) {
-        await db.deleteWorker(testWorkerId);
+      if (testDataIds.workers![0]) {
+        await db.deleteWorker(testDataIds.workers![0]);
       }
     } catch (e) {
       console.error("清理測試資料失敗：", e);
@@ -94,7 +102,7 @@ describe("排班衝突檢測測試", () => {
     const scheduledEnd2 = logic.combineDateAndTime(new Date("2026-03-15T00:00:00Z"), "13:00");
 
     const conflicts = await logic.checkWorkerConflicts(
-      testWorkerId,
+      testDataIds.workers![0],
       scheduledStart2,
       scheduledEnd2
     );
@@ -117,7 +125,7 @@ describe("排班衝突檢測測試", () => {
     console.log("Unavailable workers:", feasibility.unavailableWorkers.length);
     
     const testWorkerInUnavailable = feasibility.unavailableWorkers.find(
-      uw => uw.worker.id === testWorkerId
+      uw => uw.worker.id === testDataIds.workers![0]
     );
     
     if (testWorkerInUnavailable) {
@@ -125,7 +133,7 @@ describe("排班衝突檢測測試", () => {
     } else {
       console.log("Test worker NOT found in unavailable list!");
       const testWorkerInAvailable = feasibility.availableWorkers.find(
-        w => w.id === testWorkerId
+        w => w.id === testDataIds.workers![0]
       );
       if (testWorkerInAvailable) {
         console.log("Test worker found in AVAILABLE list - THIS IS THE BUG!");
@@ -149,7 +157,7 @@ describe("排班衝突檢測測試", () => {
     await expect(
       caller.assignments.assignWorkers({
         demandId: testDemand2Id,
-        workerIds: [testWorkerId],
+        workerIds: [testDataIds.workers![0]],
         scheduledStart: scheduledStart2,
         scheduledEnd: scheduledEnd2,
       })

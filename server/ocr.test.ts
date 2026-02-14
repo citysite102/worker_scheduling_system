@@ -17,7 +17,7 @@ describe("工作許可證 OCR 辨識功能", () => {
     expect(result).toHaveProperty("validityPeriodEnd");
     expect(result).toHaveProperty("issuedDate");
     expect(result).toHaveProperty("documentNo");
-    expect(result).toHaveProperty("uiNo");
+    expect(result).toHaveProperty("uiNumber");
     expect(result).toHaveProperty("school");
 
     // 驗證關鍵欄位存在（可能為空字串）

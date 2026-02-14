@@ -1,15 +1,23 @@
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import * as db from "./db";
+import { cleanupTestData, TestDataIds } from "./test-utils";
 
 describe("端到端測試：實際工時回填 → 報表輸出", () => {
-  let testClientId: number;
-  let testWorker1Id: number;
-  let testWorker2Id: number;
-  let testDemand1Id: number;
-  let testDemand2Id: number;
-  let testAssignment1Id: number;
-  let testAssignment2Id: number;
-  let testAssignment3Id: number;
+  const testDataIds: TestDataIds = {
+    assignments: [],
+    demands: [],
+    availability: [],
+    workers: [],
+    clients: [],
+  };
+
+
+
+
+
+
+
+
 
   beforeAll(async () => {
     // 建立測試客戶
@@ -20,7 +28,7 @@ describe("端到端測試：實際工時回填 → 報表輸出", () => {
       billingType: "hourly",
       status: "active",
     });
-    testClientId = client.id;
+    testDataIds.clients!.push(client.id);
 
     // 建立測試員工 1
     const worker1 = await db.createWorker({
@@ -46,7 +54,7 @@ describe("端到端測試：實際工時回填 → 報表輸出", () => {
 
     // 建立測試需求單 1（2026/02/15）
     const demand1 = await db.createDemand({
-      clientId: testClientId,
+      clientId: testDataIds.clients![0],
       date: new Date("2026-02-15T00:00:00Z"),
       startTime: "09:00",
       endTime: "17:00",
@@ -58,7 +66,7 @@ describe("端到端測試：實際工時回填 → 報表輸出", () => {
 
     // 建立測試需求單 2（2026/02/20）
     const demand2 = await db.createDemand({
-      clientId: testClientId,
+      clientId: testDataIds.clients![0],
       date: new Date("2026-02-20T00:00:00Z"),
       startTime: "10:00",
       endTime: "18:00",
@@ -143,8 +151,8 @@ describe("端到端測試：實際工時回填 → 報表輸出", () => {
       if (testWorker2Id) {
         await database.delete(workers).where(eq(workers.id, testWorker2Id));
       }
-      if (testClientId) {
-        await database.delete(clients).where(eq(clients.id, testClientId));
+      if (testDataIds.clients![0]) {
+        await database.delete(clients).where(eq(clients.id, testDataIds.clients![0]));
       }
     }
   });
@@ -220,7 +228,7 @@ describe("端到端測試：實際工時回填 → 報表輸出", () => {
 
   it("測試案例 2-2：客戶工時報表應包含所有已完成的記錄", async () => {
     const allDemands = await db.getAllDemands();
-    const clientDemands = allDemands.filter((d) => d.clientId === testClientId);
+    const clientDemands = allDemands.filter((d) => d.clientId === testDataIds.clients![0]);
 
     let completedCount = 0;
     let totalMinutes = 0;
@@ -260,7 +268,7 @@ describe("端到端測試：實際工時回填 → 報表輸出", () => {
 
   it("測試案例 3-2：未回填實際工時的記錄不應出現在客戶工時報表中", async () => {
     const allDemands = await db.getAllDemands();
-    const clientDemands = allDemands.filter((d) => d.clientId === testClientId);
+    const clientDemands = allDemands.filter((d) => d.clientId === testDataIds.clients![0]);
 
     let completedAssignmentIds: number[] = [];
 
