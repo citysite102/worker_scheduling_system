@@ -1,0 +1,37 @@
+{
+  "query": "-- 統計測試員工數量\nSELECT COUNT(*) as test_workers FROM workers \nWHERE name LIKE '%測試%' OR name LIKE '%TEST%' OR name LIKE '%test%' OR name LIKE '%核心流程%';\n\n-- 統計測試客戶數量\nSELECT COUNT(*) as test_clients FROM clients \nWHERE name LIKE '%測試%' OR name LIKE '%TEST%' OR name LIKE '%test%' OR name LIKE '%核心流程%';\n\n-- 統計測試需求單數量\nSELECT COUNT(*) as test_demands FROM demands \nWHERE note LIKE '%測試%' OR note LIKE '%TEST%' OR note LIKE '%test%' OR note LIKE '%核心流程%';\n\n-- 統計測試指派數量\nSELECT COUNT(*) as test_assignments FROM assignments \nWHERE workerId IN (\n  SELECT id FROM workers WHERE name LIKE '%測試%' OR name LIKE '%TEST%' OR name LIKE '%test%' OR name LIKE '%核心流程%'\n);\n\n-- 統計測試排班數量\nSELECT COUNT(*) as test_availability FROM availability \nWHERE workerId IN (\n  SELECT id FROM workers WHERE name LIKE '%測試%' OR name LIKE '%TEST%' OR name LIKE '%test%' OR name LIKE '%核心流程%'\n);",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2iEKifVQ9gKtEas.9cbf5414b428 --database CMgr35KntT8tLtgpfJPejw --execute -- 統計測試員工數量\nSELECT COUNT(*) as test_workers FROM workers \nWHERE name LIKE '%測試%' OR name LIKE '%TEST%' OR name LIKE '%test%' OR name LIKE '%核心流程%';\n\n-- 統計測試客戶數量\nSELECT COUNT(*) as test_clients FROM clients \nWHERE name LIKE '%測試%' OR name LIKE '%TEST%' OR name LIKE '%test%' OR name LIKE '%核心流程%';\n\n-- 統計測試需求單數量\nSELECT COUNT(*) as test_demands FROM demands \nWHERE note LIKE '%測試%' OR note LIKE '%TEST%' OR note LIKE '%test%' OR note LIKE '%核心流程%';\n\n-- 統計測試指派數量\nSELECT COUNT(*) as test_assignments FROM assignments \nWHERE workerId IN (\n  SELECT id FROM workers WHERE name LIKE '%測試%' OR name LIKE '%TEST%' OR name LIKE '%test%' OR name LIKE '%核心流程%'\n);\n\n-- 統計測試排班數量\nSELECT COUNT(*) as test_availability FROM availability \nWHERE workerId IN (\n  SELECT id FROM workers WHERE name LIKE '%測試%' OR name LIKE '%TEST%' OR name LIKE '%test%' OR name LIKE '%核心流程%'\n);",
+  "rows": [
+    {
+      "test_workers": "12"
+    },
+    {
+      "test_workers": "test_clients"
+    },
+    {
+      "test_workers": "9"
+    },
+    {
+      "test_workers": "test_demands"
+    },
+    {
+      "test_workers": "0"
+    },
+    {
+      "test_workers": "test_assignments"
+    },
+    {
+      "test_workers": "1"
+    },
+    {
+      "test_workers": "test_availability"
+    },
+    {
+      "test_workers": "0"
+    }
+  ],
+  "messages": [],
+  "stdout": "test_workers\n12\ntest_clients\n9\ntest_demands\n0\ntest_assignments\n1\ntest_availability\n0\n",
+  "stderr": "",
+  "execution_time_ms": 2445
+}

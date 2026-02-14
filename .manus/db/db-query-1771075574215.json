@@ -1,0 +1,17 @@
+{
+  "query": "-- 驗證測試資料已清理\nSELECT \n  (SELECT COUNT(*) FROM workers WHERE name LIKE '%測試%' OR name LIKE '%TEST%' OR name LIKE '%test%' OR name LIKE '%核心流程%') as remaining_workers,\n  (SELECT COUNT(*) FROM clients WHERE name LIKE '%測試%' OR name LIKE '%TEST%' OR name LIKE '%test%' OR name LIKE '%核心流程%') as remaining_clients,\n  (SELECT COUNT(*) FROM demands WHERE note LIKE '%測試%' OR note LIKE '%TEST%' OR note LIKE '%test%' OR note LIKE '%核心流程%') as remaining_demands,\n  (SELECT COUNT(*) FROM assignments WHERE workerId IN (SELECT id FROM workers WHERE name LIKE '%測試%' OR name LIKE '%TEST%' OR name LIKE '%test%' OR name LIKE '%核心流程%')) as remaining_assignments,\n  (SELECT COUNT(*) FROM availability WHERE workerId IN (SELECT id FROM workers WHERE name LIKE '%測試%' OR name LIKE '%TEST%' OR name LIKE '%test%' OR name LIKE '%核心流程%')) as remaining_availability;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2iEKifVQ9gKtEas.9cbf5414b428 --database CMgr35KntT8tLtgpfJPejw --execute -- 驗證測試資料已清理\nSELECT \n  (SELECT COUNT(*) FROM workers WHERE name LIKE '%測試%' OR name LIKE '%TEST%' OR name LIKE '%test%' OR name LIKE '%核心流程%') as remaining_workers,\n  (SELECT COUNT(*) FROM clients WHERE name LIKE '%測試%' OR name LIKE '%TEST%' OR name LIKE '%test%' OR name LIKE '%核心流程%') as remaining_clients,\n  (SELECT COUNT(*) FROM demands WHERE note LIKE '%測試%' OR note LIKE '%TEST%' OR note LIKE '%test%' OR note LIKE '%核心流程%') as remaining_demands,\n  (SELECT COUNT(*) FROM assignments WHERE workerId IN (SELECT id FROM workers WHERE name LIKE '%測試%' OR name LIKE '%TEST%' OR name LIKE '%test%' OR name LIKE '%核心流程%')) as remaining_assignments,\n  (SELECT COUNT(*) FROM availability WHERE workerId IN (SELECT id FROM workers WHERE name LIKE '%測試%' OR name LIKE '%TEST%' OR name LIKE '%test%' OR name LIKE '%核心流程%')) as remaining_availability;",
+  "rows": [
+    {
+      "remaining_workers": "0",
+      "remaining_clients": "0",
+      "remaining_demands": "0",
+      "remaining_assignments": "0",
+      "remaining_availability": "0"
+    }
+  ],
+  "messages": [],
+  "stdout": "remaining_workers\tremaining_clients\tremaining_demands\tremaining_assignments\tremaining_availability\n0\t0\t0\t0\t0\n",
+  "stderr": "",
+  "execution_time_ms": 1503
+}
