@@ -32,7 +32,7 @@ export default function Demands() {
         return { start: today, end: new Date(today.getTime() + 24 * 60 * 60 * 1000) };
       
       case "thisWeek": {
-        const dayOfWeek = today.getDay();
+        const dayOfWeek = today.getUTCDay();
         const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
         const monday = new Date(today.getTime() + mondayOffset * 24 * 60 * 60 * 1000);
         const sunday = new Date(monday.getTime() + 7 * 24 * 60 * 60 * 1000);
@@ -40,7 +40,7 @@ export default function Demands() {
       }
       
       case "nextWeek": {
-        const dayOfWeek = today.getDay();
+        const dayOfWeek = today.getUTCDay();
         const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
         const thisMonday = new Date(today.getTime() + mondayOffset * 24 * 60 * 60 * 1000);
         const nextMonday = new Date(thisMonday.getTime() + 7 * 24 * 60 * 60 * 1000);

@@ -83,13 +83,13 @@ export default function WorkerDetail() {
       // 本週：從今天到週日
       startDate = new Date(today);
       endDate = new Date(today);
-      const dayOfWeek = today.getDay();
+      const dayOfWeek = today.getUTCDay();
       const daysUntilSunday = dayOfWeek === 0 ? 0 : 7 - dayOfWeek;
       endDate.setDate(endDate.getDate() + daysUntilSunday);
     } else if (dateFilter === "next_week") {
       // 下週：下個週一到下個週日
       startDate = new Date(today);
-      const dayOfWeek = today.getDay();
+      const dayOfWeek = today.getUTCDay();
       const daysUntilNextMonday = dayOfWeek === 0 ? 1 : 8 - dayOfWeek;
       startDate.setDate(startDate.getDate() + daysUntilNextMonday);
       endDate = new Date(startDate);

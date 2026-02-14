@@ -1022,3 +1022,9 @@
 - [x] 修復 test-availability-flow.test.ts 的員工可用性測試
 - [x] 執行測試確認修復成功（businessLogic.test.ts 12/12、test-availability-flow.test.ts 5/5）
 - [ ] 完整測試套件：120/142 通過（84.5%），還有 6 個測試失敗
+
+## 時區邏輯統一（2026/02/14）
+- [x] 修改 Demands.tsx 的時間篩選邏輯（getDay → getUTCDay）
+- [x] 修改 WorkerDetail.tsx 的時間篩選邏輯（getDay → getUTCDay）
+- [x] 驗證前端功能正常運作（LSP、TypeScript 無錯誤）
+- [x] 確認測試與實作邏輯一致（businessLogic.test.ts 12/12、test-availability-flow.test.ts 5/5 全部通過）
