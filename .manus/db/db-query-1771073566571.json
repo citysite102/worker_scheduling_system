@@ -1,0 +1,18 @@
+{
+  "query": "-- 先查詢測試相關的 ID\nSELECT 'Test Workers:' as category, COUNT(*) as count FROM workers \nWHERE name LIKE '%測試%' OR name LIKE '%TEST%' OR name LIKE '%[測試]%'\nUNION ALL\nSELECT 'Test Clients:', COUNT(*) FROM clients \nWHERE name LIKE '%測試%' OR name LIKE '%TEST%' OR name LIKE '%[測試]%';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2iEKifVQ9gKtEas.9cbf5414b428 --database CMgr35KntT8tLtgpfJPejw --execute -- 先查詢測試相關的 ID\nSELECT 'Test Workers:' as category, COUNT(*) as count FROM workers \nWHERE name LIKE '%測試%' OR name LIKE '%TEST%' OR name LIKE '%[測試]%'\nUNION ALL\nSELECT 'Test Clients:', COUNT(*) FROM clients \nWHERE name LIKE '%測試%' OR name LIKE '%TEST%' OR name LIKE '%[測試]%';",
+  "rows": [
+    {
+      "category": "Test Clients:",
+      "count": "15"
+    },
+    {
+      "category": "Test Workers:",
+      "count": "23"
+    }
+  ],
+  "messages": [],
+  "stdout": "category\tcount\nTest Clients:\t15\nTest Workers:\t23\n",
+  "stderr": "",
+  "execution_time_ms": 1531
+}
