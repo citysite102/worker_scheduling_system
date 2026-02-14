@@ -33,6 +33,7 @@ export default function Workers() {
   const [showOCRDialog, setShowOCRDialog] = useState(false);
   const [showBatchUploadDialog, setShowBatchUploadDialog] = useState(false);
   const [selectedWorkerIds, setSelectedWorkerIds] = useState<Set<number>>(new Set());
+  const [hasWorkPermitChecked, setHasWorkPermitChecked] = useState(false);
 
   const { data: workers, isLoading, refetch } = trpc.workers.list.useQuery({
     search: searchTerm,
@@ -95,9 +96,10 @@ export default function Workers() {
       uiNumber: (formData.get("uiNumber") as string) || undefined,
       lineId: (formData.get("lineId") as string) || undefined,
       whatsappId: (formData.get("whatsappId") as string) || undefined,
-      hasWorkPermit: formData.get("hasWorkPermit") === "on",
+      hasWorkPermit: hasWorkPermitChecked,
       hasHealthCheck: formData.get("hasHealthCheck") === "on",
-      workPermitExpiryDate: workPermitDate ? new Date(workPermitDate) : undefined,
+      // 只有勾選「有工作簽證」時，才提交到期日
+      workPermitExpiryDate: hasWorkPermitChecked && workPermitDate ? new Date(workPermitDate) : undefined,
       attendanceNotes: (formData.get("attendanceNotes") as string) || undefined,
       note: (formData.get("note") as string) || undefined,
     };
@@ -144,14 +146,14 @@ export default function Workers() {
               <Upload className="mr-2 h-4 w-4" />
               單張圖片新增
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => { setEditingWorker(null); setOcrData(null); setIsDialogOpen(true); }}>
+            <DropdownMenuItem onClick={() => { setEditingWorker(null); setOcrData(null); setHasWorkPermitChecked(false); setIsDialogOpen(true); }}>
               <UserPlus className="mr-2 h-4 w-4" />
               一般新增
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
 
-        <Dialog open={isDialogOpen} onOpenChange={(open) => { setIsDialogOpen(open); if (!open) setEditingWorker(null); }}>
+        <Dialog open={isDialogOpen} onOpenChange={(open) => { setIsDialogOpen(open); if (!open) { setEditingWorker(null); setHasWorkPermitChecked(false); } }}>
           <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
             <form onSubmit={handleSubmit}>
               <DialogHeader>
@@ -204,7 +206,8 @@ export default function Workers() {
                     <Checkbox
                       id="hasWorkPermit"
                       name="hasWorkPermit"
-                      defaultChecked={editingWorker?.hasWorkPermit === 1}
+                      checked={hasWorkPermitChecked}
+                      onCheckedChange={(checked) => setHasWorkPermitChecked(checked === true)}
                     />
                     <Label htmlFor="hasWorkPermit" className="text-sm font-normal cursor-pointer">有工作簽證</Label>
                   </div>
@@ -218,21 +221,25 @@ export default function Workers() {
                   </div>
                 </div>
                 <div className="grid gap-2">
-                  <Label htmlFor="workPermitExpiryDate">工作許可到期日</Label>
+                  <Label htmlFor="workPermitExpiryDate" className={!hasWorkPermitChecked ? "text-muted-foreground" : ""}>工作許可到期日</Label>
                   <Input 
                     id="workPermitExpiryDate" 
                     name="workPermitExpiryDate" 
                     type="date" 
-                    defaultValue={
-                      editingWorker?.workPermitExpiryDate 
-                        ? new Date(editingWorker.workPermitExpiryDate).toISOString().split('T')[0] 
-                        : ocrData?.validityPeriodEnd 
-                          ? convertROCToAD(ocrData.validityPeriodEnd) || ''
-                          : ''
+                    disabled={!hasWorkPermitChecked}
+                    value={
+                      !hasWorkPermitChecked ? '' : (
+                        editingWorker?.workPermitExpiryDate 
+                          ? new Date(editingWorker.workPermitExpiryDate).toISOString().split('T')[0] 
+                          : ocrData?.validityPeriodEnd 
+                            ? convertROCToAD(ocrData.validityPeriodEnd) || ''
+                            : ''
+                      )
                     }
+                    onChange={(e) => {}}
                     key={ocrData?.validityPeriodEnd}
                   />
-                  <p className="text-xs text-muted-foreground">留空表示無期限</p>
+                  <p className="text-xs text-muted-foreground">{hasWorkPermitChecked ? '留空表示無期限' : '請先勾選「有工作簽證」才能設定到期日'}</p>
                 </div>
                 <div className="grid gap-2">
                   <Label htmlFor="attendanceNotes">出勤記錄（遲到/曠職）</Label>
@@ -533,6 +540,7 @@ export default function Workers() {
                       className="h-8 w-8 text-muted-foreground hover:text-foreground"
                       onClick={() => {
                         setEditingWorker(worker);
+                        setHasWorkPermitChecked(worker.hasWorkPermit === 1);
                         setIsDialogOpen(true);
                       }}
                     >

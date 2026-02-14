@@ -159,6 +159,15 @@ export const appRouter = router({
       }))
       .mutation(async ({ input }) => {
         const { hasWorkPermit, hasHealthCheck, ...rest } = input;
+        
+        // 驗證：如果沒有勾選「有工作簽證」，則不允許設定到期日
+        if (!hasWorkPermit && input.workPermitExpiryDate) {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: "資料不一致：未勾選『有工作簽證』時，不可設定到期日",
+          });
+        }
+        
         await db.createWorker({
           ...rest,
           hasWorkPermit: hasWorkPermit ? 1 : 0,
@@ -192,6 +201,12 @@ export const appRouter = router({
           const worker = input.workers[i];
           try {
             const { hasWorkPermit, hasHealthCheck, ...rest } = worker;
+            
+            // 驗證：如果沒有勾選「有工作簽證」，則不允許設定到期日
+            if (!hasWorkPermit && worker.workPermitExpiryDate) {
+              throw new Error("資料不一致：未勾選『有工作簽證』時，不可設定到期日");
+            }
+            
             await db.createWorker({
               ...rest,
               hasWorkPermit: hasWorkPermit ? 1 : 0,
@@ -236,6 +251,15 @@ export const appRouter = router({
       }))
       .mutation(async ({ input }) => {
         const { id, hasWorkPermit, hasHealthCheck, ...data } = input;
+        
+        // 驗證：如果明確設定 hasWorkPermit = false，則不允許設定到期日
+        if (hasWorkPermit === false && input.workPermitExpiryDate) {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: "資料不一致：未勾選『有工作簽證』時，不可設定到期日",
+          });
+        }
+        
         const updateData: any = { ...data };
         if (hasWorkPermit !== undefined) updateData.hasWorkPermit = hasWorkPermit ? 1 : 0;
         if (hasHealthCheck !== undefined) updateData.hasHealthCheck = hasHealthCheck ? 1 : 0;
