@@ -1045,3 +1045,17 @@
 - [x] 修復其他失敗測試的資料隔離問題（comprehensive-time-logic.test.ts、cancelled-demand-release.test.ts、report-export.test.ts）
 - [x] 執行測試確認修復成功
 - [ ] 確認測試通過率達到 100%（目前 101/127，79.5%）
+
+## 測試單獨執行檢測（2026/02/14）
+- [x] 檢測 auto-status-update.test.ts 單獨執行結果（4/4 通過）
+- [x] 檢測 break-hours.test.ts 單獨執行結果（6/6 通過）
+- [x] 檢測 comprehensive-time-logic.test.ts 單獨執行結果（27/27 通過）
+- [x] 檢測 core-workflow.test.ts 單獨執行結果（5/5 通過）
+- [x] 檢測 end-to-end-report.test.ts 單獨執行結果（11/11 通過）
+- [ ] 分析失敗原因並提供解決方案
+
+## Favicon 置換（2026/02/14）
+- [x] 複製 favicon 檔案到 client/public 目錄
+- [x] 更新 index.html 中的 favicon 引用（已存在正確設定）
+- [x] 更新 site.webmanifest 加入應用程式名稱
+- [x] 驗證 favicon 顯示正確（開發伺服器運行正常）

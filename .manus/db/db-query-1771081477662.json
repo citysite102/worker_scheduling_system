@@ -1,0 +1,9 @@
+{
+  "query": "DELETE FROM assignments WHERE workerId IN (SELECT id FROM workers WHERE name LIKE '%測試%' OR name LIKE '%TEST%' OR name LIKE '%test%' OR name LIKE '%人力釋放%');\nDELETE FROM assignments WHERE demandId IN (SELECT id FROM demands WHERE note LIKE '%測試%' OR note LIKE '%TEST%' OR location LIKE '%測試%');\nDELETE FROM demands WHERE clientId IN (SELECT id FROM clients WHERE name LIKE '%測試%' OR name LIKE '%TEST%' OR name LIKE '%人力釋放%');\nDELETE FROM availability WHERE workerId IN (SELECT id FROM workers WHERE name LIKE '%測試%' OR name LIKE '%TEST%' OR name LIKE '%test%' OR name LIKE '%人力釋放%');\nDELETE FROM workers WHERE name LIKE '%測試%' OR name LIKE '%TEST%' OR name LIKE '%test%' OR name LIKE '%人力釋放%';\nDELETE FROM clients WHERE name LIKE '%測試%' OR name LIKE '%TEST%' OR name LIKE '%人力釋放%';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2iEKifVQ9gKtEas.9cbf5414b428 --database CMgr35KntT8tLtgpfJPejw --execute DELETE FROM assignments WHERE workerId IN (SELECT id FROM workers WHERE name LIKE '%測試%' OR name LIKE '%TEST%' OR name LIKE '%test%' OR name LIKE '%人力釋放%');\nDELETE FROM assignments WHERE demandId IN (SELECT id FROM demands WHERE note LIKE '%測試%' OR note LIKE '%TEST%' OR location LIKE '%測試%');\nDELETE FROM demands WHERE clientId IN (SELECT id FROM clients WHERE name LIKE '%測試%' OR name LIKE '%TEST%' OR name LIKE '%人力釋放%');\nDELETE FROM availability WHERE workerId IN (SELECT id FROM workers WHERE name LIKE '%測試%' OR name LIKE '%TEST%' OR name LIKE '%test%' OR name LIKE '%人力釋放%');\nDELETE FROM workers WHERE name LIKE '%測試%' OR name LIKE '%TEST%' OR name LIKE '%test%' OR name LIKE '%人力釋放%';\nDELETE FROM clients WHERE name LIKE '%測試%' OR name LIKE '%TEST%' OR name LIKE '%人力釋放%';",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 2653
+}
