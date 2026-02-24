@@ -29,6 +29,7 @@ export default function ClientDetail() {
   const [selectedDateDemands, setSelectedDateDemands] = useState<any[]>([]);
   const [selectedDemandTypeId, setSelectedDemandTypeId] = useState<number | undefined>(undefined);
   const [selectedOptions, setSelectedOptions] = useState<number[]>([]);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
 
   const { data: clientDetail, isLoading: isLoadingClient } = trpc.clients.getDetailById.useQuery({ id: clientId });
   const { data: demandTypes = [] } = trpc.demandTypes.list.useQuery();
@@ -49,6 +50,16 @@ export default function ClientDetail() {
     },
     onError: (error) => {
       toast.error(`建立失敗：${error.message}`);
+    },
+  });
+
+  const updateClientMutation = trpc.clients.update.useMutation({
+    onSuccess: () => {
+      toast.success("客戶資料已更新");
+      setIsEditDialogOpen(false);
+    },
+    onError: (error) => {
+      toast.error(`更新失敗：${error.message}`);
     },
   });
 
@@ -206,7 +217,7 @@ export default function ClientDetail() {
 
       {/* 客戶基本資訊卡片 */}
       <Card className="border-2">
-        <CardHeader className="bg-gradient-to-r from-primary/5 to-primary/10">
+        <CardHeader>
           <div className="flex items-start justify-between">
             <div className="space-y-2">
               <div className="flex items-center gap-3">
@@ -225,7 +236,7 @@ export default function ClientDetail() {
               </div>
             </div>
             <div className="flex gap-2">
-              <Button variant="outline" size="sm" className="gap-2">
+              <Button variant="outline" size="sm" className="gap-2" onClick={() => setIsEditDialogOpen(true)}>
                 <Edit className="w-4 h-4" />
                 編輯資料
               </Button>
@@ -620,6 +631,94 @@ export default function ClientDetail() {
               關閉
             </Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* 客戶編輯對話框 */}
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>編輯客戶資料</DialogTitle>
+            <DialogDescription>
+              修改 {clientDetail?.name} 的基本資訊
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={(e) => {
+            e.preventDefault();
+            const formData = new FormData(e.currentTarget);
+            updateClientMutation.mutate({
+              id: clientId,
+              name: formData.get("name") as string,
+              contactName: (formData.get("contactName") as string) || undefined,
+              contactEmail: (formData.get("contactEmail") as string) || undefined,
+              contactPhone: (formData.get("contactPhone") as string) || undefined,
+              address: (formData.get("address") as string) || undefined,
+              billingType: formData.get("billingType") as "hourly" | "fixed" | "custom",
+              status: formData.get("status") as "active" | "inactive",
+              note: (formData.get("note") as string) || undefined,
+            });
+          }} className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="col-span-2 space-y-2">
+                <Label htmlFor="name">客戶名稱 *</Label>
+                <Input id="name" name="name" defaultValue={clientDetail?.name} required />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="contactName">聯絡人</Label>
+                <Input id="contactName" name="contactName" defaultValue={clientDetail?.contactName || ""} />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="contactPhone">聯絡電話</Label>
+                <Input id="contactPhone" name="contactPhone" defaultValue={clientDetail?.contactPhone || ""} />
+              </div>
+              <div className="col-span-2 space-y-2">
+                <Label htmlFor="contactEmail">聯絡 Email</Label>
+                <Input id="contactEmail" name="contactEmail" type="email" defaultValue={clientDetail?.contactEmail || ""} />
+              </div>
+              <div className="col-span-2 space-y-2">
+                <Label htmlFor="address">地址</Label>
+                <Textarea id="address" name="address" defaultValue={clientDetail?.address || ""} rows={2} />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="billingType">計費方式</Label>
+                <Select name="billingType" defaultValue={clientDetail?.billingType}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="hourly">時薪制</SelectItem>
+                    <SelectItem value="fixed">固定費用</SelectItem>
+                    <SelectItem value="custom">自訂</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="status">狀態</Label>
+                <Select name="status" defaultValue={clientDetail?.status}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="active">啟用中</SelectItem>
+                    <SelectItem value="inactive">已停用</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="col-span-2 space-y-2">
+                <Label htmlFor="note">備註</Label>
+                <Textarea id="note" name="note" defaultValue={clientDetail?.note || ""} rows={3} />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+                取消
+              </Button>
+              <Button type="submit" disabled={updateClientMutation.isPending}>
+                {updateClientMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                儲存更改
+              </Button>
+            </DialogFooter>
+          </form>
         </DialogContent>
       </Dialog>
     </div>

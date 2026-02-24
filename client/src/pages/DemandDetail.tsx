@@ -406,6 +406,35 @@ export default function DemandDetail() {
                     <span className="font-medium">{demand.location}</span>
                   </div>
                 )}
+                {demand.demandType && (
+                  <div className="mt-4 pt-4 border-t">
+                    <div className="space-y-2">
+                      <div className="flex items-start gap-2">
+                        <FileCheck className="h-3.5 w-3.5 text-muted-foreground mt-0.5" />
+                        <div className="flex-1">
+                          <div className="text-muted-foreground mb-1">需求類別：</div>
+                          <div className="font-medium">{demand.demandType.name}</div>
+                          {demand.demandType.description && (
+                            <div className="text-xs text-muted-foreground mt-1">{demand.demandType.description}</div>
+                          )}
+                        </div>
+                      </div>
+                      {demand.selectedOptions && demand.selectedOptions.length > 0 && (
+                        <div className="ml-5 space-y-1">
+                          <div className="text-xs text-muted-foreground mb-1.5">已勾選的項目：</div>
+                          <div className="space-y-1">
+                            {demand.selectedOptions.map((option: any) => (
+                              <div key={option.id} className="flex items-start gap-2 text-xs">
+                                <CheckCircle2 className="h-3 w-3 text-green-600 mt-0.5 flex-shrink-0" />
+                                <span>{option.content}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>

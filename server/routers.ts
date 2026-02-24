@@ -690,10 +690,31 @@ export const appRouter = router({
         const client = await db.getClientById(demand.clientId);
         const assignments = await db.getAssignmentsByDemand(demand.id);
         
+        // 如果有需求類型，查詢需求類型與選項
+        let demandType = null;
+        let selectedOptions: any[] = [];
+        if (demand.demandTypeId) {
+          demandType = await db.getDemandTypeById(demand.demandTypeId);
+          // 解析 selectedOptions JSON
+          if (demand.selectedOptions) {
+            try {
+              const optionIds = JSON.parse(demand.selectedOptions);
+              if (Array.isArray(optionIds) && optionIds.length > 0) {
+                // 從 demandType.options 中篩選已勾選的選項
+                selectedOptions = (demandType?.options || []).filter((opt: any) => optionIds.includes(opt.id));
+              }
+            } catch (e) {
+              // JSON 解析失敗，忽略
+            }
+          }
+        }
+        
         return {
           ...demand,
           client,
           assignments,
+          demandType,
+          selectedOptions,
         };
       }),
 
