@@ -58,6 +58,7 @@ export type InsertWorker = typeof workers.$inferInsert;
  */
 export const clients = mysqlTable("clients", {
   id: int("id").autoincrement().primaryKey(),
+  clientCode: varchar("clientCode", { length: 50 }).notNull().unique(), // 客戶唯一識別碼（例如：CLI-20260225-001）
   name: varchar("name", { length: 200 }).notNull(),
   contactName: varchar("contactName", { length: 100 }),
   contactEmail: varchar("contactEmail", { length: 320 }),

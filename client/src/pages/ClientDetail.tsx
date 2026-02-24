@@ -7,7 +7,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, Building2, Phone, Mail, MapPin, Calendar, Users, CheckCircle2, XCircle, Clock, Loader2, Plus } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { 
+  ArrowLeft, Building2, Phone, Mail, MapPin, Calendar, Users, 
+  CheckCircle2, XCircle, Clock, Loader2, Plus, FileText, 
+  TrendingUp, Briefcase, Copy, Edit, Trash2
+} from "lucide-react";
 import { useParams, useLocation } from "wouter";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -38,6 +43,8 @@ export default function ClientDetail() {
     onSuccess: () => {
       toast.success("需求單已建立");
       setIsCreateDialogOpen(false);
+      setSelectedDemandTypeId(undefined);
+      setSelectedOptions([]);
       refetch();
     },
     onError: (error) => {
@@ -105,7 +112,7 @@ export default function ClientDetail() {
 
     const calendar: (Date | null)[] = [];
     
-    // 填充月初空白
+    // 填充前面的空白
     for (let i = 0; i < startDayOfWeek; i++) {
       calendar.push(null);
     }
@@ -118,196 +125,246 @@ export default function ClientDetail() {
     return calendar;
   };
 
-  // 獲取特定日期的需求
   const getDemandsForDate = (date: Date) => {
     if (!monthDemands) return [];
-    return monthDemands.filter((d: any) => {
-      const demandDate = new Date(d.date);
-      return demandDate.getDate() === date.getDate() &&
-             demandDate.getMonth() === date.getMonth() &&
-             demandDate.getFullYear() === date.getFullYear();
+    return monthDemands.filter((demand: any) => {
+      const demandDate = new Date(demand.date);
+      return (
+        demandDate.getFullYear() === date.getFullYear() &&
+        demandDate.getMonth() === date.getMonth() &&
+        demandDate.getDate() === date.getDate()
+      );
     });
   };
 
-  // 獲取狀態顏色（含過期判斷）
-  const getStatusColor = (status: string, date: Date) => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const demandDate = new Date(date);
-    demandDate.setHours(0, 0, 0, 0);
-    
-    // 如果需求日期早於今日，顯示灰色
-    if (demandDate < today) {
-      return "bg-gray-300";
-    }
-    
-    switch (status) {
-      case "confirmed":
-        return "bg-blue-500";
-      case "closed":
-        return "bg-green-500";
-      case "cancelled":
-        return "bg-gray-400";
-      default:
-        return "bg-yellow-500";
-    }
+  const getStatusBadge = (status: string) => {
+    const statusMap = {
+      draft: { label: "草稿", variant: "secondary" as const },
+      confirmed: { label: "已確認", variant: "default" as const },
+      cancelled: { label: "已取消", variant: "destructive" as const },
+      closed: { label: "已結案", variant: "outline" as const },
+    };
+    const config = statusMap[status as keyof typeof statusMap] || statusMap.draft;
+    return <Badge variant={config.variant}>{config.label}</Badge>;
+  };
+
+  const formatDate = (date: Date) => {
+    const year = date.getFullYear();
+    const month = date.getMonth() + 1;
+    const day = date.getDate();
+    const weekdays = ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六'];
+    const weekday = weekdays[date.getDay()];
+    return `${year}/${month}/${day} ${weekday}`;
   };
 
   if (isLoadingClient) {
     return (
-      <div className="p-6 lg:p-8 max-w-7xl mx-auto">
-        <div className="flex items-center justify-center py-12">
-          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-        </div>
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
       </div>
     );
   }
 
   if (!clientDetail) {
     return (
-      <div className="p-6 lg:p-8 max-w-7xl mx-auto">
-        <div className="text-center py-12">
-          <p className="text-muted-foreground">客戶不存在</p>
-          <Button onClick={() => setLocation("/clients")} className="mt-4">
-            返回客戶列表
-          </Button>
-        </div>
+      <div className="container mx-auto py-8">
+        <Card>
+          <CardContent className="py-8 text-center text-muted-foreground">
+            找不到客戶資料
+          </CardContent>
+        </Card>
       </div>
     );
   }
 
   const calendar = generateCalendar();
+  const weekDays = ["日", "一", "二", "三", "四", "五", "六"];
+
+  // 計算統計數據
+  const totalDemands = clientDetail.stats.totalDemands;
+  const confirmedDemands = clientDetail.stats.activeDemands;
+  const totalHours = monthDemands?.reduce((sum: number, d: any) => {
+    const start = new Date(`2000-01-01T${d.startTime}`);
+    const end = new Date(`2000-01-01T${d.endTime}`);
+    const hours = (end.getTime() - start.getTime()) / (1000 * 60 * 60);
+    return sum + hours * d.requiredWorkers;
+  }, 0) || 0;
+
+  // 計算合作天數（從建立客戶到現在）
+  const cooperationDays = Math.floor((Date.now() - new Date(clientDetail.createdAt).getTime()) / (1000 * 60 * 60 * 24));
+
+  // 找出選中的需求類型與選項
+  const selectedDemandType = demandTypes.find(t => t.id === selectedDemandTypeId);
 
   return (
-    <div className="p-6 lg:p-8 max-w-7xl mx-auto">
-      {/* Header */}
-      <div className="mb-6 flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <Button variant="outline" size="icon" onClick={() => setLocation("/clients")}>
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
-          {clientDetail.logoUrl && (
-            <div className="h-12 w-12 rounded-lg bg-muted flex items-center justify-center overflow-hidden">
-              <img src={clientDetail.logoUrl} alt={clientDetail.name} className="w-full h-full object-contain" />
-            </div>
-          )}
-          <div>
-            <h1 className="text-2xl font-semibold text-foreground">{clientDetail.name}</h1>
-            <p className="text-sm text-muted-foreground mt-1">客戶詳細資料與需求管理</p>
-          </div>
-        </div>
-        <Badge variant={clientDetail.status === "active" ? "default" : "secondary"}>
-          {clientDetail.status === "active" ? "合作中" : "已停用"}
-        </Badge>
-      </div>
+    <div className="container mx-auto py-6 space-y-6">
+      {/* 返回按鈕 */}
+      <Button variant="ghost" onClick={() => setLocation("/clients")} className="gap-2">
+        <ArrowLeft className="w-4 h-4" />
+        返回客戶列表
+      </Button>
 
-      {/* 客戶資訊卡片 */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-        <Card className="shadow-sm border-border/60">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base font-medium flex items-center gap-2">
-              <Building2 className="h-4 w-4 text-primary" />
-              基本資訊
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3 text-sm">
-            {clientDetail.contactName && (
-              <div className="flex items-center gap-2">
-                <Users className="h-4 w-4 text-muted-foreground" />
-                <span className="text-muted-foreground">聯絡人：</span>
-                <span className="font-medium">{clientDetail.contactName}</span>
-              </div>
-            )}
-            {clientDetail.contactPhone && (
-              <div className="flex items-center gap-2">
-                <Phone className="h-4 w-4 text-muted-foreground" />
-                <span className="text-muted-foreground">電話：</span>
-                <span className="font-medium">{clientDetail.contactPhone}</span>
-              </div>
-            )}
-            {clientDetail.contactEmail && (
-              <div className="flex items-center gap-2">
-                <Mail className="h-4 w-4 text-muted-foreground" />
-                <span className="text-muted-foreground">Email：</span>
-                <span className="font-medium">{clientDetail.contactEmail}</span>
-              </div>
-            )}
-            {clientDetail.address && (
-              <div className="flex items-start gap-2">
-                <MapPin className="h-4 w-4 text-muted-foreground mt-0.5" />
+      {/* 客戶基本資訊卡片 */}
+      <Card className="border-2">
+        <CardHeader className="bg-gradient-to-r from-primary/5 to-primary/10">
+          <div className="flex items-start justify-between">
+            <div className="space-y-2">
+              <div className="flex items-center gap-3">
+                <Building2 className="w-8 h-8 text-primary" />
                 <div>
-                  <span className="text-muted-foreground">地址：</span>
-                  <p className="font-medium">{clientDetail.address}</p>
+                  <CardTitle className="text-2xl">{clientDetail.name}</CardTitle>
+                  <div className="flex items-center gap-2 mt-1">
+                    <Badge variant="outline" className="font-mono text-xs">
+                      {clientDetail.clientCode}
+                    </Badge>
+                    <Badge variant={clientDetail.status === "active" ? "default" : "secondary"}>
+                      {clientDetail.status === "active" ? "啟用中" : "已停用"}
+                    </Badge>
+                  </div>
                 </div>
               </div>
-            )}
+            </div>
+            <div className="flex gap-2">
+              <Button variant="outline" size="sm" className="gap-2">
+                <Edit className="w-4 h-4" />
+                編輯資料
+              </Button>
+              <Button variant="outline" size="sm" className="gap-2">
+                <FileText className="w-4 h-4" />
+                查看報表
+              </Button>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className="pt-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* 聯絡資訊 */}
+            <div className="space-y-3">
+              <h3 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">聯絡資訊</h3>
+              <div className="space-y-2">
+                {clientDetail.contactName && (
+                  <div className="flex items-center gap-2 text-sm">
+                    <Users className="w-4 h-4 text-muted-foreground" />
+                    <span className="font-medium">聯絡人：</span>
+                    <span>{clientDetail.contactName}</span>
+                  </div>
+                )}
+                {clientDetail.contactPhone && (
+                  <div className="flex items-center gap-2 text-sm">
+                    <Phone className="w-4 h-4 text-muted-foreground" />
+                    <span className="font-medium">電話：</span>
+                    <span>{clientDetail.contactPhone}</span>
+                  </div>
+                )}
+                {clientDetail.contactEmail && (
+                  <div className="flex items-center gap-2 text-sm">
+                    <Mail className="w-4 h-4 text-muted-foreground" />
+                    <span className="font-medium">Email：</span>
+                    <span>{clientDetail.contactEmail}</span>
+                  </div>
+                )}
+                {clientDetail.address && (
+                  <div className="flex items-start gap-2 text-sm">
+                    <MapPin className="w-4 h-4 text-muted-foreground mt-0.5" />
+                    <div>
+                      <span className="font-medium">地址：</span>
+                      <span>{clientDetail.address}</span>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* 計費資訊 */}
+            <div className="space-y-3">
+              <h3 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">計費資訊</h3>
+              <div className="space-y-2">
+                <div className="flex items-center gap-2 text-sm">
+                  <Briefcase className="w-4 h-4 text-muted-foreground" />
+                  <span className="font-medium">計費方式：</span>
+                  <Badge variant="outline">
+                    {clientDetail.billingType === "hourly" && "時薪制"}
+                    {clientDetail.billingType === "fixed" && "固定費用"}
+                    {clientDetail.billingType === "custom" && "自訂"}
+                  </Badge>
+                </div>
+                {clientDetail.note && (
+                  <div className="text-sm">
+                    <span className="font-medium">備註：</span>
+                    <p className="text-muted-foreground mt-1">{clientDetail.note}</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* 統計卡片 */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">總需求數</p>
+                <p className="text-2xl font-bold mt-1">{totalDemands}</p>
+              </div>
+              <FileText className="w-8 h-8 text-primary/60" />
+            </div>
           </CardContent>
         </Card>
 
-        <Card className="shadow-sm border-border/60">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base font-medium flex items-center gap-2">
-              <Calendar className="h-4 w-4 text-primary" />
-              需求統計
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3 text-sm">
+        <Card>
+          <CardContent className="pt-6">
             <div className="flex items-center justify-between">
-              <span className="text-muted-foreground">總需求數</span>
-              <span className="font-semibold text-lg">{clientDetail.stats.totalDemands}</span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-muted-foreground flex items-center gap-1">
-                <CheckCircle2 className="h-4 w-4 text-green-500" />
-                已關閉
-              </span>
-              <span className="font-medium">{clientDetail.stats.closedDemands}</span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-muted-foreground flex items-center gap-1">
-                <Clock className="h-4 w-4 text-blue-500" />
-                進行中
-              </span>
-              <span className="font-medium">{clientDetail.stats.activeDemands}</span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-muted-foreground flex items-center gap-1">
-                <XCircle className="h-4 w-4 text-gray-400" />
-                已取消
-              </span>
-              <span className="font-medium">{clientDetail.stats.cancelledDemands}</span>
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">已確認需求</p>
+                <p className="text-2xl font-bold mt-1">{confirmedDemands}</p>
+              </div>
+              <CheckCircle2 className="w-8 h-8 text-green-500/60" />
             </div>
           </CardContent>
         </Card>
 
-        <Card className="shadow-sm border-border/60">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base font-medium">備註</CardTitle>
-          </CardHeader>
-          <CardContent className="text-sm">
-            {clientDetail.note ? (
-              <p className="text-muted-foreground">{clientDetail.note}</p>
-            ) : (
-              <p className="text-muted-foreground italic">無備註</p>
-            )}
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">本月工時</p>
+                <p className="text-2xl font-bold mt-1">{totalHours.toFixed(1)}h</p>
+              </div>
+              <Clock className="w-8 h-8 text-blue-500/60" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">合作天數</p>
+                <p className="text-2xl font-bold mt-1">{cooperationDays}</p>
+              </div>
+              <TrendingUp className="w-8 h-8 text-orange-500/60" />
+            </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Calendar View */}
-      <Card className="shadow-sm border-border/60">
+      {/* 月曆與需求單 */}
+      <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
-            <CardTitle className="text-lg font-semibold">需求日曆</CardTitle>
+            <CardTitle>需求單管理</CardTitle>
             <div className="flex items-center gap-2">
               <Button variant="outline" size="sm" onClick={handlePrevMonth}>
-                上一月
+                上個月
               </Button>
               <span className="text-sm font-medium min-w-[120px] text-center">
                 {currentDate.getFullYear()} 年 {currentDate.getMonth() + 1} 月
               </span>
               <Button variant="outline" size="sm" onClick={handleNextMonth}>
-                下一月
+                下個月
               </Button>
             </div>
           </div>
@@ -315,13 +372,13 @@ export default function ClientDetail() {
         <CardContent>
           {isLoadingDemands ? (
             <div className="flex items-center justify-center py-12">
-              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+              <Loader2 className="w-6 h-6 animate-spin text-primary" />
             </div>
           ) : (
             <div className="grid grid-cols-7 gap-2">
               {/* 星期標題 */}
-              {["日", "一", "二", "三", "四", "五", "六"].map((day) => (
-                <div key={day} className="text-center text-sm font-medium text-muted-foreground py-2">
+              {weekDays.map((day) => (
+                <div key={day} className="text-center font-semibold text-sm text-muted-foreground py-2">
                   {day}
                 </div>
               ))}
@@ -333,36 +390,37 @@ export default function ClientDetail() {
                 }
 
                 const demands = getDemandsForDate(date);
-                const isToday = date.toDateString() === new Date().toDateString();
+                const isToday = 
+                  date.getDate() === new Date().getDate() &&
+                  date.getMonth() === new Date().getMonth() &&
+                  date.getFullYear() === new Date().getFullYear();
 
                 return (
                   <button
                     key={date.toISOString()}
                     onClick={() => handleDateClick(date)}
-                    className={`aspect-square border rounded-lg p-2 hover:bg-accent transition-colors relative flex flex-col ${
-                      isToday ? "border-primary border-2" : "border-border"
-                    }`}
+                    className={`
+                      aspect-square rounded-lg border-2 p-2 text-left transition-all
+                      hover:border-primary hover:shadow-md
+                      ${isToday ? "border-primary bg-primary/5" : "border-border"}
+                      ${demands.length > 0 ? "bg-accent/50" : ""}
+                    `}
                   >
                     <div className="text-sm font-medium">{date.getDate()}</div>
                     {demands.length > 0 && (
-                      <div className="mt-auto space-y-1">
-                        {demands.slice(0, 2).map((demand: any) => {
-                          const shortage = demand.requiredWorkers - demand.assignedCount;
-                          return (
-                            <div key={demand.id} className="space-y-0.5">
-                              <div
-                                className={`h-1.5 rounded-full ${getStatusColor(demand.status, new Date(demand.date))}`}
-                                title={`${demand.startTime}-${demand.endTime}`}
-                              />
-                              <div className="text-[10px] text-muted-foreground leading-none">
-                                {demand.assignedCount}/{demand.requiredWorkers}
-                                {shortage > 0 && <span className="text-orange-600 ml-0.5">缺{shortage}</span>}
-                              </div>
-                            </div>
-                          );
-                        })}
+                      <div className="mt-1 space-y-1">
+                        {demands.slice(0, 2).map((demand: any) => (
+                          <div
+                            key={demand.id}
+                            className="text-xs px-1 py-0.5 rounded bg-primary/20 text-primary truncate"
+                          >
+                            {demand.startTime} - {demand.endTime}
+                          </div>
+                        ))}
                         {demands.length > 2 && (
-                          <div className="text-[10px] text-muted-foreground">+{demands.length - 2}單</div>
+                          <div className="text-xs text-muted-foreground">
+                            +{demands.length - 2} 筆
+                          </div>
                         )}
                       </div>
                     )}
@@ -371,261 +429,117 @@ export default function ClientDetail() {
               })}
             </div>
           )}
-
-          {/* 圖例 */}
-          <div className="mt-6 flex items-center gap-6 text-sm">
-            <div className="flex items-center gap-2">
-              <div className="h-3 w-3 rounded-full bg-yellow-500" />
-              <span className="text-muted-foreground">草稿</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="h-3 w-3 rounded-full bg-blue-500" />
-              <span className="text-muted-foreground">已確認</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="h-3 w-3 rounded-full bg-green-500" />
-              <span className="text-muted-foreground">已關閉</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="h-3 w-3 rounded-full bg-gray-400" />
-              <span className="text-muted-foreground">已取消</span>
-            </div>
-          </div>
         </CardContent>
       </Card>
 
-      {/* 需求清單 Dialog */}
-      <Dialog open={isDemandListDialogOpen} onOpenChange={setIsDemandListDialogOpen}>
-        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>
-              {selectedDate && `${selectedDate.getFullYear()}/${selectedDate.getMonth() + 1}/${selectedDate.getDate()}`} 的需求單
-            </DialogTitle>
-            <DialogDescription>
-              共 {selectedDateDemands.length} 筆需求
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4 py-4">
-            {selectedDateDemands.map((demand: any) => {
-              const shortage = demand.requiredWorkers - demand.assignedCount;
-              return (
-                <Card key={demand.id} className="shadow-sm">
-                  <CardContent className="p-4">
-                    <div className="flex items-start justify-between mb-3">
-                      <div className="flex items-center gap-2">
-                        <Badge variant="outline" className={`${
-                          demand.status === "draft" ? "bg-yellow-50 text-yellow-700 border-yellow-200" :
-                          demand.status === "confirmed" ? "bg-blue-50 text-blue-700 border-blue-200" :
-                          demand.status === "closed" ? "bg-green-50 text-green-700 border-green-200" :
-                          "bg-gray-50 text-gray-500 border-gray-200"
-                        }`}>
-                          {demand.status === "draft" && "草稿"}
-                          {demand.status === "confirmed" && "已確認"}
-                          {demand.status === "closed" && "已關閉"}
-                          {demand.status === "cancelled" && "已取消"}
-                        </Badge>
-                        <span className="text-sm font-medium">{demand.startTime} - {demand.endTime}</span>
-                      </div>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setLocation(`/demands/${demand.id}`)}
-                      >
-                        查看詳情
-                      </Button>
-                    </div>
-                    
-                    <div className="grid grid-cols-2 gap-3 text-sm">
-                      <div>
-                        <span className="text-muted-foreground">需求人數：</span>
-                        <span className="font-medium">{demand.requiredWorkers} 人</span>
-                      </div>
-                      <div>
-                        <span className="text-muted-foreground">已指派：</span>
-                        <span className="font-medium">{demand.assignedCount} 人</span>
-                        {shortage > 0 && (
-                          <span className="text-orange-600 ml-1">(還缺 {shortage} 人)</span>
-                        )}
-                      </div>
-                    </div>
-                    
-                    {demand.assignedWorkers && demand.assignedWorkers.length > 0 && (
-                      <div className="mt-3 pt-3 border-t border-border/60">
-                        <div className="text-xs text-muted-foreground mb-2">已指派員工：</div>
-                        <div className="flex flex-wrap gap-2">
-                          {demand.assignedWorkers.map((worker: any) => (
-                            <Button
-                              key={worker.assignmentId}
-                              variant="outline"
-                              size="sm"
-                              className="h-7 text-xs"
-                              onClick={() => setLocation(`/workers/${worker.id}`)}
-                            >
-                              <Users className="h-3 w-3 mr-1" />
-                              {worker.name}
-                            </Button>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                    
-                    {demand.location && (
-                      <div className="mt-2 text-xs text-muted-foreground flex items-center gap-1">
-                        <MapPin className="h-3 w-3" />
-                        {demand.location}
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              );
-            })}
-          </div>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => {
-                setIsDemandListDialogOpen(false);
-                setIsCreateDialogOpen(true);
-              }}
-            >
-              <Plus className="h-4 w-4 mr-1" />
-              新增需求單
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* 建立需求單 Dialog */}
+      {/* 建立需求單對話框 */}
       <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>建立用工需求</DialogTitle>
+            <DialogTitle>新增用工需求</DialogTitle>
             <DialogDescription>
-              為 {clientDetail.name} 建立需求單
-              {selectedDate && ` - ${selectedDate.getFullYear()}/${selectedDate.getMonth() + 1}/${selectedDate.getDate()}`}
+              為 {selectedDate && formatDate(selectedDate)} 建立新的用工需求
             </DialogDescription>
           </DialogHeader>
-          <form onSubmit={handleSubmit}>
-            <div className="space-y-5 py-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="startTime">開始時間</Label>
-                  <Input
-                    id="startTime"
-                    name="startTime"
-                    type="time"
-                    required
-                    defaultValue="09:00"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="endTime">結束時間</Label>
-                  <Input
-                    id="endTime"
-                    name="endTime"
-                    type="time"
-                    required
-                    defaultValue="18:00"
-                  />
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="requiredWorkers">需求人數</Label>
-                  <Input
-                    id="requiredWorkers"
-                    name="requiredWorkers"
-                    type="number"
-                    min="1"
-                    required
-                    defaultValue="1"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="breakHours">休息時間（小時）</Label>
-                  <Input
-                    id="breakHours"
-                    name="breakHours"
-                    type="number"
-                    step="0.5"
-                    min="0"
-                    defaultValue="1"
-                  />
-                </div>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="startTime">開始時間 *</Label>
+                <Input id="startTime" name="startTime" type="time" required />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="demandTypeId">需求類別</Label>
-                <Select 
-                  value={selectedDemandTypeId?.toString() || ""} 
-                  onValueChange={(value) => {
-                    setSelectedDemandTypeId(value ? parseInt(value) : undefined);
-                    setSelectedOptions([]);
-                  }}
-                >
+                <Label htmlFor="endTime">結束時間 *</Label>
+                <Input id="endTime" name="endTime" type="time" required />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="requiredWorkers">需求人數 *</Label>
+                <Input id="requiredWorkers" name="requiredWorkers" type="number" min="1" required />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="breakHours">休息時間（小時）</Label>
+                <Select name="breakHours" defaultValue="0">
                   <SelectTrigger>
-                    <SelectValue placeholder="選擇需求類別（可選）" />
+                    <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">無（不選擇）</SelectItem>
-                    {demandTypes.map((type) => (
-                      <SelectItem key={type.id} value={type.id.toString()}>
-                        {type.name}
-                      </SelectItem>
-                    ))}
+                    <SelectItem value="0">無休息時間</SelectItem>
+                    <SelectItem value="0.5">0.5 小時</SelectItem>
+                    <SelectItem value="1">1 小時</SelectItem>
+                    <SelectItem value="1.5">1.5 小時</SelectItem>
+                    <SelectItem value="2">2 小時</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
-              {selectedDemandTypeId && (() => {
-                const selectedType = demandTypes.find(t => t.id === selectedDemandTypeId);
-                if (selectedType && selectedType.options && selectedType.options.length > 0) {
-                  return (
-                    <div className="space-y-3 p-4 bg-muted/30 rounded-lg">
-                      <Label className="text-sm font-medium">選擇需要的項目</Label>
-                      <div className="space-y-2">
-                        {selectedType.options.map((option) => (
-                          <label key={option.id} className="flex items-start gap-2 cursor-pointer">
-                            <input
-                              type="checkbox"
-                              checked={selectedOptions.includes(option.id)}
-                              onChange={(e) => {
-                                if (e.target.checked) {
-                                  setSelectedOptions([...selectedOptions, option.id]);
-                                } else {
-                                  setSelectedOptions(selectedOptions.filter(id => id !== option.id));
-                                }
-                              }}
-                              className="mt-1"
-                            />
-                            <span className="text-sm">{option.content}</span>
-                          </label>
-                        ))}
-                      </div>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="demandTypeId">需求類別</Label>
+              <Select 
+                value={selectedDemandTypeId?.toString() || "none"} 
+                onValueChange={(value) => {
+                  setSelectedDemandTypeId(value === "none" ? undefined : parseInt(value));
+                  setSelectedOptions([]);
+                }}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="選擇需求類別（可選）" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">無（不選擇）</SelectItem>
+                  {demandTypes.map((type) => (
+                    <SelectItem key={type.id} value={type.id.toString()}>
+                      {type.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* 需求類型選項 */}
+            {selectedDemandType && selectedDemandType.options && selectedDemandType.options.length > 0 && (
+              <div className="space-y-2 p-4 bg-muted/50 rounded-lg">
+                <Label>選擇需求項目</Label>
+                <div className="space-y-2">
+                  {selectedDemandType.options.map((option: any) => (
+                    <div key={option.id} className="flex items-start gap-2">
+                      <Checkbox
+                        id={`option-${option.id}`}
+                        checked={selectedOptions.includes(option.id)}
+                        onCheckedChange={(checked) => {
+                          if (checked) {
+                            setSelectedOptions([...selectedOptions, option.id]);
+                          } else {
+                            setSelectedOptions(selectedOptions.filter(id => id !== option.id));
+                          }
+                        }}
+                      />
+                      <label
+                        htmlFor={`option-${option.id}`}
+                        className="text-sm leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                      >
+                        {option.content}
+                      </label>
                     </div>
-                  );
-                }
-                return null;
-              })()}
-              <div className="space-y-2">
-                <Label htmlFor="location">工作地點</Label>
-                <Input
-                  id="location"
-                  name="location"
-                  defaultValue={clientDetail.address || ""}
-                  placeholder="若與客戶地址不同，請填寫"
-                />
+                  ))}
+                </div>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="note">備註</Label>
-                <Textarea
-                  id="note"
-                  name="note"
-                  placeholder="其他說明事項"
-                  rows={3}
-                />
-              </div>
+            )}
+
+            <div className="space-y-2">
+              <Label htmlFor="location">工作地點</Label>
+              <Input id="location" name="location" placeholder="選填" />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="note">備註</Label>
+              <Textarea id="note" name="note" placeholder="選填" rows={3} />
             </div>
             <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
+              <Button type="button" variant="outline" onClick={() => {
+                setIsCreateDialogOpen(false);
+                setSelectedDemandTypeId(undefined);
+                setSelectedOptions([]);
+              }}>
                 取消
               </Button>
               <Button type="submit" disabled={createDemandMutation.isPending}>
@@ -634,6 +548,78 @@ export default function ClientDetail() {
               </Button>
             </DialogFooter>
           </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* 需求單列表對話框 */}
+      <Dialog open={isDemandListDialogOpen} onOpenChange={setIsDemandListDialogOpen}>
+        <DialogContent className="max-w-3xl">
+          <DialogHeader>
+            <DialogTitle>
+              {selectedDate && formatDate(selectedDate)} 的需求單
+            </DialogTitle>
+            <DialogDescription>
+              共 {selectedDateDemands.length} 筆需求單
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3 max-h-[60vh] overflow-y-auto">
+            {selectedDateDemands.map((demand) => (
+              <Card key={demand.id} className="hover:shadow-md transition-shadow">
+                <CardContent className="pt-4">
+                  <div className="flex items-start justify-between">
+                    <div className="space-y-2 flex-1">
+                      <div className="flex items-center gap-2">
+                        <span className="font-semibold">
+                          {demand.startTime} - {demand.endTime}
+                        </span>
+                        {getStatusBadge(demand.status)}
+                      </div>
+                      <div className="text-sm text-muted-foreground space-y-1">
+                        <div className="flex items-center gap-2">
+                          <Users className="w-4 h-4" />
+                          需求人數：{demand.requiredWorkers} 人
+                        </div>
+                        {demand.location && (
+                          <div className="flex items-center gap-2">
+                            <MapPin className="w-4 h-4" />
+                            {demand.location}
+                          </div>
+                        )}
+                        {demand.note && (
+                          <div className="text-xs text-muted-foreground mt-1">
+                            備註：{demand.note}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setLocation(`/demands/${demand.id}`)}
+                    >
+                      查看詳情
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setIsDemandListDialogOpen(false);
+                setIsCreateDialogOpen(true);
+              }}
+              className="gap-2"
+            >
+              <Plus className="w-4 h-4" />
+              新增需求單
+            </Button>
+            <Button onClick={() => setIsDemandListDialogOpen(false)}>
+              關閉
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>

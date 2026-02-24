@@ -71,6 +71,13 @@
       "when": 1771952071230,
       "tag": "0009_melted_phalanx",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "5",
+      "when": 1771953560194,
+      "tag": "0010_dizzy_green_goblin",
+      "breakpoints": true
     }
   ]
 }

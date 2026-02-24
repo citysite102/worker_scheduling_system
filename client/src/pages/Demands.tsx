@@ -292,9 +292,9 @@ export default function Demands() {
                 <div className="grid gap-2">
                   <Label htmlFor="demandTypeId">需求類別</Label>
                   <Select 
-                    value={selectedDemandTypeId?.toString() || ""} 
+                    value={selectedDemandTypeId?.toString() || "none"} 
                     onValueChange={(value) => {
-                      setSelectedDemandTypeId(value ? parseInt(value) : undefined);
+                      setSelectedDemandTypeId(value === "none" ? undefined : parseInt(value));
                       setSelectedOptions([]);
                     }}
                   >
@@ -302,7 +302,7 @@ export default function Demands() {
                       <SelectValue placeholder="選擇需求類別（可選）" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">無（不選擇）</SelectItem>
+                      <SelectItem value="none">無（不選擇）</SelectItem>
                       {demandTypes.map((type) => (
                         <SelectItem key={type.id} value={type.id.toString()}>
                           {type.name}

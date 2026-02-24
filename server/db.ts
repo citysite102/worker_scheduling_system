@@ -230,7 +230,28 @@ export async function getClientById(id: number) {
 export async function createClient(data: { name: string; contactName?: string; contactEmail?: string; contactPhone?: string; address?: string; billingType?: "hourly" | "fixed" | "custom"; note?: string }) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
-  await db.insert(clients).values(data);
+  
+  // 生成 clientCode
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const day = String(now.getDate()).padStart(2, '0');
+  
+  // 查詢今天已建立的客戶數量，作為序號
+  const todayStart = new Date(year, now.getMonth(), now.getDate());
+  const todayEnd = new Date(year, now.getMonth(), now.getDate() + 1);
+  const todayClients = await db.select().from(clients)
+    .where(and(
+      sql`${clients.createdAt} >= ${todayStart}`,
+      sql`${clients.createdAt} < ${todayEnd}`
+    ));
+  
+  const sequence = String(todayClients.length + 1).padStart(3, '0');
+  const clientCode = `CLI-${year}${month}${day}-${sequence}`;
+  
+  // 插入資料（包含 clientCode）
+  await db.insert(clients).values({ ...data, clientCode });
+  
   // 返回新建立的記錄
   const [newClient] = await db.select().from(clients).orderBy(desc(clients.id)).limit(1);
   return newClient;

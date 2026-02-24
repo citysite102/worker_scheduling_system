@@ -1,0 +1,75 @@
+{
+  "query": "SELECT id, name, clientCode FROM clients;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2iEKifVQ9gKtEas.9cbf5414b428 --database CMgr35KntT8tLtgpfJPejw --execute SELECT id, name, clientCode FROM clients;",
+  "rows": [
+    {
+      "id": "1",
+      "name": "大潤發桃園店",
+      "clientCode": ""
+    },
+    {
+      "id": "2",
+      "name": "家樂福台北店",
+      "clientCode": ""
+    },
+    {
+      "id": "3",
+      "name": "全聯新竹店",
+      "clientCode": ""
+    },
+    {
+      "id": "240001",
+      "name": "晶華國際酒店集團",
+      "clientCode": ""
+    },
+    {
+      "id": "240002",
+      "name": "台北福華大飯店",
+      "clientCode": ""
+    },
+    {
+      "id": "240003",
+      "name": "永安棧 Westgate Hotel",
+      "clientCode": ""
+    },
+    {
+      "id": "240004",
+      "name": "寒舍艾麗",
+      "clientCode": ""
+    },
+    {
+      "id": "240045",
+      "name": "饗賓餐旅事業",
+      "clientCode": ""
+    },
+    {
+      "id": "240046",
+      "name": "MOS Burger",
+      "clientCode": ""
+    },
+    {
+      "id": "240047",
+      "name": "瓦城泰統集團",
+      "clientCode": ""
+    },
+    {
+      "id": "240048",
+      "name": "築間餐飲集團",
+      "clientCode": ""
+    },
+    {
+      "id": "360001",
+      "name": "米窩-中山店",
+      "clientCode": ""
+    },
+    {
+      "id": "450001",
+      "name": "米窩酒店",
+      "clientCode": ""
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\tclientCode\n1\t大潤發桃園店\t\n2\t家樂福台北店\t\n3\t全聯新竹店\t\n240001\t晶華國際酒店集團\t\n240002\t台北福華大飯店\t\n240003\t永安棧 Westgate Hotel\t\n240004\t寒舍艾麗\t\n240045\t饗賓餐旅事業\t\n240046\tMOS Burger\t\n240047\t瓦城泰統集團\t\n240048\t築間餐飲集團\t\n360001\t米窩-中山店\t\n450001\t米窩酒店\t\n",
+  "stderr": "",
+  "execution_time_ms": 1547
+}
