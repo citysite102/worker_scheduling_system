@@ -19,6 +19,8 @@ export default function ClientDetail() {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [isDemandListDialogOpen, setIsDemandListDialogOpen] = useState(false);
+  const [selectedDateDemands, setSelectedDateDemands] = useState<any[]>([]);
 
   const { data: clientDetail, isLoading: isLoadingClient } = trpc.clients.getDetailById.useQuery({ id: clientId });
   
@@ -49,7 +51,16 @@ export default function ClientDetail() {
 
   const handleDateClick = (date: Date) => {
     setSelectedDate(date);
-    setIsCreateDialogOpen(true);
+    const demands = getDemandsForDate(date);
+    
+    if (demands.length > 0) {
+      // 當日有需求單：顯示需求清單
+      setSelectedDateDemands(demands);
+      setIsDemandListDialogOpen(true);
+    } else {
+      // 當日無需求單：直接建立
+      setIsCreateDialogOpen(true);
+    }
   };
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
@@ -307,22 +318,30 @@ export default function ClientDetail() {
                   <button
                     key={date.toISOString()}
                     onClick={() => handleDateClick(date)}
-                    className={`aspect-square border rounded-lg p-2 hover:bg-accent transition-colors relative ${
+                    className={`aspect-square border rounded-lg p-2 hover:bg-accent transition-colors relative flex flex-col ${
                       isToday ? "border-primary border-2" : "border-border"
                     }`}
                   >
                     <div className="text-sm font-medium">{date.getDate()}</div>
                     {demands.length > 0 && (
-                      <div className="mt-1 space-y-1">
-                        {demands.slice(0, 2).map((demand: any) => (
-                          <div
-                            key={demand.id}
-                            className={`h-1.5 rounded-full ${getStatusColor(demand.status)}`}
-                            title={`${demand.startTime}-${demand.endTime} (${demand.assignedCount}/${demand.requiredWorkers})`}
-                          />
-                        ))}
+                      <div className="mt-auto space-y-1">
+                        {demands.slice(0, 2).map((demand: any) => {
+                          const shortage = demand.requiredWorkers - demand.assignedCount;
+                          return (
+                            <div key={demand.id} className="space-y-0.5">
+                              <div
+                                className={`h-1.5 rounded-full ${getStatusColor(demand.status)}`}
+                                title={`${demand.startTime}-${demand.endTime}`}
+                              />
+                              <div className="text-[10px] text-muted-foreground leading-none">
+                                {demand.assignedCount}/{demand.requiredWorkers}
+                                {shortage > 0 && <span className="text-orange-600 ml-0.5">缺{shortage}</span>}
+                              </div>
+                            </div>
+                          );
+                        })}
                         {demands.length > 2 && (
-                          <div className="text-[10px] text-muted-foreground">+{demands.length - 2}</div>
+                          <div className="text-[10px] text-muted-foreground">+{demands.length - 2}單</div>
                         )}
                       </div>
                     )}
@@ -354,6 +373,107 @@ export default function ClientDetail() {
         </CardContent>
       </Card>
 
+      {/* 需求清單 Dialog */}
+      <Dialog open={isDemandListDialogOpen} onOpenChange={setIsDemandListDialogOpen}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>
+              {selectedDate && `${selectedDate.getFullYear()}/${selectedDate.getMonth() + 1}/${selectedDate.getDate()}`} 的需求單
+            </DialogTitle>
+            <DialogDescription>
+              共 {selectedDateDemands.length} 筆需求
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            {selectedDateDemands.map((demand: any) => {
+              const shortage = demand.requiredWorkers - demand.assignedCount;
+              return (
+                <Card key={demand.id} className="shadow-sm">
+                  <CardContent className="p-4">
+                    <div className="flex items-start justify-between mb-3">
+                      <div className="flex items-center gap-2">
+                        <Badge variant="outline" className={`${
+                          demand.status === "draft" ? "bg-yellow-50 text-yellow-700 border-yellow-200" :
+                          demand.status === "confirmed" ? "bg-blue-50 text-blue-700 border-blue-200" :
+                          demand.status === "closed" ? "bg-green-50 text-green-700 border-green-200" :
+                          "bg-gray-50 text-gray-500 border-gray-200"
+                        }`}>
+                          {demand.status === "draft" && "草稿"}
+                          {demand.status === "confirmed" && "已確認"}
+                          {demand.status === "closed" && "已關閉"}
+                          {demand.status === "cancelled" && "已取消"}
+                        </Badge>
+                        <span className="text-sm font-medium">{demand.startTime} - {demand.endTime}</span>
+                      </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setLocation(`/demands/${demand.id}`)}
+                      >
+                        查看詳情
+                      </Button>
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-3 text-sm">
+                      <div>
+                        <span className="text-muted-foreground">需求人數：</span>
+                        <span className="font-medium">{demand.requiredWorkers} 人</span>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">已指派：</span>
+                        <span className="font-medium">{demand.assignedCount} 人</span>
+                        {shortage > 0 && (
+                          <span className="text-orange-600 ml-1">(還缺 {shortage} 人)</span>
+                        )}
+                      </div>
+                    </div>
+                    
+                    {demand.assignedWorkers && demand.assignedWorkers.length > 0 && (
+                      <div className="mt-3 pt-3 border-t border-border/60">
+                        <div className="text-xs text-muted-foreground mb-2">已指派員工：</div>
+                        <div className="flex flex-wrap gap-2">
+                          {demand.assignedWorkers.map((worker: any) => (
+                            <Button
+                              key={worker.assignmentId}
+                              variant="outline"
+                              size="sm"
+                              className="h-7 text-xs"
+                              onClick={() => setLocation(`/workers/${worker.id}`)}
+                            >
+                              <Users className="h-3 w-3 mr-1" />
+                              {worker.name}
+                            </Button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    
+                    {demand.location && (
+                      <div className="mt-2 text-xs text-muted-foreground flex items-center gap-1">
+                        <MapPin className="h-3 w-3" />
+                        {demand.location}
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setIsDemandListDialogOpen(false);
+                setIsCreateDialogOpen(true);
+              }}
+            >
+              <Plus className="h-4 w-4 mr-1" />
+              新增需求單
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {/* 建立需求單 Dialog */}
       <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
         <DialogContent className="max-w-md">
@@ -365,9 +485,9 @@ export default function ClientDetail() {
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={handleSubmit}>
-            <div className="space-y-4 py-4">
+            <div className="space-y-5 py-4">
               <div className="grid grid-cols-2 gap-4">
-                <div>
+                <div className="space-y-2">
                   <Label htmlFor="startTime">開始時間</Label>
                   <Input
                     id="startTime"
@@ -377,7 +497,7 @@ export default function ClientDetail() {
                     defaultValue="09:00"
                   />
                 </div>
-                <div>
+                <div className="space-y-2">
                   <Label htmlFor="endTime">結束時間</Label>
                   <Input
                     id="endTime"
@@ -389,7 +509,7 @@ export default function ClientDetail() {
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
-                <div>
+                <div className="space-y-2">
                   <Label htmlFor="requiredWorkers">需求人數</Label>
                   <Input
                     id="requiredWorkers"
@@ -400,7 +520,7 @@ export default function ClientDetail() {
                     defaultValue="1"
                   />
                 </div>
-                <div>
+                <div className="space-y-2">
                   <Label htmlFor="breakHours">休息時間（小時）</Label>
                   <Input
                     id="breakHours"
@@ -412,7 +532,7 @@ export default function ClientDetail() {
                   />
                 </div>
               </div>
-              <div>
+              <div className="space-y-2">
                 <Label htmlFor="location">工作地點</Label>
                 <Input
                   id="location"
@@ -421,7 +541,7 @@ export default function ClientDetail() {
                   placeholder="若與客戶地址不同，請填寫"
                 />
               </div>
-              <div>
+              <div className="space-y-2">
                 <Label htmlFor="note">備註</Label>
                 <Textarea
                   id="note"
