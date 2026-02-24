@@ -30,6 +30,8 @@ export default function ClientDetail() {
   const [selectedDemandTypeId, setSelectedDemandTypeId] = useState<number | undefined>(undefined);
   const [selectedOptions, setSelectedOptions] = useState<number[]>([]);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [logoFile, setLogoFile] = useState<File | null>(null);
+  const [logoPreview, setLogoPreview] = useState<string | null>(null);
 
   const { data: clientDetail, isLoading: isLoadingClient } = trpc.clients.getDetailById.useQuery({ id: clientId });
   const { data: demandTypes = [] } = trpc.demandTypes.list.useQuery();
@@ -57,11 +59,77 @@ export default function ClientDetail() {
     onSuccess: () => {
       toast.success("客戶資料已更新");
       setIsEditDialogOpen(false);
+      setLogoFile(null);
+      setLogoPreview(null);
     },
     onError: (error) => {
       toast.error(`更新失敗：${error.message}`);
     },
   });
+
+  const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // 驗證檔案類型
+    if (!file.type.startsWith("image/")) {
+      toast.error("請上傳圖片檔案");
+      return;
+    }
+
+    // 驗證檔案大小（最大 5MB）
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("圖片大小不可超過 5MB");
+      return;
+    }
+
+    setLogoFile(file);
+
+    // 生成預覽
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setLogoPreview(reader.result as string);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const compressAndConvertToBase64 = async (file: File): Promise<string> => {
+    // 壓縮圖片並轉換為 base64
+    const canvas = document.createElement("canvas");
+    const ctx = canvas.getContext("2d");
+    const img = new Image();
+
+    return new Promise((resolve, reject) => {
+      img.onload = () => {
+        const maxSize = 200;
+        let width = img.width;
+        let height = img.height;
+
+        if (width > height) {
+          if (width > maxSize) {
+            height = (height * maxSize) / width;
+            width = maxSize;
+          }
+        } else {
+          if (height > maxSize) {
+            width = (width * maxSize) / height;
+            height = maxSize;
+          }
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        ctx?.drawImage(img, 0, 0, width, height);
+
+        // 轉換為 base64
+        const base64 = canvas.toDataURL("image/jpeg", 0.8);
+        resolve(base64);
+      };
+
+      img.onerror = () => reject(new Error("圖片載入失敗"));
+      img.src = URL.createObjectURL(file);
+    });
+  };
 
   const handlePrevMonth = () => {
     setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1));
@@ -221,7 +289,13 @@ export default function ClientDetail() {
           <div className="flex items-start justify-between">
             <div className="space-y-2">
               <div className="flex items-center gap-3">
-                <Building2 className="w-8 h-8 text-primary" />
+                <div className="w-12 h-12 rounded-lg bg-blue-50 flex items-center justify-center shrink-0 overflow-hidden">
+                  {clientDetail.logoUrl ? (
+                    <img src={clientDetail.logoUrl} alt={clientDetail.name} className="w-full h-full object-cover" />
+                  ) : (
+                    <Building2 className="w-6 h-6 text-primary" />
+                  )}
+                </div>
                 <div>
                   <CardTitle className="text-2xl">{clientDetail.name}</CardTitle>
                   <div className="flex items-center gap-2 mt-1">
@@ -641,9 +715,22 @@ export default function ClientDetail() {
               修改 {clientDetail?.name} 的基本資訊
             </DialogDescription>
           </DialogHeader>
-          <form onSubmit={(e) => {
+          <form onSubmit={async (e) => {
             e.preventDefault();
             const formData = new FormData(e.currentTarget);
+            
+            let logoUrl = clientDetail?.logoUrl;
+            
+            // 如果有上傳新的 Logo，先處理圖片
+            if (logoFile) {
+              try {
+                logoUrl = await compressAndConvertToBase64(logoFile);
+              } catch (error) {
+                toast.error("圖片處理失敗");
+                return;
+              }
+            }
+            
             updateClientMutation.mutate({
               id: clientId,
               name: formData.get("name") as string,
@@ -651,6 +738,7 @@ export default function ClientDetail() {
               contactEmail: (formData.get("contactEmail") as string) || undefined,
               contactPhone: (formData.get("contactPhone") as string) || undefined,
               address: (formData.get("address") as string) || undefined,
+              logoUrl: logoUrl || undefined,
               billingType: formData.get("billingType") as "hourly" | "fixed" | "custom",
               status: formData.get("status") as "active" | "inactive",
               note: (formData.get("note") as string) || undefined,
@@ -660,6 +748,32 @@ export default function ClientDetail() {
               <div className="col-span-2 space-y-2">
                 <Label htmlFor="name">客戶名稱 *</Label>
                 <Input id="name" name="name" defaultValue={clientDetail?.name} required />
+              </div>
+              <div className="col-span-2 space-y-2">
+                <Label htmlFor="logo">Logo</Label>
+                <div className="flex items-center gap-4">
+                  {(logoPreview || clientDetail?.logoUrl) && (
+                    <div className="w-16 h-16 rounded-lg border-2 border-border overflow-hidden flex-shrink-0">
+                      <img 
+                        src={logoPreview || clientDetail?.logoUrl || ""} 
+                        alt="Logo" 
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  )}
+                  <div className="flex-1">
+                    <Input 
+                      id="logo" 
+                      type="file" 
+                      accept="image/*" 
+                      onChange={handleLogoChange}
+                      className="cursor-pointer"
+                    />
+                    <p className="text-sm text-muted-foreground mt-1">
+                      建議尺寸：200x200，最大 5MB
+                    </p>
+                  </div>
+                </div>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="contactName">聯絡人</Label>

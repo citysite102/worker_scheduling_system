@@ -217,6 +217,9 @@ export async function getAllClients(statusFilter?: "active" | "inactive", search
     query = query.where(and(...conditions)) as any;
   }
 
+  // 按建立時間降序排列，最新建立的客戶排在最前面
+  query = query.orderBy(desc(clients.createdAt)) as any;
+
   return await query;
 }
 
@@ -257,7 +260,7 @@ export async function createClient(data: { name: string; contactName?: string; c
   return newClient;
 }
 
-export async function updateClient(id: number, data: Partial<{ name: string; contactName?: string; contactEmail?: string; contactPhone?: string; address?: string; billingType?: "hourly" | "fixed" | "custom"; status: "active" | "inactive"; note?: string }>) {
+export async function updateClient(id: number, data: Partial<{ name: string; contactName?: string; contactEmail?: string; contactPhone?: string; address?: string; logoUrl?: string; billingType?: "hourly" | "fixed" | "custom"; status: "active" | "inactive"; note?: string }>) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   await db.update(clients).set(data).where(eq(clients.id, id));
