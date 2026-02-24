@@ -1,0 +1,18 @@
+{
+  "query": "SELECT id, name FROM workers WHERE name LIKE '%SAI TUN KHAM%';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2iEKifVQ9gKtEas.9cbf5414b428 --database CMgr35KntT8tLtgpfJPejw --execute SELECT id, name FROM workers WHERE name LIKE '%SAI TUN KHAM%';",
+  "rows": [
+    {
+      "id": "540001",
+      "name": "SAI TUN KHAM"
+    },
+    {
+      "id": "660006",
+      "name": "SAI TUN KHAM"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\n540001\tSAI TUN KHAM\n660006\tSAI TUN KHAM\n",
+  "stderr": "",
+  "execution_time_ms": 1476
+}

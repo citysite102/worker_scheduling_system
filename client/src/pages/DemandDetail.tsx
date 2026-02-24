@@ -67,7 +67,7 @@ export default function DemandDetail() {
       utils.demands.getById.invalidate({ id: demandId });
       utils.demands.feasibility.invalidate({
         demandId,
-        date: demand?.date || new Date(),
+        date: localDate,
         startTime: demand?.startTime || "00:00",
         endTime: demand?.endTime || "00:00",
         requiredWorkers: demand?.requiredWorkers || 0,
@@ -101,10 +101,25 @@ export default function DemandDetail() {
   });
   const { data: demand, isLoading } = trpc.demands.getById.useQuery({ id: demandId });
 
+  // 將 UTC 日期轉換為台灣時區的日期（用於顯示和 API 呼叫）
+  const localDate = useMemo(() => {
+    if (!demand?.date) return new Date();
+    const utcDate = new Date(demand.date);
+    // 將 UTC 時間轉換為台灣時區（UTC+8）的本地時間
+    // 加上 8 小時的時區偏移
+    const taiwanTime = new Date(utcDate.getTime() + 8 * 60 * 60 * 1000);
+    // 取得台灣時區的年月日
+    const year = taiwanTime.getUTCFullYear();
+    const month = taiwanTime.getUTCMonth();
+    const day = taiwanTime.getUTCDate();
+    // 使用 Date.UTC() 建立 UTC 時間的日期物件，但日期是台灣時區的日期
+    return new Date(Date.UTC(year, month, day, 0, 0, 0, 0));
+  }, [demand?.date]);
+
   const { data: feasibility, isLoading: feasibilityLoading } = trpc.demands.feasibility.useQuery(
     {
       demandId,
-      date: demand?.date || new Date(),
+      date: localDate,
       startTime: demand?.startTime || "00:00",
       endTime: demand?.endTime || "00:00",
       requiredWorkers: demand?.requiredWorkers || 0,
@@ -149,7 +164,7 @@ export default function DemandDetail() {
       // 自動刷新可行性資料，確保顯示的是最新狀態
       utils.demands.feasibility.invalidate({
         demandId,
-        date: demand?.date || new Date(),
+        date: localDate,
         startTime: demand?.startTime || "00:00",
         endTime: demand?.endTime || "00:00",
         requiredWorkers: demand?.requiredWorkers || 0,
@@ -164,7 +179,7 @@ export default function DemandDetail() {
       utils.assignments.getByDemand.invalidate({ demandId });
       utils.demands.feasibility.invalidate({
         demandId,
-        date: demand?.date || new Date(),
+        date: localDate,
         startTime: demand?.startTime || "00:00",
         endTime: demand?.endTime || "00:00",
         requiredWorkers: demand?.requiredWorkers || 0,
@@ -392,7 +407,7 @@ export default function DemandDetail() {
                   <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
                   <span className="text-muted-foreground">日期：</span>
                   <span className="font-medium">
-                    {new Date(demand.date).toLocaleDateString("zh-TW", {
+                    {localDate.toLocaleDateString("zh-TW", {
                       year: "numeric", month: "long", day: "numeric", weekday: "long",
                     })}
                   </span>

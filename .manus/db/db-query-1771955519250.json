@@ -1,0 +1,19 @@
+{
+  "query": "SELECT id, clientId, date, startTime, endTime, requiredWorkers, location FROM demands WHERE id = 720001;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2iEKifVQ9gKtEas.9cbf5414b428 --database CMgr35KntT8tLtgpfJPejw --execute SELECT id, clientId, date, startTime, endTime, requiredWorkers, location FROM demands WHERE id = 720001;",
+  "rows": [
+    {
+      "id": "720001",
+      "clientId": "540001",
+      "date": "2026-02-25 16:00:00",
+      "startTime": "15:42",
+      "endTime": "19:42",
+      "requiredWorkers": "4",
+      "location": "NULL"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tclientId\tdate\tstartTime\tendTime\trequiredWorkers\tlocation\n720001\t540001\t2026-02-25 16:00:00\t15:42\t19:42\t4\tNULL\n",
+  "stderr": "",
+  "execution_time_ms": 1531
+}
