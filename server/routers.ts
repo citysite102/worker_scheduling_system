@@ -363,6 +363,30 @@ export const appRouter = router({
         return client;
       }),
 
+    getDetailById: publicProcedure
+      .input(z.object({ id: z.number() }))
+      .query(async ({ input }) => {
+        const client = await db.getClientById(input.id);
+        if (!client) throw new Error("客戶不存在");
+        
+        // 統計資料：總需求數、已關閉、進行中、已取消
+        const allDemands = await db.getDemandsByClientId(input.id);
+        const totalDemands = allDemands.length;
+        const closedDemands = allDemands.filter((d: any) => d.status === "closed").length;
+        const activeDemands = allDemands.filter((d: any) => d.status === "confirmed").length;
+        const cancelledDemands = allDemands.filter((d: any) => d.status === "cancelled").length;
+        
+        return {
+          ...client,
+          stats: {
+            totalDemands,
+            closedDemands,
+            activeDemands,
+            cancelledDemands,
+          },
+        };
+      }),
+
     create: publicProcedure
       .input(z.object({
         name: z.string().min(1, "客戶名稱不可為空"),
@@ -593,6 +617,55 @@ export const appRouter = router({
               ...demand,
               client,
               assignedCount,
+            };
+          })
+        );
+        
+        return result;
+      }),
+
+    listByClientAndMonth: publicProcedure
+      .input(z.object({
+        clientId: z.number(),
+        year: z.number(),
+        month: z.number(), // 1-12
+      }))
+      .query(async ({ input }) => {
+        // 計算月份的起始和結束日期
+        const startDate = new Date(Date.UTC(input.year, input.month - 1, 1, 0, 0, 0, 0));
+        const endDate = new Date(Date.UTC(input.year, input.month, 0, 23, 59, 59, 999));
+        
+        // 查詢該客戶在該月份的所有需求
+        const allDemands = await db.getDemandsByClientId(input.clientId);
+        const monthDemands = allDemands.filter((d: any) => {
+          const demandDate = new Date(d.date);
+          return demandDate >= startDate && demandDate <= endDate;
+        });
+        
+        // 附加指派資訊
+        const result = await Promise.all(
+          monthDemands.map(async (demand: any) => {
+            const assignments = await db.getAssignmentsByDemand(demand.id);
+            const assignedCount = assignments.filter(a => a.status !== "cancelled").length;
+            
+            // 獲取已指派的員工資訊
+            const assignedWorkers = await Promise.all(
+              assignments
+                .filter(a => a.status !== "cancelled")
+                .map(async (assignment) => {
+                  const worker = await db.getWorkerById(assignment.workerId);
+                  return {
+                    id: worker?.id,
+                    name: worker?.name,
+                    assignmentId: assignment.id,
+                  };
+                })
+            );
+            
+            return {
+              ...demand,
+              assignedCount,
+              assignedWorkers,
             };
           })
         );

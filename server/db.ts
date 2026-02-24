@@ -354,6 +354,12 @@ export async function getDemandById(id: number) {
   return result[0];
 }
 
+export async function getDemandsByClientId(clientId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return await db.select().from(demands).where(eq(demands.clientId, clientId)).orderBy(desc(demands.date));
+}
+
 export async function createDemand(data: { clientId: number; date: Date; startTime: string; endTime: string; requiredWorkers: number; breakHours?: number; location?: string; note?: string; status?: "draft" | "confirmed" | "cancelled" | "closed" }) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");

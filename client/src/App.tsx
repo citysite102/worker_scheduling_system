@@ -17,6 +17,7 @@ import Reports from "./pages/Reports";
 import DashboardLayout from "./components/DashboardLayout";
 import AdminSettings from "./pages/AdminSettings";
 import WorkerDetail from "./pages/WorkerDetail";
+import ClientDetail from "./pages/ClientDetail";
 
 function Router() {
   return (
@@ -25,6 +26,7 @@ function Router() {
       <Route path="/workers" component={() => <DashboardLayout><Workers /></DashboardLayout>} />
       <Route path="/workers/:id" component={() => <DashboardLayout><WorkerDetail /></DashboardLayout>} />
       <Route path="/clients" component={() => <DashboardLayout><Clients /></DashboardLayout>} />
+      <Route path="/clients/:id" component={() => <DashboardLayout><ClientDetail /></DashboardLayout>} />
       <Route path="/availability" component={() => <DashboardLayout><Availability /></DashboardLayout>} />
       <Route path="/demands" component={() => <DashboardLayout><Demands /></DashboardLayout>} />
       <Route path="/demands/:id" component={() => <DashboardLayout><DemandDetail /></DashboardLayout>} />

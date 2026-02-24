@@ -7,11 +7,13 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Search, Edit, Building2, Loader2, MapPin, Phone, User } from "lucide-react";
+import { Plus, Search, Edit, Building2, Loader2, MapPin, Phone, User, ChevronRight } from "lucide-react";
+import { useLocation } from "wouter";
 import { useState } from "react";
 import { toast } from "sonner";
 
 export default function Clients() {
+  const [, setLocation] = useLocation();
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<"active" | "inactive" | undefined>(undefined);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -201,7 +203,8 @@ export default function Clients() {
               {clients.map((client) => (
                 <div
                   key={client.id}
-                  className="flex items-center justify-between p-4 rounded-lg border border-border/60 hover:bg-muted/40 transition-colors"
+                  className="flex items-center justify-between p-4 rounded-lg border border-border/60 hover:bg-muted/40 transition-colors cursor-pointer"
+                  onClick={() => setLocation(`/clients/${client.id}`)}
                 >
                   <div className="flex items-start gap-3 flex-1 min-w-0">
                     <div className="h-9 w-9 rounded-lg bg-blue-50 flex items-center justify-center shrink-0 mt-0.5">
@@ -253,7 +256,8 @@ export default function Clients() {
                       variant="ghost"
                       size="icon"
                       className="h-8 w-8 text-muted-foreground hover:text-foreground"
-                      onClick={() => {
+                      onClick={(e) => {
+                        e.stopPropagation();
                         setEditingClient(client);
                         setIsDialogOpen(true);
                       }}
@@ -268,7 +272,10 @@ export default function Clients() {
                           ? "text-muted-foreground hover:text-destructive"
                           : "text-muted-foreground hover:text-emerald-600"
                       }`}
-                      onClick={() => handleStatusToggle(client)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleStatusToggle(client);
+                      }}
                     >
                       {client.status === "active" ? "停用" : "啟用"}
                     </Button>
