@@ -172,58 +172,80 @@ export default function Workers() {
                 <div className="grid gap-2.5">
                   <Label>頭像</Label>
                   <div className="flex items-center gap-4">
-                    {avatarUrl && (
-                      <img src={avatarUrl} alt="頭像" className="w-16 h-16 rounded-full object-cover" />
-                    )}
-                    <div className="flex gap-2">
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setShowAvatarPicker(!showAvatarPicker)}
-                      >
-                        {avatarUrl ? "更換頭像" : "選擇頭像"}
-                      </Button>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={() => {
-                          const input = document.createElement("input");
-                          input.type = "file";
-                          input.accept = "image/*";
-                          input.onchange = async (e) => {
-                            const file = (e.target as HTMLInputElement).files?.[0];
-                            if (!file) return;
-                            
-                            // 驗證檔案類型
-                            if (!isValidImageFile(file)) {
-                              toast.error("請上傳有效的圖片檔案（JPG、PNG、GIF、WebP）");
-                              return;
-                            }
-                            
-                            // 驗證檔案大小
-                            if (!isValidImageSize(file, 5)) {
-                              toast.error("圖片檔案大小不可超過 5MB");
-                              return;
-                            }
-                            
-                            try {
-                              // 裁切並壓縮圖片
-                              const processedImage = await cropAndCompressImage(file, 200, 0.8);
-                              setAvatarUrl(processedImage);
-                              toast.success("圖片已處理完成");
-                            } catch (error) {
-                              toast.error("圖片處理失敗，請重試");
-                              console.error(error);
-                            }
-                          };
-                          input.click();
-                        }}
-                      >
-                        <Upload className="w-4 h-4 mr-1" />
-                        上傳圖片
-                      </Button>
+                    {/* 頭像預覽 */}
+                    <div className="relative">
+                      {avatarUrl ? (
+                        <img src={avatarUrl} alt="頭像預覽" className="w-20 h-20 rounded-full object-cover border-2 border-border" />
+                      ) : (
+                        <div className="w-20 h-20 rounded-full bg-muted flex items-center justify-center text-muted-foreground">
+                          <UserPlus className="w-8 h-8" />
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex flex-col gap-2">
+                      <div className="flex gap-2">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setShowAvatarPicker(!showAvatarPicker)}
+                        >
+                          選擇預設頭像
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={async () => {
+                            const input = document.createElement("input");
+                            input.type = "file";
+                            input.accept = "image/*";
+                            input.onchange = async (e: any) => {
+                              const file = e.target.files?.[0];
+                              if (!file) return;
+
+                              // 驗證檔案類型
+                              if (!isValidImageFile(file)) {
+                                toast.error("僅支援 JPG、PNG、GIF 或 WebP 格式");
+                                return;
+                              }
+
+                              // 驗證檔案大小
+                              if (!isValidImageSize(file)) {
+                                toast.error("檔案大小不可超過 5MB");
+                                return;
+                              }
+
+                              try {
+                                // 裁切與壓縮圖片
+                                const compressedBase64 = await cropAndCompressImage(file);
+                                setAvatarUrl(compressedBase64);
+                                toast.success("頭像已上傳（已繪製至 200x200）");
+                              } catch (error) {
+                                toast.error("圖片處理失敗，請重試");
+                              }
+                            };
+                            input.click();
+                          }}
+                        >
+                          <Upload className="w-4 h-4 mr-1" />
+                          上傳圖片
+                        </Button>
+                      </div>
+                      {avatarUrl && (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            setAvatarUrl("");
+                            toast.success("已清除頭像");
+                          }}
+                          className="text-muted-foreground hover:text-destructive"
+                        >
+                          清除頭像
+                        </Button>
+                      )}
                     </div>
                   </div>
                   {showAvatarPicker && (

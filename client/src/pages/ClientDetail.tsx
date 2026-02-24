@@ -123,8 +123,18 @@ export default function ClientDetail() {
     });
   };
 
-  // 獲取狀態顏色
-  const getStatusColor = (status: string) => {
+  // 獲取狀態顏色（含過期判斷）
+  const getStatusColor = (status: string, date: Date) => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const demandDate = new Date(date);
+    demandDate.setHours(0, 0, 0, 0);
+    
+    // 如果需求日期早於今日，顯示灰色
+    if (demandDate < today) {
+      return "bg-gray-300";
+    }
+    
     switch (status) {
       case "confirmed":
         return "bg-blue-500";
@@ -335,7 +345,7 @@ export default function ClientDetail() {
                           return (
                             <div key={demand.id} className="space-y-0.5">
                               <div
-                                className={`h-1.5 rounded-full ${getStatusColor(demand.status)}`}
+                                className={`h-1.5 rounded-full ${getStatusColor(demand.status, new Date(demand.date))}`}
                                 title={`${demand.startTime}-${demand.endTime}`}
                               />
                               <div className="text-[10px] text-muted-foreground leading-none">
