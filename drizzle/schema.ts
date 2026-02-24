@@ -104,6 +104,8 @@ export const demands = mysqlTable("demands", {
   endTime: varchar("endTime", { length: 5 }).notNull(), // HH:mm
   requiredWorkers: int("requiredWorkers").notNull(),
   breakHours: int("breakHours").default(0).notNull(), // 休息時間（以分鐘為單位，預設 0）
+  demandTypeId: int("demandTypeId").references(() => demandTypes.id), // 需求類型 ID（可為 null）
+  selectedOptions: text("selectedOptions"), // 已勾選的選項 ID（JSON 陣列，例如："[1,3,5]"）
   location: varchar("location", { length: 200 }),
   note: text("note"),
   status: mysqlEnum("status", ["draft", "confirmed", "cancelled", "closed"]).default("draft").notNull(),
@@ -138,7 +140,36 @@ export type Assignment = typeof assignments.$inferSelect;
 export type InsertAssignment = typeof assignments.$inferInsert;
 
 /**
- * AdminInvites (管理員邀請) - 邀請碼管理
+ * DemandTypes (需求類型) - 用工需求的類型分類
+ */
+export const demandTypes = mysqlTable("demandTypes", {
+  id: int("id").autoincrement().primaryKey(),
+  name: varchar("name", { length: 100 }).notNull(), // 需求名稱（例如：櫃檯接待服務）
+  description: text("description"), // 需求說明
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type DemandType = typeof demandTypes.$inferSelect;
+export type InsertDemandType = typeof demandTypes.$inferInsert;
+
+/**
+ * DemandTypeOptions (需求類型選項) - 每個需求類型的可選項目
+ */
+export const demandTypeOptions = mysqlTable("demandTypeOptions", {
+  id: int("id").autoincrement().primaryKey(),
+  demandTypeId: int("demandTypeId").notNull().references(() => demandTypes.id),
+  content: text("content").notNull(), // 選項內容（例如：以專業、熱情及友善的態度接待顧客）
+  sortOrder: int("sortOrder").default(0).notNull(), // 排序順序
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type DemandTypeOption = typeof demandTypeOptions.$inferSelect;
+export type InsertDemandTypeOption = typeof demandTypeOptions.$inferInsert;
+
+/**
+ * Admins (管理員) - 管理員邀請與權限管理碼管理
  */
 export const adminInvites = mysqlTable("admin_invites", {
   id: int("id").autoincrement().primaryKey(),

@@ -6,6 +6,10 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Check, ChevronsUpDown } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { Textarea } from "@/components/ui/textarea";
 import { Plus, Calendar, Clock, MapPin, AlertTriangle, Loader2, ArrowRight, Copy, Edit, Trash2 } from "lucide-react";
 import { useState } from "react";
@@ -21,6 +25,10 @@ export default function Demands() {
   const [customStartDate, setCustomStartDate] = useState<string>("");
   const [customEndDate, setCustomEndDate] = useState<string>("");
   const [clientFilter, setClientFilter] = useState<number | undefined>(undefined);
+  const [selectedClientId, setSelectedClientId] = useState<number | undefined>(undefined);
+  const [clientComboboxOpen, setClientComboboxOpen] = useState(false);
+  const [selectedDemandTypeId, setSelectedDemandTypeId] = useState<number | undefined>(undefined);
+  const [selectedOptions, setSelectedOptions] = useState<number[]>([]);
 
   // 計算日期範圍
   const getDateRange = (filter: typeof dateFilter) => {
@@ -72,6 +80,7 @@ export default function Demands() {
   });
 
   const { data: clients } = trpc.clients.list.useQuery({});
+  const { data: demandTypes = [] } = trpc.demandTypes.list.useQuery();
 
   const createMutation = trpc.demands.create.useMutation({
     onSuccess: () => {
@@ -134,12 +143,14 @@ export default function Demands() {
     }
 
     const data = {
-      clientId: parseInt(formData.get("clientId") as string),
+      clientId: selectedClientId || parseInt(formData.get("clientId") as string),
       date,
       startTime,
       endTime,
       requiredWorkers: parseInt(formData.get("requiredWorkers") as string),
       breakHours: parseFloat(formData.get("breakHours") as string) || 0,
+      demandTypeId: selectedDemandTypeId || undefined,
+      selectedOptions: selectedOptions.length > 0 ? JSON.stringify(selectedOptions) : undefined,
       location: (formData.get("location") as string) || undefined,
       note: (formData.get("note") as string) || undefined,
     };
@@ -184,10 +195,18 @@ export default function Demands() {
         </div>
         <Dialog open={isDialogOpen} onOpenChange={(open) => {
           setIsDialogOpen(open);
-          if (!open) setEditingDemand(null);
+          if (!open) {
+            setEditingDemand(null);
+            setSelectedClientId(undefined);
+            setSelectedDemandTypeId(undefined);
+            setSelectedOptions([]);
+          }
         }}>
           <Button onClick={() => {
             setEditingDemand(null);
+            setSelectedClientId(undefined);
+            setSelectedDemandTypeId(undefined);
+            setSelectedOptions([]);
             setIsDialogOpen(true);
           }} size="sm">
             <Plus className="mr-2 h-4 w-4" />
@@ -202,18 +221,49 @@ export default function Demands() {
               <div className="grid gap-4 py-4">
                 <div className="grid gap-2">
                   <Label htmlFor="clientId">客戶 *</Label>
-                  <Select name="clientId" defaultValue={editingDemand?.clientId?.toString()} required>
-                    <SelectTrigger>
-                      <SelectValue placeholder="請選擇客戶" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {clients?.map((client) => (
-                        <SelectItem key={client.id} value={client.id.toString()}>
-                          {client.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <Popover open={clientComboboxOpen} onOpenChange={setClientComboboxOpen}>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        role="combobox"
+                        aria-expanded={clientComboboxOpen}
+                        className="w-full justify-between"
+                      >
+                        {selectedClientId
+                          ? clients?.find((client) => client.id === selectedClientId)?.name
+                          : "請選擇客戶"}
+                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-[400px] p-0">
+                      <Command>
+                        <CommandInput placeholder="搜尋客戶名稱..." />
+                        <CommandList>
+                          <CommandEmpty>找不到符合的客戶</CommandEmpty>
+                          <CommandGroup>
+                            {clients?.map((client) => (
+                              <CommandItem
+                                key={client.id}
+                                value={client.name}
+                                onSelect={() => {
+                                  setSelectedClientId(client.id);
+                                  setClientComboboxOpen(false);
+                                }}
+                              >
+                                <Check
+                                  className={cn(
+                                    "mr-2 h-4 w-4",
+                                    selectedClientId === client.id ? "opacity-100" : "opacity-0"
+                                  )}
+                                />
+                                {client.name}
+                              </CommandItem>
+                            ))}
+                          </CommandGroup>
+                        </CommandList>
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
                 </div>
                 <div className="grid gap-2">
                   <Label htmlFor="date">日期 *</Label>
@@ -239,6 +289,58 @@ export default function Demands() {
                   <Label htmlFor="requiredWorkers">需求人數 *</Label>
                   <Input id="requiredWorkers" name="requiredWorkers" type="number" min="1" defaultValue={editingDemand?.requiredWorkers} required />
                 </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="demandTypeId">需求類別</Label>
+                  <Select 
+                    value={selectedDemandTypeId?.toString() || ""} 
+                    onValueChange={(value) => {
+                      setSelectedDemandTypeId(value ? parseInt(value) : undefined);
+                      setSelectedOptions([]);
+                    }}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="選擇需求類別（可選）" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="">無（不選擇）</SelectItem>
+                      {demandTypes.map((type) => (
+                        <SelectItem key={type.id} value={type.id.toString()}>
+                          {type.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                {selectedDemandTypeId && (() => {
+                  const selectedType = demandTypes.find(t => t.id === selectedDemandTypeId);
+                  if (selectedType && selectedType.options && selectedType.options.length > 0) {
+                    return (
+                      <div className="grid gap-3 p-4 bg-muted/30 rounded-lg">
+                        <Label className="text-sm font-medium">選擇需要的項目</Label>
+                        <div className="space-y-2">
+                          {selectedType.options.map((option) => (
+                            <label key={option.id} className="flex items-start gap-2 cursor-pointer">
+                              <input
+                                type="checkbox"
+                                checked={selectedOptions.includes(option.id)}
+                                onChange={(e) => {
+                                  if (e.target.checked) {
+                                    setSelectedOptions([...selectedOptions, option.id]);
+                                  } else {
+                                    setSelectedOptions(selectedOptions.filter(id => id !== option.id));
+                                  }
+                                }}
+                                className="mt-1"
+                              />
+                              <span className="text-sm">{option.content}</span>
+                            </label>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  }
+                  return null;
+                })()}
                 <div className="grid gap-2">
                   <Label htmlFor="breakHours">休息時間（小時）</Label>
                   <Input 
@@ -475,6 +577,9 @@ export default function Demands() {
                         onClick={(e) => {
                           e.stopPropagation();
                           setEditingDemand(demand);
+                          setSelectedClientId(demand.clientId);
+                          setSelectedDemandTypeId(demand.demandTypeId || undefined);
+                          setSelectedOptions(demand.selectedOptions ? JSON.parse(demand.selectedOptions) : []);
                           setIsDialogOpen(true);
                         }}
                       >

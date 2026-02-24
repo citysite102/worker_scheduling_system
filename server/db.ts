@@ -511,3 +511,120 @@ export async function getWorkerAvailabilityHistory(workerId: number) {
     .where(eq(availability.workerId, workerId))
     .orderBy(desc(availability.weekStartDate));
 }
+
+// ==================== DemandType Management ====================
+
+import { demandTypes, demandTypeOptions, InsertDemandType, InsertDemandTypeOption } from "../drizzle/schema";
+
+/**
+ * 取得所有需求類型（含選項）
+ */
+export async function getAllDemandTypes() {
+  const db = await getDb();
+  if (!db) return [];
+  
+  const types = await db.select().from(demandTypes);
+  const options = await db.select().from(demandTypeOptions);
+  
+  return types.map(type => ({
+    ...type,
+    options: options.filter(opt => opt.demandTypeId === type.id).sort((a, b) => a.sortOrder - b.sortOrder),
+  }));
+}
+
+/**
+ * 根據 ID 取得需求類型（含選項）
+ */
+export async function getDemandTypeById(id: number) {
+  const db = await getDb();
+  if (!db) return null;
+  
+  const [type] = await db.select().from(demandTypes).where(eq(demandTypes.id, id));
+  if (!type) return null;
+  
+  const options = await db.select().from(demandTypeOptions).where(eq(demandTypeOptions.demandTypeId, id));
+  
+  return {
+    ...type,
+    options: options.sort((a, b) => a.sortOrder - b.sortOrder),
+  };
+}
+
+/**
+ * 建立需求類型
+ */
+export async function createDemandType(data: InsertDemandType) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const [result] = await db.insert(demandTypes).values(data);
+  return result.insertId;
+}
+
+/**
+ * 更新需求類型
+ */
+export async function updateDemandType(id: number, data: Partial<InsertDemandType>) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  await db.update(demandTypes).set(data).where(eq(demandTypes.id, id));
+}
+
+/**
+ * 刪除需求類型（同時刪除所有選項）
+ */
+export async function deleteDemandType(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  // 先刪除所有選項
+  await db.delete(demandTypeOptions).where(eq(demandTypeOptions.demandTypeId, id));
+  // 再刪除需求類型
+  await db.delete(demandTypes).where(eq(demandTypes.id, id));
+}
+
+/**
+ * 為需求類型新增選項
+ */
+export async function createDemandTypeOption(data: InsertDemandTypeOption) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const [result] = await db.insert(demandTypeOptions).values(data);
+  return result.insertId;
+}
+
+/**
+ * 更新需求類型選項
+ */
+export async function updateDemandTypeOption(id: number, data: Partial<InsertDemandTypeOption>) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  await db.update(demandTypeOptions).set(data).where(eq(demandTypeOptions.id, id));
+}
+
+/**
+ * 刪除需求類型選項
+ */
+export async function deleteDemandTypeOption(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  await db.delete(demandTypeOptions).where(eq(demandTypeOptions.id, id));
+}
+
+/**
+ * 批次更新需求類型選項的排序
+ */
+export async function updateDemandTypeOptionsOrder(updates: { id: number; sortOrder: number }[]) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  for (const update of updates) {
+    await db.update(demandTypeOptions)
+      .set({ sortOrder: update.sortOrder })
+      .where(eq(demandTypeOptions.id, update.id));
+  }
+}

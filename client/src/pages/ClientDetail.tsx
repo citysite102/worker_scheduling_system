@@ -6,6 +6,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ArrowLeft, Building2, Phone, Mail, MapPin, Calendar, Users, CheckCircle2, XCircle, Clock, Loader2, Plus } from "lucide-react";
 import { useParams, useLocation } from "wouter";
 import { useState } from "react";
@@ -21,8 +22,11 @@ export default function ClientDetail() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isDemandListDialogOpen, setIsDemandListDialogOpen] = useState(false);
   const [selectedDateDemands, setSelectedDateDemands] = useState<any[]>([]);
+  const [selectedDemandTypeId, setSelectedDemandTypeId] = useState<number | undefined>(undefined);
+  const [selectedOptions, setSelectedOptions] = useState<number[]>([]);
 
   const { data: clientDetail, isLoading: isLoadingClient } = trpc.clients.getDetailById.useQuery({ id: clientId });
+  const { data: demandTypes = [] } = trpc.demandTypes.list.useQuery();
   
   const { data: monthDemands, isLoading: isLoadingDemands, refetch } = trpc.demands.listByClientAndMonth.useQuery({
     clientId,
@@ -82,6 +86,8 @@ export default function ClientDetail() {
       endTime,
       requiredWorkers,
       breakHours,
+      demandTypeId: selectedDemandTypeId || undefined,
+      selectedOptions: selectedOptions.length > 0 ? JSON.stringify(selectedOptions) : undefined,
       location: location || undefined,
       note: note || undefined,
       status: "draft",
@@ -547,6 +553,58 @@ export default function ClientDetail() {
                   />
                 </div>
               </div>
+              <div className="space-y-2">
+                <Label htmlFor="demandTypeId">需求類別</Label>
+                <Select 
+                  value={selectedDemandTypeId?.toString() || ""} 
+                  onValueChange={(value) => {
+                    setSelectedDemandTypeId(value ? parseInt(value) : undefined);
+                    setSelectedOptions([]);
+                  }}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="選擇需求類別（可選）" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">無（不選擇）</SelectItem>
+                    {demandTypes.map((type) => (
+                      <SelectItem key={type.id} value={type.id.toString()}>
+                        {type.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              {selectedDemandTypeId && (() => {
+                const selectedType = demandTypes.find(t => t.id === selectedDemandTypeId);
+                if (selectedType && selectedType.options && selectedType.options.length > 0) {
+                  return (
+                    <div className="space-y-3 p-4 bg-muted/30 rounded-lg">
+                      <Label className="text-sm font-medium">選擇需要的項目</Label>
+                      <div className="space-y-2">
+                        {selectedType.options.map((option) => (
+                          <label key={option.id} className="flex items-start gap-2 cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={selectedOptions.includes(option.id)}
+                              onChange={(e) => {
+                                if (e.target.checked) {
+                                  setSelectedOptions([...selectedOptions, option.id]);
+                                } else {
+                                  setSelectedOptions(selectedOptions.filter(id => id !== option.id));
+                                }
+                              }}
+                              className="mt-1"
+                            />
+                            <span className="text-sm">{option.content}</span>
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                }
+                return null;
+              })()}
               <div className="space-y-2">
                 <Label htmlFor="location">工作地點</Label>
                 <Input

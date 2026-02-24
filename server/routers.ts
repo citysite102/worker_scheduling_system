@@ -705,6 +705,8 @@ export const appRouter = router({
         endTime: z.string().regex(/^\d{2}:\d{2}$/, "時間格式應為 HH:mm"),
         requiredWorkers: z.number().min(1, "需求人數至少為 1"),
         breakHours: z.number().min(0, "休息時間不可為負數").optional(), // 以小時為單位，如 0.5, 1, 1.5
+        demandTypeId: z.number().optional(), // 需求類型 ID
+        selectedOptions: z.string().optional(), // 已勾選的選項 ID（JSON 格式）
         location: z.string().optional(),
         note: z.string().optional(),
         status: z.enum(["draft", "confirmed", "cancelled", "closed"]).optional(),
@@ -727,6 +729,8 @@ export const appRouter = router({
         endTime: z.string().regex(/^\d{2}:\d{2}$/, "時間格式應為 HH:mm").optional(),
         requiredWorkers: z.number().min(1, "需求人數至少為 1").optional(),
         breakHours: z.number().min(0, "休息時間不可為負數").optional(), // 以小時為單位
+        demandTypeId: z.number().optional(), // 需求類型 ID
+        selectedOptions: z.string().optional(), // 已勾選的選項 ID（JSON 格式）
         location: z.string().optional(),
         note: z.string().optional(),
         status: z.enum(["draft", "confirmed", "cancelled", "closed"]).optional(),
@@ -1463,6 +1467,109 @@ export const appRouter = router({
         if (ctx.user.id === input.userId) throw new TRPCError({ code: "BAD_REQUEST", message: "不可移除自己的管理員權限" });
 
         await db.updateUserRole(input.userId, "user");
+        return { success: true };
+      }),
+  }),
+
+  // ============ DemandTypes ============
+  demandTypes: router({
+    // 取得所有需求類型（含選項）
+    list: publicProcedure.query(async () => {
+      const demandTypes = await db.getAllDemandTypes();
+      return demandTypes;
+    }),
+
+    // 根據 ID 取得需求類型（含選項）
+    getById: publicProcedure
+      .input(z.object({ id: z.number() }))
+      .query(async ({ input }) => {
+        const demandType = await db.getDemandTypeById(input.id);
+        if (!demandType) throw new TRPCError({ code: "NOT_FOUND", message: "需求類型不存在" });
+        return demandType;
+      }),
+
+    // 建立需求類型
+    create: publicProcedure
+      .input(z.object({
+        name: z.string().min(1, "需求名稱不可為空"),
+        description: z.string().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const id = await db.createDemandType({
+          name: input.name,
+          description: input.description || null,
+        });
+        return { id };
+      }),
+
+    // 更新需求類型
+    update: publicProcedure
+      .input(z.object({
+        id: z.number(),
+        name: z.string().min(1, "需求名稱不可為空").optional(),
+        description: z.string().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const { id, ...data } = input;
+        await db.updateDemandType(id, data);
+        return { success: true };
+      }),
+
+    // 刪除需求類型
+    delete: publicProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input }) => {
+        await db.deleteDemandType(input.id);
+        return { success: true };
+      }),
+
+    // 為需求類型新增選項
+    createOption: publicProcedure
+      .input(z.object({
+        demandTypeId: z.number(),
+        content: z.string().min(1, "選項內容不可為空"),
+        sortOrder: z.number().default(0),
+      }))
+      .mutation(async ({ input }) => {
+        const id = await db.createDemandTypeOption({
+          demandTypeId: input.demandTypeId,
+          content: input.content,
+          sortOrder: input.sortOrder,
+        });
+        return { id };
+      }),
+
+    // 更新需求類型選項
+    updateOption: publicProcedure
+      .input(z.object({
+        id: z.number(),
+        content: z.string().min(1, "選項內容不可為空").optional(),
+        sortOrder: z.number().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const { id, ...data } = input;
+        await db.updateDemandTypeOption(id, data);
+        return { success: true };
+      }),
+
+    // 刪除需求類型選項
+    deleteOption: publicProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input }) => {
+        await db.deleteDemandTypeOption(input.id);
+        return { success: true };
+      }),
+
+    // 批次更新選項排序
+    updateOptionsOrder: publicProcedure
+      .input(z.object({
+        updates: z.array(z.object({
+          id: z.number(),
+          sortOrder: z.number(),
+        })),
+      }))
+      .mutation(async ({ input }) => {
+        await db.updateDemandTypeOptionsOrder(input.updates);
         return { success: true };
       }),
   }),

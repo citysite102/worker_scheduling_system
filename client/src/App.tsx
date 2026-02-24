@@ -18,6 +18,7 @@ import DashboardLayout from "./components/DashboardLayout";
 import AdminSettings from "./pages/AdminSettings";
 import WorkerDetail from "./pages/WorkerDetail";
 import ClientDetail from "./pages/ClientDetail";
+import DemandTypes from "./pages/DemandTypes";
 
 function Router() {
   return (
@@ -32,6 +33,7 @@ function Router() {
       <Route path="/demands/:id" component={() => <DashboardLayout><DemandDetail /></DashboardLayout>} />
       <Route path="/actual-time" component={() => <DashboardLayout><ActualTime /></DashboardLayout>} />
       <Route path="/reports" component={() => <DashboardLayout><Reports /></DashboardLayout>} />
+      <Route path="/demand-types" component={() => <DashboardLayout><DemandTypes /></DashboardLayout>} />
       <Route path="/admin" component={() => <DashboardLayout><AdminSettings /></DashboardLayout>} />
       <Route path="/404" component={NotFound} />
       <Route component={NotFound} />
