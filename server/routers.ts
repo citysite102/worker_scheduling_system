@@ -244,7 +244,7 @@ export const appRouter = router({
       .input(z.object({
         id: z.number(),
         name: z.string().min(1, "姓名不可為空").optional(),
-        phone: z.string().min(1, "電話不可為空").optional(),
+        phone: z.string().optional(),
         email: z.string().email("Email 格式不正確").optional(),
         school: z.string().optional(),
         hasWorkPermit: z.boolean().optional(),

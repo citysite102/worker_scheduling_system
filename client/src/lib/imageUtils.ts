@@ -35,16 +35,22 @@ export async function cropAndCompressImage(
         canvas.width = targetSize;
         canvas.height = targetSize;
         
-        // 計算裁切區域（取中心正方形）
-        const sourceSize = Math.min(img.width, img.height);
-        const sourceX = (img.width - sourceSize) / 2;
-        const sourceY = (img.height - sourceSize) / 2;
+        // 填充白色背景
+        ctx.fillStyle = '#FFFFFF';
+        ctx.fillRect(0, 0, targetSize, targetSize);
         
-        // 繪製裁切並縮放後的圖片
+        // 計算繪製區域（保持比例，置中顯示）
+        const scale = Math.min(targetSize / img.width, targetSize / img.height);
+        const scaledWidth = img.width * scale;
+        const scaledHeight = img.height * scale;
+        const offsetX = (targetSize - scaledWidth) / 2;
+        const offsetY = (targetSize - scaledHeight) / 2;
+        
+        // 繪製圖片至中心位置
         ctx.drawImage(
           img,
-          sourceX, sourceY, sourceSize, sourceSize, // 來源區域
-          0, 0, targetSize, targetSize // 目標區域
+          0, 0, img.width, img.height, // 來源區域（完整圖片）
+          offsetX, offsetY, scaledWidth, scaledHeight // 目標區域（置中）
         );
         
         // 轉換為 Base64（JPEG 格式）
