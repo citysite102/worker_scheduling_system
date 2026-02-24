@@ -176,17 +176,38 @@ export default function WorkerDetail() {
     <div className="p-6 space-y-6">
       {/* 頂部導航 */}
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-4">
           <Link href="/workers">
             <Button variant="ghost" size="sm" className="gap-1.5 text-gray-500 hover:text-gray-700">
               <ArrowLeft className="h-4 w-4" /> 返回
             </Button>
           </Link>
           <div className="h-6 w-px bg-gray-200" />
-          <h1 className="text-2xl font-bold text-gray-900">{worker.name}</h1>
-          <Badge className={worker.status === "active" ? "bg-emerald-50 text-emerald-700 border-emerald-200" : "bg-gray-100 text-gray-500 border-gray-200"}>
-            {worker.status === "active" ? "啟用" : "停用"}
-          </Badge>
+          {/* 大頭像 */}
+          <div className="shrink-0">
+            {worker.avatarUrl ? (
+              <img
+                src={worker.avatarUrl}
+                alt={worker.name}
+                className="w-16 h-16 rounded-full object-cover border-2 border-border/60"
+              />
+            ) : (
+              <div className="w-16 h-16 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold text-xl border-2 border-border/60">
+                {worker.name.charAt(0)}
+              </div>
+            )}
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">{worker.name}</h1>
+            <div className="flex items-center gap-2 mt-1">
+              <Badge className={worker.status === "active" ? "bg-emerald-50 text-emerald-700 border-emerald-200" : "bg-gray-100 text-gray-500 border-gray-200"}>
+                {worker.status === "active" ? "啟用" : "停用"}
+              </Badge>
+              {worker.city && (
+                <span className="text-sm text-muted-foreground">{worker.city}</span>
+              )}
+            </div>
+          </div>
         </div>
         <Link href={`/availability?workerId=${workerId}`}>
           <Button variant="outline" size="sm" className="gap-1.5">

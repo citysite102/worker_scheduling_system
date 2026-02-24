@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Plus, Search, Edit, UserX, UserCheck, Loader2, Phone, Mail, GraduationCap, ShieldCheck, HeartPulse, Filter, ChevronDown, Upload, UserPlus, Download } from "lucide-react";
+import { Plus, Search, Edit, UserX, UserCheck, Loader2, Phone, Mail, GraduationCap, ShieldCheck, HeartPulse, Filter, ChevronDown, Upload, UserPlus, Download, MapPin } from "lucide-react";
 import { Link } from "wouter";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -19,6 +19,7 @@ import { BatchWorkPermitUpload } from "@/components/BatchWorkPermitUpload";
 import { exportWorkersToCSV } from "@/lib/exportWorkers";
 import { DEFAULT_AVATARS } from "../../../shared/avatars";
 import { TAIWAN_CITIES } from "../../../shared/cities";
+import { cropAndCompressImage, isValidImageFile, isValidImageSize } from "@/lib/imageUtils";
 
 export default function Workers() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -194,11 +195,28 @@ export default function Workers() {
                           input.onchange = async (e) => {
                             const file = (e.target as HTMLInputElement).files?.[0];
                             if (!file) return;
-                            const reader = new FileReader();
-                            reader.onload = () => {
-                              setAvatarUrl(reader.result as string);
-                            };
-                            reader.readAsDataURL(file);
+                            
+                            // 驗證檔案類型
+                            if (!isValidImageFile(file)) {
+                              toast.error("請上傳有效的圖片檔案（JPG、PNG、GIF、WebP）");
+                              return;
+                            }
+                            
+                            // 驗證檔案大小
+                            if (!isValidImageSize(file, 5)) {
+                              toast.error("圖片檔案大小不可超過 5MB");
+                              return;
+                            }
+                            
+                            try {
+                              // 裁切並壓縮圖片
+                              const processedImage = await cropAndCompressImage(file, 200, 0.8);
+                              setAvatarUrl(processedImage);
+                              toast.success("圖片已處理完成");
+                            } catch (error) {
+                              toast.error("圖片處理失敗，請重試");
+                              console.error(error);
+                            }
                           };
                           input.click();
                         }}
@@ -543,6 +561,20 @@ export default function Workers() {
                     }}
                     onClick={(e) => e.stopPropagation()}
                   />
+                  {/* 頭像 */}
+                  <div className="shrink-0">
+                    {worker.avatarUrl ? (
+                      <img
+                        src={worker.avatarUrl}
+                        alt={worker.name}
+                        className="w-10 h-10 rounded-full object-cover border-2 border-border/60"
+                      />
+                    ) : (
+                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-medium text-sm border-2 border-border/60">
+                        {worker.name.charAt(0)}
+                      </div>
+                    )}
+                  </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
                       <Link href={`/workers/${worker.id}`} className="font-medium text-sm text-blue-600 hover:text-blue-800 hover:underline cursor-pointer">{worker.name}</Link>
@@ -605,6 +637,12 @@ export default function Workers() {
                         <span className="flex items-center gap-1">
                           <GraduationCap className="h-3 w-3" />
                           {worker.school}
+                        </span>
+                      )}
+                      {worker.city && (
+                        <span className="flex items-center gap-1">
+                          <MapPin className="h-3 w-3" />
+                          {worker.city}
                         </span>
                       )}
                     </div>

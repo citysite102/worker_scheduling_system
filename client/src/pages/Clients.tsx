@@ -11,6 +11,7 @@ import { Plus, Search, Edit, Building2, Loader2, MapPin, Phone, User, ChevronRig
 import { useLocation } from "wouter";
 import { useState } from "react";
 import { toast } from "sonner";
+import { cropAndCompressImage, isValidImageFile, isValidImageSize } from "@/lib/imageUtils";
 
 export default function Clients() {
   const [, setLocation] = useLocation();
@@ -131,11 +132,28 @@ export default function Clients() {
                         input.onchange = async (e) => {
                           const file = (e.target as HTMLInputElement).files?.[0];
                           if (!file) return;
-                          const reader = new FileReader();
-                          reader.onload = () => {
-                            setLogoUrl(reader.result as string);
-                          };
-                          reader.readAsDataURL(file);
+                          
+                          // 驗證檔案類型
+                          if (!isValidImageFile(file)) {
+                            toast.error("請上傳有效的圖片檔案（JPG、PNG、GIF、WebP）");
+                            return;
+                          }
+                          
+                          // 驗證檔案大小
+                          if (!isValidImageSize(file, 5)) {
+                            toast.error("圖片檔案大小不可超過 5MB");
+                            return;
+                          }
+                          
+                          try {
+                            // 裁切並壓縮圖片
+                            const processedImage = await cropAndCompressImage(file, 200, 0.8);
+                            setLogoUrl(processedImage);
+                            toast.success("圖片已處理完成");
+                          } catch (error) {
+                            toast.error("圖片處理失敗，請重試");
+                            console.error(error);
+                          }
                         };
                         input.click();
                       }}
