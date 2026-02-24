@@ -33,7 +33,7 @@ const menuItems = [
   { icon: Users, label: "員工管理", path: "/workers" },
   { icon: Building2, label: "客戶管理", path: "/clients" },
   { icon: Calendar, label: "排班時間設置", path: "/availability" },
-  { icon: ClipboardList, label: "用工需求", path: "/demands" },
+  { icon: ClipboardList, label: "需求管理", path: "/demands" },
   { icon: Tags, label: "需求類型管理", path: "/demand-types" },
   { icon: Clock, label: "實際工時回填", path: "/actual-time" },
   { icon: FileText, label: "報表輸出", path: "/reports" },

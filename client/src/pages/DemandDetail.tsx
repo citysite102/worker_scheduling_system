@@ -40,6 +40,8 @@ export default function DemandDetail() {
   const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
   const [assignmentToCancel, setAssignmentToCancel] = useState<number | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [selectedDemandTypeId, setSelectedDemandTypeId] = useState<number | undefined>(undefined);
+  const [selectedOptions, setSelectedOptions] = useState<number[]>([]);
 
   // 篩選狀態
   const [filterSchool, setFilterSchool] = useState("");
@@ -50,6 +52,12 @@ export default function DemandDetail() {
 
   // 查詢客戶列表
   const { data: clients } = trpc.clients.list.useQuery({});
+
+  // 查詢需求類型列表
+  const { data: demandTypes = [] } = trpc.demandTypes.list.useQuery();
+
+  // 當前選擇的需求類型
+  const selectedDemandType = demandTypes.find(t => t.id === selectedDemandTypeId);
 
   // 更新需求單
   const updateMutation = trpc.demands.update.useMutation({
@@ -852,13 +860,26 @@ export default function DemandDetail() {
       </div>
 
       {/* 編輯對話框 */}
-      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="max-w-md">
+      <Dialog open={isEditDialogOpen} onOpenChange={(open) => {
+        setIsEditDialogOpen(open);
+        if (open && demand) {
+          // 當對話框開啟時，初始化需求類型與選項
+          setSelectedDemandTypeId(demand.demandTypeId || undefined);
+          setSelectedOptions(demand.selectedOptions || []);
+        } else {
+          // 當對話框關閉時，清空狀態
+          setSelectedDemandTypeId(undefined);
+          setSelectedOptions([]);
+        }
+      }}>
+        <DialogContent className="max-w-3xl">
           <form onSubmit={(e) => {
             e.preventDefault();
             const formData = new FormData(e.currentTarget);
             const dateStr = formData.get("date") as string;
             const date = new Date(dateStr);
+            const breakHoursStr = formData.get("breakHours") as string;
+            const breakHours = breakHoursStr ? parseFloat(breakHoursStr) * 60 : 0;
 
             const data = {
               id: demandId,
@@ -867,8 +888,11 @@ export default function DemandDetail() {
               startTime: formData.get("startTime") as string,
               endTime: formData.get("endTime") as string,
               requiredWorkers: parseInt(formData.get("requiredWorkers") as string),
+              breakHours,
               location: (formData.get("location") as string) || undefined,
               note: (formData.get("note") as string) || undefined,
+              demandTypeId: selectedDemandTypeId,
+              selectedOptions: selectedOptions.length > 0 ? JSON.stringify(selectedOptions) : undefined,
             };
 
             updateMutation.mutate(data);
@@ -877,8 +901,8 @@ export default function DemandDetail() {
               <DialogTitle>編輯用工需求</DialogTitle>
               <DialogDescription>填寫需求單基本資料</DialogDescription>
             </DialogHeader>
-            <div className="grid gap-4 py-4">
-              <div className="grid gap-2">
+            <div className="grid grid-cols-2 gap-x-6 gap-y-4 py-4">
+              <div className="col-span-2 grid gap-2">
                 <Label htmlFor="clientId">客戶 *</Label>
                 <Select name="clientId" defaultValue={demand?.clientId?.toString()} required>
                   <SelectTrigger>
@@ -903,25 +927,87 @@ export default function DemandDetail() {
                   required 
                 />
               </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="grid gap-2">
-                  <Label htmlFor="startTime">開始時間 *</Label>
-                  <Input id="startTime" name="startTime" type="time" defaultValue={demand?.startTime} required />
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="endTime">結束時間 *</Label>
-                  <Input id="endTime" name="endTime" type="time" defaultValue={demand?.endTime} required />
-                </div>
+              <div className="grid gap-2">
+                {/* 空格，保持對齊 */}
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="startTime">開始時間 *</Label>
+                <Input id="startTime" name="startTime" type="time" defaultValue={demand?.startTime} required />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="endTime">結束時間 *</Label>
+                <Input id="endTime" name="endTime" type="time" defaultValue={demand?.endTime} required />
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="requiredWorkers">需求人數 *</Label>
                 <Input id="requiredWorkers" name="requiredWorkers" type="number" min="1" defaultValue={demand?.requiredWorkers} required />
               </div>
               <div className="grid gap-2">
+                <Label htmlFor="breakHours">休息時間（小時）</Label>
+                <Input 
+                  id="breakHours" 
+                  name="breakHours" 
+                  type="number" 
+                  step="0.25" 
+                  min="0" 
+                  placeholder="例如：0.75 小時 = 45 分鐘" 
+                  defaultValue={demand?.breakHours ? (demand.breakHours / 60).toString() : "0"} 
+                />
+              </div>
+              <div className="col-span-2 grid gap-2">
+                <Label htmlFor="demandTypeId">需求類別</Label>
+                <Select 
+                  value={selectedDemandTypeId?.toString() || "none"} 
+                  onValueChange={(value) => {
+                    setSelectedDemandTypeId(value === "none" ? undefined : parseInt(value));
+                    setSelectedOptions([]);
+                  }}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="選擇需求類別（可選）" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">無（不選擇）</SelectItem>
+                    {demandTypes.map((type) => (
+                      <SelectItem key={type.id} value={type.id.toString()}>
+                        {type.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              {selectedDemandType && selectedDemandType.options && selectedDemandType.options.length > 0 && (
+                <div className="col-span-2 grid gap-3 p-4 bg-muted/30 rounded-lg">
+                  <Label className="text-sm font-medium">選擇需要的項目</Label>
+                  <div className="space-y-2">
+                    {selectedDemandType.options.map((option) => (
+                      <label key={option.id} className="flex items-start gap-2 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={selectedOptions.includes(option.id)}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setSelectedOptions([...selectedOptions, option.id]);
+                            } else {
+                              setSelectedOptions(selectedOptions.filter(id => id !== option.id));
+                            }
+                          }}
+                          className="mt-1"
+                        />
+                        <span className="text-sm">{option.content}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              )}
+              <div className="grid gap-2">
                 <Label htmlFor="location">地點</Label>
                 <Input id="location" name="location" placeholder="工作地點" defaultValue={demand?.location || ''} />
               </div>
               <div className="grid gap-2">
+                {/* 空格，保持對齊 */}
+              </div>
+              <div className="col-span-2 grid gap-2">
                 <Label htmlFor="note">備註</Label>
                 <Textarea id="note" name="note" placeholder="其他說明..." rows={3} defaultValue={demand?.note || ''} />
               </div>

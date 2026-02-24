@@ -212,13 +212,13 @@ export default function Demands() {
             <Plus className="mr-2 h-4 w-4" />
             新增需求單
           </Button>
-          <DialogContent className="max-w-md">
+          <DialogContent className="max-w-3xl">
             <form onSubmit={handleSubmit}>
               <DialogHeader>
                 <DialogTitle>{editingDemand ? "編輯用工需求" : "新增用工需求"}</DialogTitle>
                 <DialogDescription>填寫需求單基本資料</DialogDescription>
               </DialogHeader>
-              <div className="grid gap-4 py-4">
+              <div className="grid grid-cols-2 gap-x-6 gap-y-4 py-4">
                 <div className="grid gap-2">
                   <Label htmlFor="clientId">客戶 *</Label>
                   <Popover open={clientComboboxOpen} onOpenChange={setClientComboboxOpen}>
@@ -275,21 +275,31 @@ export default function Demands() {
                     required 
                   />
                 </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="grid gap-2">
-                    <Label htmlFor="startTime">開始時間 *</Label>
-                    <Input id="startTime" name="startTime" type="time" defaultValue={editingDemand?.startTime} required />
-                  </div>
-                  <div className="grid gap-2">
-                    <Label htmlFor="endTime">結束時間 *</Label>
-                    <Input id="endTime" name="endTime" type="time" defaultValue={editingDemand?.endTime} required />
-                  </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="startTime">開始時間 *</Label>
+                  <Input id="startTime" name="startTime" type="time" defaultValue={editingDemand?.startTime} required />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="endTime">結束時間 *</Label>
+                  <Input id="endTime" name="endTime" type="time" defaultValue={editingDemand?.endTime} required />
                 </div>
                 <div className="grid gap-2">
                   <Label htmlFor="requiredWorkers">需求人數 *</Label>
                   <Input id="requiredWorkers" name="requiredWorkers" type="number" min="1" defaultValue={editingDemand?.requiredWorkers} required />
                 </div>
                 <div className="grid gap-2">
+                  <Label htmlFor="breakHours">休息時間（小時）</Label>
+                  <Input 
+                    id="breakHours" 
+                    name="breakHours" 
+                    type="number" 
+                    step="0.25" 
+                    min="0" 
+                    placeholder="例如：0.75 小時 = 45 分鐘" 
+                    defaultValue={editingDemand?.breakHours ? (editingDemand.breakHours / 60).toString() : "0"} 
+                  />
+                </div>
+                <div className="col-span-2 grid gap-2">
                   <Label htmlFor="demandTypeId">需求類別</Label>
                   <Select 
                     value={selectedDemandTypeId?.toString() || "none"} 
@@ -315,7 +325,7 @@ export default function Demands() {
                   const selectedType = demandTypes.find(t => t.id === selectedDemandTypeId);
                   if (selectedType && selectedType.options && selectedType.options.length > 0) {
                     return (
-                      <div className="grid gap-3 p-4 bg-muted/30 rounded-lg">
+                      <div className="col-span-2 grid gap-3 p-4 bg-muted/30 rounded-lg">
                         <Label className="text-sm font-medium">選擇需要的項目</Label>
                         <div className="space-y-2">
                           {selectedType.options.map((option) => (
@@ -342,22 +352,13 @@ export default function Demands() {
                   return null;
                 })()}
                 <div className="grid gap-2">
-                  <Label htmlFor="breakHours">休息時間（小時）</Label>
-                  <Input 
-                    id="breakHours" 
-                    name="breakHours" 
-                    type="number" 
-                    step="0.25" 
-                    min="0" 
-                    placeholder="例如：0.75 小時 = 45 分鐘" 
-                    defaultValue={editingDemand?.breakHours ? (editingDemand.breakHours / 60).toString() : "0"} 
-                  />
-                </div>
-                <div className="grid gap-2">
                   <Label htmlFor="location">地點</Label>
                   <Input id="location" name="location" placeholder="工作地點" defaultValue={editingDemand?.location} />
                 </div>
                 <div className="grid gap-2">
+                  {/* 空格，保持對齊 */}
+                </div>
+                <div className="col-span-2 grid gap-2">
                   <Label htmlFor="note">備註</Label>
                   <Textarea id="note" name="note" placeholder="其他說明..." rows={3} defaultValue={editingDemand?.note} />
                 </div>

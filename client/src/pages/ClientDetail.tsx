@@ -452,23 +452,21 @@ export default function ClientDetail() {
               為 {selectedDate && formatDate(selectedDate)} 建立新的用工需求
             </DialogDescription>
           </DialogHeader>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
+          <form onSubmit={handleSubmit}>
+            <div className="grid grid-cols-2 gap-x-6 gap-y-4 py-4">
+              <div className="grid gap-2">
                 <Label htmlFor="startTime">開始時間 *</Label>
                 <Input id="startTime" name="startTime" type="time" required />
               </div>
-              <div className="space-y-2">
+              <div className="grid gap-2">
                 <Label htmlFor="endTime">結束時間 *</Label>
                 <Input id="endTime" name="endTime" type="time" required />
               </div>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
+              <div className="grid gap-2">
                 <Label htmlFor="requiredWorkers">需求人數 *</Label>
                 <Input id="requiredWorkers" name="requiredWorkers" type="number" min="1" required />
               </div>
-              <div className="space-y-2">
+              <div className="grid gap-2">
                 <Label htmlFor="breakHours">休息時間（小時）</Label>
                 <Select name="breakHours" defaultValue="0">
                   <SelectTrigger>
@@ -483,9 +481,8 @@ export default function ClientDetail() {
                   </SelectContent>
                 </Select>
               </div>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="demandTypeId">需求類別</Label>
+              <div className="col-span-2 grid gap-2">
+                <Label htmlFor="demandTypeId">需求類別</Label>
               <Select 
                 value={selectedDemandTypeId?.toString() || "none"} 
                 onValueChange={(value) => {
@@ -505,11 +502,9 @@ export default function ClientDetail() {
                   ))}
                 </SelectContent>
               </Select>
-            </div>
-
-            {/* 需求類型選項 */}
-            {selectedDemandType && selectedDemandType.options && selectedDemandType.options.length > 0 && (
-              <div className="space-y-2 p-4 bg-muted/50 rounded-lg">
+              </div>
+              {selectedDemandType && selectedDemandType.options && selectedDemandType.options.length > 0 && (
+                <div className="col-span-2 grid gap-3 p-4 bg-muted/30 rounded-lg">
                 <Label>選擇需求項目</Label>
                 <div className="space-y-2">
                   {selectedDemandType.options.map((option: any) => (
@@ -533,17 +528,20 @@ export default function ClientDetail() {
                       </label>
                     </div>
                   ))}
+                  </div>
                 </div>
+              )}
+              <div className="grid gap-2">
+                <Label htmlFor="location">地點</Label>
+                <Input id="location" name="location" placeholder="工作地點" />
               </div>
-            )}
-
-            <div className="space-y-2">
-              <Label htmlFor="location">工作地點</Label>
-              <Input id="location" name="location" placeholder="選填" />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="note">備註</Label>
-              <Textarea id="note" name="note" placeholder="選填" rows={3} />
+              <div className="grid gap-2">
+                {/* 空格，保持對齊 */}
+              </div>
+              <div className="col-span-2 grid gap-2">
+                <Label htmlFor="note">備註</Label>
+                <Textarea id="note" name="note" placeholder="其他說明..." rows={3} />
+              </div>
             </div>
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => {
