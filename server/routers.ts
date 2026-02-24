@@ -155,6 +155,8 @@ export const appRouter = router({
         attendanceNotes: z.string().optional(),
         lineId: z.string().optional(),
         whatsappId: z.string().optional(),
+        avatarUrl: z.string().optional(),
+        city: z.string().optional(),
         note: z.string().optional(),
       }))
       .mutation(async ({ input }) => {
@@ -191,6 +193,8 @@ export const appRouter = router({
           attendanceNotes: z.string().optional(),
           lineId: z.string().optional(),
           whatsappId: z.string().optional(),
+          avatarUrl: z.string().optional(),
+          city: z.string().optional(),
           note: z.string().optional(),
         })),
       }))
@@ -246,6 +250,8 @@ export const appRouter = router({
         hasWorkPermit: z.boolean().optional(),
         hasHealthCheck: z.boolean().optional(),
         workPermitExpiryDate: z.date().optional(),
+        avatarUrl: z.string().optional(),
+        city: z.string().optional(),
         status: z.enum(["active", "inactive"]).optional(),
         note: z.string().optional(),
       }))
@@ -394,6 +400,7 @@ export const appRouter = router({
         contactEmail: z.string().email("Email 格式不正確").optional(),
         contactPhone: z.string().optional(),
         address: z.string().optional(),
+        logoUrl: z.string().optional(),
         billingType: z.enum(["hourly", "fixed", "custom"]).optional(),
         note: z.string().optional(),
       }))
@@ -410,6 +417,7 @@ export const appRouter = router({
         contactEmail: z.string().email("Email 格式不正確").optional(),
         contactPhone: z.string().optional(),
         address: z.string().optional(),
+        logoUrl: z.string().optional(),
         billingType: z.enum(["hourly", "fixed", "custom"]).optional(),
         status: z.enum(["active", "inactive"]).optional(),
         note: z.string().optional(),

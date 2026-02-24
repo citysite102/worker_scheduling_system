@@ -42,6 +42,8 @@ export const workers = mysqlTable("workers", {
   attendanceNotes: text("attendanceNotes"), // 出勤備註（遲到/曠職記錄）
   lineId: varchar("lineId", { length: 100 }), // Line ID（選填）
   whatsappId: varchar("whatsappId", { length: 100 }), // WhatsApp ID（選填）
+  avatarUrl: text("avatarUrl"), // 頭像 URL（可為自訂上傳或預設頭像）
+  city: varchar("city", { length: 50 }), // 所在縣市
   status: mysqlEnum("status", ["active", "inactive"]).default("active").notNull(),
   note: text("note"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
@@ -61,6 +63,7 @@ export const clients = mysqlTable("clients", {
   contactEmail: varchar("contactEmail", { length: 320 }),
   contactPhone: varchar("contactPhone", { length: 20 }),
   address: text("address"),
+  logoUrl: text("logoUrl"), // 客戶 Logo URL
   billingType: mysqlEnum("billingType", ["hourly", "fixed", "custom"]).default("hourly").notNull(),
   note: text("note"),
   status: mysqlEnum("status", ["active", "inactive"]).default("active").notNull(),

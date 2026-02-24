@@ -17,6 +17,8 @@ import { toast } from "sonner";
 import { WorkPermitOCRDialog } from "@/components/WorkPermitOCRDialog";
 import { BatchWorkPermitUpload } from "@/components/BatchWorkPermitUpload";
 import { exportWorkersToCSV } from "@/lib/exportWorkers";
+import { DEFAULT_AVATARS } from "../../../shared/avatars";
+import { TAIWAN_CITIES } from "../../../shared/cities";
 
 export default function Workers() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -35,6 +37,8 @@ export default function Workers() {
   const [selectedWorkerIds, setSelectedWorkerIds] = useState<Set<number>>(new Set());
   const [hasWorkPermitChecked, setHasWorkPermitChecked] = useState(false);
   const [workPermitExpiryDate, setWorkPermitExpiryDate] = useState<string>("");
+  const [avatarUrl, setAvatarUrl] = useState<string>("");
+  const [showAvatarPicker, setShowAvatarPicker] = useState(false);
 
   const { data: workers, isLoading, refetch } = trpc.workers.list.useQuery({
     search: searchTerm,
@@ -101,6 +105,8 @@ export default function Workers() {
       // 只有勾選「有工作簽證」時，才提交到期日
       workPermitExpiryDate: hasWorkPermitChecked && workPermitExpiryDate ? new Date(workPermitExpiryDate) : undefined,
       attendanceNotes: (formData.get("attendanceNotes") as string) || undefined,
+      avatarUrl: avatarUrl || undefined,
+      city: (formData.get("city") as string) || undefined,
       note: (formData.get("note") as string) || undefined,
     };
 
@@ -161,6 +167,65 @@ export default function Workers() {
                 <DialogDescription>填寫員工基本資料</DialogDescription>
               </DialogHeader>
               <div className="grid gap-6 py-4">
+                {/* 頭像選擇 */}
+                <div className="grid gap-2.5">
+                  <Label>頭像</Label>
+                  <div className="flex items-center gap-4">
+                    {avatarUrl && (
+                      <img src={avatarUrl} alt="頭像" className="w-16 h-16 rounded-full object-cover" />
+                    )}
+                    <div className="flex gap-2">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setShowAvatarPicker(!showAvatarPicker)}
+                      >
+                        {avatarUrl ? "更換頭像" : "選擇頭像"}
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          const input = document.createElement("input");
+                          input.type = "file";
+                          input.accept = "image/*";
+                          input.onchange = async (e) => {
+                            const file = (e.target as HTMLInputElement).files?.[0];
+                            if (!file) return;
+                            const reader = new FileReader();
+                            reader.onload = () => {
+                              setAvatarUrl(reader.result as string);
+                            };
+                            reader.readAsDataURL(file);
+                          };
+                          input.click();
+                        }}
+                      >
+                        <Upload className="w-4 h-4 mr-1" />
+                        上傳圖片
+                      </Button>
+                    </div>
+                  </div>
+                  {showAvatarPicker && (
+                    <div className="grid grid-cols-4 gap-3 p-4 border rounded-lg">
+                      {DEFAULT_AVATARS.map((url, index) => (
+                        <button
+                          key={index}
+                          type="button"
+                          onClick={() => {
+                            setAvatarUrl(url);
+                            setShowAvatarPicker(false);
+                          }}
+                          className="w-full aspect-square rounded-full overflow-hidden border-2 hover:border-primary transition-colors"
+                        >
+                          <img src={url} alt={`預設頭像 ${index + 1}`} className="w-full h-full object-cover" />
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
                 <div className="grid grid-cols-2 gap-6">
                   <div className="grid gap-2.5">
                     <Label htmlFor="name">姓名 *</Label>
@@ -190,6 +255,24 @@ export default function Workers() {
                     <Label htmlFor="uiNumber">統一證號</Label>
                     <Input id="uiNumber" name="uiNumber" defaultValue={editingWorker?.uiNumber || ocrData?.uiNumber} placeholder="例：H801403696" key={ocrData?.uiNumber} />
                   </div>
+                </div>
+                <div className="grid grid-cols-2 gap-6">
+                  <div className="grid gap-2.5">
+                    <Label htmlFor="city">所在縣市</Label>
+                    <Select name="city" defaultValue={editingWorker?.city || ""}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="選擇縣市" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {TAIWAN_CITIES.map((city) => (
+                          <SelectItem key={city} value={city}>
+                            {city}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="grid gap-2.5" />
                 </div>
                 <div className="grid grid-cols-2 gap-6">
                   <div className="grid gap-2.5">

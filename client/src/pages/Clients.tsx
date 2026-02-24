@@ -18,6 +18,7 @@ export default function Clients() {
   const [statusFilter, setStatusFilter] = useState<"active" | "inactive" | undefined>(undefined);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingClient, setEditingClient] = useState<any>(null);
+  const [logoUrl, setLogoUrl] = useState<string>("");
 
   const { data: clients, isLoading, refetch } = trpc.clients.list.useQuery({
     search: searchTerm,
@@ -56,6 +57,7 @@ export default function Clients() {
       contactPhone: (formData.get("contactPhone") as string) || undefined,
       contactEmail: (formData.get("contactEmail") as string) || undefined,
       address: (formData.get("address") as string) || undefined,
+      logoUrl: logoUrl || undefined,
       billingType: (formData.get("billingType") as "hourly" | "fixed" | "custom") || undefined,
       note: (formData.get("note") as string) || undefined,
     };
@@ -110,6 +112,37 @@ export default function Clients() {
                 <div className="grid gap-2">
                   <Label htmlFor="name">客戶名稱 *</Label>
                   <Input id="name" name="name" defaultValue={editingClient?.name} required />
+                </div>
+                {/* Logo 上傳 */}
+                <div className="grid gap-2">
+                  <Label>Logo</Label>
+                  <div className="flex items-center gap-4">
+                    {logoUrl && (
+                      <img src={logoUrl} alt="Logo" className="w-16 h-16 rounded object-contain border" />
+                    )}
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        const input = document.createElement("input");
+                        input.type = "file";
+                        input.accept = "image/*";
+                        input.onchange = async (e) => {
+                          const file = (e.target as HTMLInputElement).files?.[0];
+                          if (!file) return;
+                          const reader = new FileReader();
+                          reader.onload = () => {
+                            setLogoUrl(reader.result as string);
+                          };
+                          reader.readAsDataURL(file);
+                        };
+                        input.click();
+                      }}
+                    >
+                      {logoUrl ? "更換 Logo" : "上傳 Logo"}
+                    </Button>
+                  </div>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="grid gap-2">
@@ -207,8 +240,12 @@ export default function Clients() {
                   onClick={() => setLocation(`/clients/${client.id}`)}
                 >
                   <div className="flex items-start gap-3 flex-1 min-w-0">
-                    <div className="h-9 w-9 rounded-lg bg-blue-50 flex items-center justify-center shrink-0 mt-0.5">
-                      <Building2 className="h-4 w-4 text-blue-600" />
+                    <div className="h-9 w-9 rounded-lg bg-blue-50 flex items-center justify-center shrink-0 mt-0.5 overflow-hidden">
+                      {client.logoUrl ? (
+                        <img src={client.logoUrl} alt={client.name} className="w-full h-full object-contain" />
+                      ) : (
+                        <Building2 className="h-4 w-4 text-blue-600" />
+                      )}
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">

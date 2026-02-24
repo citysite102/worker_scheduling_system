@@ -170,6 +170,11 @@ export default function ClientDetail() {
           <Button variant="outline" size="icon" onClick={() => setLocation("/clients")}>
             <ArrowLeft className="h-4 w-4" />
           </Button>
+          {clientDetail.logoUrl && (
+            <div className="h-12 w-12 rounded-lg bg-muted flex items-center justify-center overflow-hidden">
+              <img src={clientDetail.logoUrl} alt={clientDetail.name} className="w-full h-full object-contain" />
+            </div>
+          )}
           <div>
             <h1 className="text-2xl font-semibold text-foreground">{clientDetail.name}</h1>
             <p className="text-sm text-muted-foreground mt-1">客戶詳細資料與需求管理</p>
