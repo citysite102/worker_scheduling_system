@@ -2,11 +2,12 @@ import { ClientPortalLayout } from "@/components/ClientPortalLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { trpc } from "@/lib/trpc";
 import { FileText, Clock, CheckCircle2, AlertCircle } from "lucide-react";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 
 export function ClientDashboard() {
   const { data: demandsData, isLoading } = trpc.demands.list.useQuery({});
+  const [, setLocation] = useLocation();
 
   if (isLoading) {
     return (
@@ -143,8 +144,11 @@ export function ClientDashboard() {
             ) : (
               <div className="space-y-4">
                 {recentDemands.map((demand) => (
-                  <Link key={demand.id} href={`/client-portal/demands/${demand.id}`}>
-                    <div className="flex items-center justify-between rounded-lg border p-5 mb-4 hover:bg-accent hover:shadow-md transition-all cursor-pointer bg-card">
+                    <div 
+                      key={demand.id}
+                      onClick={() => setLocation(`/client-portal/demands/${demand.id}`)}
+                      className="flex items-center justify-between rounded-lg border p-5 mb-4 hover:bg-accent hover:shadow-md transition-all cursor-pointer bg-card"
+                    >
                       <div className="flex-1">
                         <div className="flex items-center gap-3 mb-2">
                           <p className="font-semibold text-base">
@@ -189,7 +193,6 @@ export function ClientDashboard() {
                         </span>
                       </div>
                     </div>
-                  </Link>
                 ))}
               </div>
             )}
