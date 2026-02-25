@@ -15,7 +15,7 @@ import {
   Calendar, Clock, MapPin, Users, Filter, GraduationCap, FileCheck, Stethoscope, X,
   Edit, Copy, Trash2
 } from "lucide-react";
-import { useParams, useLocation } from "wouter";
+import { useRoute, useLocation, Link } from "wouter";;
 import { useState, useMemo } from "react";
 import { toast } from "sonner";
 import {
@@ -30,9 +30,9 @@ import {
 } from "@/components/ui/alert-dialog";
 
 export default function DemandDetail() {
-  const params = useParams();
+  const [, params] = useRoute("/demands/:id");
   const [, setLocation] = useLocation();
-  const demandId = parseInt(params.id || "0");
+  const demandId = parseInt(params?.id || "0");
 
   const [selectedWorkerIds, setSelectedWorkerIds] = useState<number[]>([]);
   const [isInactiveExpanded, setIsInactiveExpanded] = useState(false);
@@ -357,7 +357,12 @@ export default function DemandDetail() {
 
       <div className="mb-8 flex items-start justify-between">
         <div>
-          <h1 className="text-2xl font-semibold text-foreground">需求單：{demand.client?.name}</h1>
+          <h1 className="text-2xl font-semibold text-foreground">
+            需求單：
+            <Link href={`/clients/${demand.clientId}`} className="hover:underline hover:text-primary transition-colors">
+              {demand.client?.name}
+            </Link>
+          </h1>
           <p className="text-sm text-muted-foreground mt-1">指派員工至此需求單</p>
         </div>
         <div className="flex gap-2">
@@ -616,7 +621,9 @@ export default function DemandDetail() {
                   >
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
-                        <span className="font-medium text-sm">{assignment.worker?.name}</span>
+                        <Link href={`/workers/${assignment.workerId}`} className="font-medium text-sm hover:underline hover:text-primary transition-colors">
+                          {assignment.worker?.name}
+                        </Link>
                         {assignment.worker?.school ? (
                           <Badge variant="outline" className="text-xs px-1.5 py-0 bg-white">
                             <GraduationCap className="h-3 w-3 mr-0.5" />
@@ -745,7 +752,9 @@ export default function DemandDetail() {
                     />
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
-                        <span className="font-medium text-sm">{worker.name}</span>
+                        <Link href={`/workers/${worker.id}`} className="font-medium text-sm hover:underline hover:text-primary transition-colors">
+                          {worker.name}
+                        </Link>
                         {worker.school && (
                           <Badge variant="outline" className="text-[10px] px-1.5 py-0 font-normal text-muted-foreground">
                             <GraduationCap className="h-2.5 w-2.5 mr-0.5" />
@@ -813,7 +822,9 @@ export default function DemandDetail() {
                     <Checkbox disabled />
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
-                        <span className="font-medium text-sm text-muted-foreground">{uw.worker.name}</span>
+                        <Link href={`/workers/${uw.worker.id}`} className="font-medium text-sm text-muted-foreground hover:underline hover:text-primary transition-colors">
+                          {uw.worker.name}
+                        </Link>
                         {uw.worker.school && (
                           <Badge variant="outline" className="text-[10px] px-1.5 py-0 font-normal text-muted-foreground/60">
                             {uw.worker.school}
@@ -861,7 +872,9 @@ export default function DemandDetail() {
                         className="flex items-center gap-3 p-3 rounded-lg border border-border/30 bg-muted/20 opacity-40"
                       >
                         <div className="flex-1 min-w-0">
-                          <div className="font-medium text-sm text-muted-foreground">{uw.worker.name}</div>
+                          <Link href={`/workers/${uw.worker.id}`} className="font-medium text-sm text-muted-foreground hover:underline hover:text-primary transition-colors">
+                            {uw.worker.name}
+                          </Link>
                           <div className="text-xs text-muted-foreground">已停用</div>
                         </div>
                       </div>
