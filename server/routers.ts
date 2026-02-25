@@ -1089,6 +1089,60 @@ export const appRouter = router({
         return { success: true };
       }),
 
+    // 批次建立需求單（多個日期）
+    createBatch: protectedProcedure
+      .input(z.object({
+        dates: z.array(z.date()).min(1, "至少需要選擇一個日期"),
+        startTime: z.string().regex(/^\d{2}:\d{2}$/, "時間格式應為 HH:mm"),
+        endTime: z.string().regex(/^\d{2}:\d{2}$/, "時間格式應為 HH:mm"),
+        requiredWorkers: z.number().min(1, "需求人數至少為 1"),
+        breakHours: z.number().min(0, "休息時間不可為負數").optional(),
+        demandTypeId: z.number().optional(),
+        selectedOptions: z.string().optional(),
+        location: z.string().optional(),
+        note: z.string().optional(),
+        status: z.enum(["draft", "confirmed", "cancelled", "closed"]).optional(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        // 如果是客戶角色，從 ctx.user 中取得 clientId
+        let clientId: number;
+        if (ctx.user.role === 'client') {
+          if (!ctx.user.clientId) {
+            throw new TRPCError({ code: "BAD_REQUEST", message: "客戶帳號未關聯到客戶公司" });
+          }
+          clientId = ctx.user.clientId;
+        } else {
+          throw new TRPCError({ code: "FORBIDDEN", message: "Admin 角色不能使用此 API 建立需求單" });
+        }
+        
+        const { dates, breakHours, ...rest } = input;
+        
+        // 批次建立需求單
+        const results = await Promise.allSettled(
+          dates.map(date => 
+            db.createDemand({
+              ...rest,
+              date,
+              clientId,
+              breakHours: breakHours ? Math.round(breakHours * 60) : 0,
+              createdBy: ctx.user.id,
+              status: 'pending',
+            })
+          )
+        );
+        
+        // 統計成功和失敗數量
+        const succeeded = results.filter(r => r.status === 'fulfilled').length;
+        const failed = results.filter(r => r.status === 'rejected').length;
+        
+        return { 
+          success: true, 
+          total: dates.length,
+          succeeded,
+          failed,
+        };
+      }),
+
     update: publicProcedure
       .input(z.object({
         id: z.number(),

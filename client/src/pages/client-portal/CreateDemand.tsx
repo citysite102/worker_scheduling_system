@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Switch } from "@/components/ui/switch";
 import {
   Select,
   SelectContent,
@@ -12,11 +13,21 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { DateMultiPicker } from "@/components/DateMultiPicker";
 import { trpc } from "@/lib/trpc";
 import { useState } from "react";
 import { useLocation } from "wouter";
-import { ArrowLeft, Loader2 } from "lucide-react";
-
+import { ArrowLeft, Loader2, Calendar } from "lucide-react";
 import { toast } from "sonner";
 
 export function CreateDemand() {
@@ -25,6 +36,12 @@ export function CreateDemand() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedDemandTypeId, setSelectedDemandTypeId] = useState<number | null>(null);
   const [selectedOptionIds, setSelectedOptionIds] = useState<number[]>([]);
+  
+  // 批次模式狀態
+  const [isBatchMode, setIsBatchMode] = useState(false);
+  const [selectedDates, setSelectedDates] = useState<Date[]>([]);
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+  const [pendingFormData, setPendingFormData] = useState<any>(null);
 
   // 取得需求類型列表
   const { data: demandTypes } = trpc.demandTypes.list.useQuery();
@@ -36,6 +53,21 @@ export function CreateDemand() {
     },
     onError: (error) => {
       toast.error(error.message || "提交需求單時發生錯誤，請稍後再試。");
+      setIsSubmitting(false);
+    },
+  });
+
+  const createBatchMutation = trpc.demands.createBatch.useMutation({
+    onSuccess: (result) => {
+      if (result.failed > 0) {
+        toast.warning(`已成功建立 ${result.succeeded} 筆需求單，${result.failed} 筆失敗。`);
+      } else {
+        toast.success(`已成功建立 ${result.succeeded} 筆需求單！`);
+      }
+      setLocation("/client-portal/demands");
+    },
+    onError: (error) => {
+      toast.error(error.message || "批次建立需求單時發生錯誤，請稍後再試。");
       setIsSubmitting(false);
     },
   });
@@ -56,13 +88,6 @@ export function CreateDemand() {
     // 將選取的選項 ID 轉為 JSON 字串
     const selectedOptionsJson = selectedOptionIds.length > 0 ? JSON.stringify(selectedOptionIds) : undefined;
 
-    // 驗證必填欄位
-    if (!date || !startTime || !endTime || !requiredWorkers) {
-      toast.error("請填寫所有必填欄位：日期、開始時間、結束時間、需求人數。");
-      setIsSubmitting(false);
-      return;
-    }
-
     // 驗證時間邏輯
     if (startTime >= endTime) {
       toast.error("結束時間必須晚於開始時間。");
@@ -73,6 +98,37 @@ export function CreateDemand() {
     // 驗證需求人數
     if (requiredWorkers <= 0) {
       toast.error("需求人數必須大於 0。");
+      setIsSubmitting(false);
+      return;
+    }
+
+    // 批次模式
+    if (isBatchMode) {
+      if (selectedDates.length === 0) {
+        toast.error("請至少選擇一個日期。");
+        setIsSubmitting(false);
+        return;
+      }
+
+      // 顯示確認對話框
+      setPendingFormData({
+        dates: selectedDates,
+        startTime,
+        endTime,
+        requiredWorkers,
+        location: location || undefined,
+        demandTypeId: demandTypeId ? parseInt(demandTypeId) : undefined,
+        selectedOptions: selectedOptionsJson,
+        note: note || undefined,
+      });
+      setShowConfirmDialog(true);
+      setIsSubmitting(false);
+      return;
+    }
+
+    // 單一日期模式
+    if (!date) {
+      toast.error("請選擇日期。");
       setIsSubmitting(false);
       return;
     }
@@ -93,6 +149,20 @@ export function CreateDemand() {
     }
   };
 
+  const handleConfirmBatchCreate = async () => {
+    setShowConfirmDialog(false);
+    setIsSubmitting(true);
+
+    try {
+      await createBatchMutation.mutateAsync(pendingFormData);
+    } catch (error) {
+      // Error handling is done in onError callback
+    }
+  };
+
+  const minDate = new Date();
+  minDate.setHours(0, 0, 0, 0);
+
   return (
     <ClientPortalLayout>
       <div className="space-y-6">
@@ -107,8 +177,8 @@ export function CreateDemand() {
           </Button>
         </div>
 
-        <Card className="max-w-2xl">
-          <CardHeader>
+        <Card className="max-w-2xl shadow-md border-border/40">
+          <CardHeader className="pb-4">
             <CardTitle>建立新需求單</CardTitle>
             <p className="text-sm text-muted-foreground">
               填寫以下資訊建立用工需求單，提交後將由內部人員審核並指派員工。
@@ -116,18 +186,48 @@ export function CreateDemand() {
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-6">
-              {/* 日期 */}
+              {/* 批次模式切換 */}
+              <div className="flex items-center justify-between p-4 bg-accent/10 rounded-lg border border-accent/20">
+                <div className="space-y-0.5">
+                  <Label htmlFor="batch-mode" className="text-base font-medium">
+                    批次建立模式
+                  </Label>
+                  <p className="text-sm text-muted-foreground">
+                    一次選擇多個日期，快速建立相同設定的需求單
+                  </p>
+                </div>
+                <Switch
+                  id="batch-mode"
+                  checked={isBatchMode}
+                  onCheckedChange={(checked) => {
+                    setIsBatchMode(checked);
+                    if (!checked) {
+                      setSelectedDates([]);
+                    }
+                  }}
+                />
+              </div>
+
+              {/* 日期選擇 */}
               <div className="space-y-2">
-                <Label htmlFor="date">
+                <Label htmlFor={isBatchMode ? undefined : "date"}>
                   日期 <span className="text-destructive">*</span>
                 </Label>
-                <Input
-                  type="date"
-                  id="date"
-                  name="date"
-                  required
-                  min={new Date().toISOString().split("T")[0]}
-                />
+                {isBatchMode ? (
+                  <DateMultiPicker
+                    selectedDates={selectedDates}
+                    onDatesChange={setSelectedDates}
+                    minDate={minDate}
+                  />
+                ) : (
+                  <Input
+                    type="date"
+                    id="date"
+                    name="date"
+                    required
+                    min={new Date().toISOString().split("T")[0]}
+                  />
+                )}
               </div>
 
               {/* 時間範圍 */}
@@ -254,7 +354,7 @@ export function CreateDemand() {
                   {isSubmitting && (
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   )}
-                  提交需求單
+                  {isBatchMode ? `批次建立需求單` : `提交需求單`}
                 </Button>
                 <Button 
                   type="button" 
@@ -268,6 +368,25 @@ export function CreateDemand() {
           </CardContent>
         </Card>
       </div>
+
+      {/* 批次建立確認對話框 */}
+      <AlertDialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>確認批次建立需求單</AlertDialogTitle>
+            <AlertDialogDescription className="space-y-2">
+              <p>您即將建立 <span className="font-semibold text-foreground">{selectedDates.length}</span> 筆需求單，所有需求單將使用相同的設定（時間、地點、人數等），僅日期不同。</p>
+              <p className="text-sm text-muted-foreground">提交後將由內部人員審核並指派員工。</p>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>取消</AlertDialogCancel>
+            <AlertDialogAction onClick={handleConfirmBatchCreate}>
+              確認建立
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </ClientPortalLayout>
   );
 }
