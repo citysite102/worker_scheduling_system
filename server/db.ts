@@ -230,6 +230,13 @@ export async function getClientById(id: number) {
   return result[0];
 }
 
+export async function getClientByName(name: string) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db.select().from(clients).where(eq(clients.name, name)).limit(1);
+  return result[0];
+}
+
 export async function createClient(data: { name: string; contactName?: string; contactEmail?: string; contactPhone?: string; address?: string; billingType?: "hourly" | "fixed" | "custom"; note?: string }) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");

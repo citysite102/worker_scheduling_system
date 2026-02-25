@@ -73,6 +73,12 @@ export function DateMultiPicker({ selectedDates, onDatesChange, minDate }: DateM
               if (minDate && date < minDate) return true;
               return false;
             }}
+            modifiers={{
+              selected: selectedDates,
+            }}
+            modifiersClassNames={{
+              selected: "bg-primary/10 text-primary font-semibold border-2 border-primary",
+            }}
             initialFocus
             locale={zhTW}
           />

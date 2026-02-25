@@ -168,7 +168,10 @@ export default function Reports() {
                       <SelectItem value="all">全部客戶</SelectItem>
                       {clients?.map((client) => (
                         <SelectItem key={client.id} value={client.id.toString()}>
-                          {client.name}
+                          <div className="flex flex-col">
+                            <span>{client.name}</span>
+                            <span className="text-xs text-muted-foreground">聯絡人：{client.contactName || '未設定'}</span>
+                          </div>
                         </SelectItem>
                       ))}
                     </SelectContent>

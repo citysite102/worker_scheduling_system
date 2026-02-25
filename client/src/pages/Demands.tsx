@@ -334,7 +334,10 @@ export default function Demands() {
                         className="w-full justify-between"
                       >
                         {selectedClientId
-                          ? clients?.find((client) => client.id === selectedClientId)?.name
+                          ? (() => {
+                              const client = clients?.find((c) => c.id === selectedClientId);
+                              return client ? `${client.name}（聯絡人：${client.contactName || '未設定'}）` : '請選擇客戶';
+                            })()
                           : "請選擇客戶"}
                         <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                       </Button>
@@ -348,7 +351,7 @@ export default function Demands() {
                             {clients?.map((client) => (
                               <CommandItem
                                 key={client.id}
-                                value={client.name}
+                                value={`${client.id}-${client.name}`}
                                 onSelect={() => {
                                   setSelectedClientId(client.id);
                                   setClientComboboxOpen(false);
@@ -360,7 +363,10 @@ export default function Demands() {
                                     selectedClientId === client.id ? "opacity-100" : "opacity-0"
                                   )}
                                 />
-                                {client.name}
+                                <div className="flex flex-col">
+                                  <span>{client.name}</span>
+                                  <span className="text-xs text-muted-foreground">聯絡人：{client.contactName || '未設定'}</span>
+                                </div>
                               </CommandItem>
                             ))}
                           </CommandGroup>

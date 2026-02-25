@@ -635,6 +635,14 @@ export const appRouter = router({
         note: z.string().optional(),
       }))
       .mutation(async ({ input }) => {
+        // 檢查客戶名稱是否已存在
+        const existingClient = await db.getClientByName(input.name);
+        if (existingClient) {
+          throw new TRPCError({
+            code: 'BAD_REQUEST',
+            message: `客戶名稱「${input.name}」已存在，請使用不同的名稱`,
+          });
+        }
         await db.createClient(input);
         return { success: true };
       }),
