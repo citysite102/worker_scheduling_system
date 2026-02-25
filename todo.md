@@ -1775,4 +1775,29 @@
 - [x] 測試所有微互動效果是否正常運作（Toast、按鈕動畫、Loading 狀態）
 - [x] 測試所有頁面在手機、平板、桌面的響應式效果（卡片內距、按鈕大小）
 - [x] 執行 TypeScript 編譯檢查（無錯誤）
-- [x] 執行所有單元測試（UI 優化不影響既有功能）
+- [x] 執行所有單元測試（UI 優化不影響### 1. 修u6b63u6240u6709u8868u55aeu7684u6a19u984cu8207u8f38u5165u6b04u4f4du9593u8ddd
+- [x] 檢查所有 Dialog 表單的 Label 與 Input 間距（目前過於緊密）
+- [x] 統一設定 Label 與 Input 之間的間距為 `space-y-2`
+- [x] 檢查需求單類型管理（DemandTypes.tsx）的新增表單
+- [x] 檢查員工管理（Workers.tsx）的新增/編輯表單
+- [x] 檢查客戶管理（Clients.tsx）的新增/編輯表單
+- [x] 檢查需求單管理（Demands.tsx）的新增/編輯表單
+- [x] 檢查所有其他包含表單的頁面（DemandDetail.tsx, ClientDetail.tsx, ActualTime.tsx, Availability.tsx, AdminSettings.tsx, Reports.tsx）
+- [x] 建立表單間距的全域樣式規範（移除所有 grid gap 與 space-y 的衝u7a81，統一使用 space-y-2）算彈性化方案討論與設計
+- [ ] 與使用者確認薪資計算方式的需求細節
+- [ ] 設計資料庫 schema 變更（支援時薪/件計/混合制）
+- [ ] 設計 UI 流程（需求單建立、員工指派、工時回填）
+- [ ] 實作薪資計算邏輯
+- [ ] 實作成本分析報表
+
+## 使用者需求（2026/02/25 - 需求單指派頁面優化 + 儀表板調整）
+
+### 1. 需求單指派頁面優化
+- [x] 為可指派名單加入搜尋功能（依姓名、電話、學校搜尋）
+- [x] 為可指派名單加入分頁功能（每頁 10 筆）
+- [x] 為不可指派名單加入搜尋功能
+- [x] 為不可指派名單加入分頁功能（每頁 10 筆）
+- [x] 優u5316u6548u80fduff1au907fu514du4e00u6b21u6e32u67d9u904eu591au54e1u5de5u5361u7247uff08u5df2u5be6u4f5cu5206u9801uff0cu6bcfu9801u50c5u6e32u67d9 10 u7b46uff09
+
+### 2. 儀表板調整
+- [x] 移除「合作單位需求分布」圖表區塊

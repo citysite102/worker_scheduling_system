@@ -110,13 +110,13 @@ export default function Clients() {
                 <DialogDescription>填寫客戶基本資料</DialogDescription>
               </DialogHeader>
               <div className="grid gap-4 py-4">
-                <div className="grid gap-2">
-                  <Label htmlFor="name">客戶名稱 *</Label>
+                <div className="space-y-2">
+              <Label htmlFor="name">客戶名稱 *</Label>
                   <Input id="name" name="name" defaultValue={editingClient?.name} required />
                 </div>
                 {/* Logo 上傳 */}
-                <div className="grid gap-2">
-                  <Label>Logo</Label>
+                <div className="space-y-2">
+              <Label>Logo</Label>
                   <div className="flex items-center gap-4">
                     {logoUrl && (
                       <img src={logoUrl} alt="Logo" className="w-16 h-16 rounded object-contain border" />
@@ -163,25 +163,25 @@ export default function Clients() {
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="grid gap-2">
-                    <Label htmlFor="contactName">聯絡人</Label>
+                  <div className="space-y-2">
+              <Label htmlFor="contactName">聯絡人</Label>
                     <Input id="contactName" name="contactName" defaultValue={editingClient?.contactName} />
                   </div>
-                  <div className="grid gap-2">
-                    <Label htmlFor="contactPhone">聯絡電話</Label>
+                  <div className="space-y-2">
+              <Label htmlFor="contactPhone">聯絡電話</Label>
                     <Input id="contactPhone" name="contactPhone" defaultValue={editingClient?.contactPhone} />
                   </div>
                 </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="contactEmail">聯絡 Email</Label>
+                <div className="space-y-2">
+              <Label htmlFor="contactEmail">聯絡 Email</Label>
                   <Input id="contactEmail" name="contactEmail" type="email" defaultValue={editingClient?.contactEmail} />
                 </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="address">地址</Label>
+                <div className="space-y-2">
+              <Label htmlFor="address">地址</Label>
                   <Input id="address" name="address" defaultValue={editingClient?.address} />
                 </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="billingType">計費方式</Label>
+                <div className="space-y-2">
+              <Label htmlFor="billingType">計費方式</Label>
                   <Select name="billingType" defaultValue={editingClient?.billingType || "hourly"}>
                     <SelectTrigger>
                       <SelectValue />
@@ -193,8 +193,8 @@ export default function Clients() {
                     </SelectContent>
                   </Select>
                 </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="note">備註</Label>
+                <div className="space-y-2">
+              <Label htmlFor="note">備註</Label>
                   <Textarea id="note" name="note" defaultValue={editingClient?.note} />
                 </div>
               </div>

@@ -108,8 +108,8 @@ export default function Reports() {
           </CardHeader>
           <CardContent>
             <div className="grid gap-5">
-              <div>
-                <Label className="text-sm font-medium">報表類型</Label>
+              <div className="space-y-2">
+              <Label className="text-sm font-medium">報表類型</Label>
                 <Select value={reportType} onValueChange={(value) => {
                   setReportType(value as ReportType);
                   setHasGenerated(false);
@@ -130,8 +130,8 @@ export default function Reports() {
               </div>
 
               {reportType === "worker" && (
-                <div>
-                  <Label className="text-sm font-medium">篩選員工</Label>
+                <div className="space-y-2">
+              <Label className="text-sm font-medium">篩選員工</Label>
                   <Select value={selectedWorker} onValueChange={(value) => {
                     setSelectedWorker(value);
                     setHasGenerated(false);
@@ -155,8 +155,8 @@ export default function Reports() {
               )}
 
               {reportType === "client" && (
-                <div>
-                  <Label className="text-sm font-medium">篩選客戶</Label>
+                <div className="space-y-2">
+              <Label className="text-sm font-medium">篩選客戶</Label>
                   <Select value={selectedClient} onValueChange={(value) => {
                     setSelectedClient(value);
                     setHasGenerated(false);
@@ -180,8 +180,8 @@ export default function Reports() {
               )}
 
               <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label className="text-sm font-medium">開始日期</Label>
+                <div className="space-y-2">
+              <Label className="text-sm font-medium">開始日期</Label>
                   <Input
                     type="date"
                     value={startDate}
@@ -189,8 +189,8 @@ export default function Reports() {
                     className="mt-1.5 h-9"
                   />
                 </div>
-                <div>
-                  <Label className="text-sm font-medium">結束日期</Label>
+                <div className="space-y-2">
+              <Label className="text-sm font-medium">結束日期</Label>
                   <Input
                     type="date"
                     value={endDate}

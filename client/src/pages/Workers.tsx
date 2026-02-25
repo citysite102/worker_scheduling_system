@@ -169,8 +169,8 @@ export default function Workers() {
               </DialogHeader>
               <div className="grid gap-6 py-4">
                 {/* 頭像選擇 */}
-                <div className="grid gap-2.5">
-                  <Label>頭像</Label>
+                <div className="space-y-2">
+              <Label>頭像</Label>
                   <div className="flex items-center gap-4">
                     {/* 頭像預覽 */}
                     <div className="relative">
@@ -267,38 +267,38 @@ export default function Workers() {
                   )}
                 </div>
                 <div className="grid grid-cols-2 gap-6">
-                  <div className="grid gap-2.5">
-                    <Label htmlFor="name">姓名 *</Label>
+                  <div className="space-y-2">
+              <Label htmlFor="name">姓名 *</Label>
                     <Input id="name" name="name" defaultValue={editingWorker?.name || ocrData?.name} required key={ocrData?.name} />
                   </div>
-                  <div className="grid gap-2.5">
-                    <Label htmlFor="phone">電話</Label>
+                  <div className="space-y-2">
+              <Label htmlFor="phone">電話</Label>
                     <Input id="phone" name="phone" defaultValue={editingWorker?.phone} />
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-6">
-                  <div className="grid gap-2.5">
-                    <Label htmlFor="email">Email</Label>
+                  <div className="space-y-2">
+              <Label htmlFor="email">Email</Label>
                     <Input id="email" name="email" type="email" defaultValue={editingWorker?.email} />
                   </div>
-                  <div className="grid gap-2.5">
-                    <Label htmlFor="school">學校</Label>
+                  <div className="space-y-2">
+              <Label htmlFor="school">學校</Label>
                     <Input id="school" name="school" defaultValue={editingWorker?.school || ocrData?.school} placeholder="例：台大、政大" key={ocrData?.school} />
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-6">
-                  <div className="grid gap-2.5">
-                    <Label htmlFor="nationality">國籍</Label>
+                  <div className="space-y-2">
+              <Label htmlFor="nationality">國籍</Label>
                     <Input id="nationality" name="nationality" defaultValue={editingWorker?.nationality || ocrData?.nationality} placeholder="例：印尼、越南" key={ocrData?.nationality} />
                   </div>
-                  <div className="grid gap-2.5">
-                    <Label htmlFor="idNumber">統一證號</Label>
+                  <div className="space-y-2">
+              <Label htmlFor="idNumber">統一證號</Label>
                     <Input id="idNumber" name="idNumber" defaultValue={editingWorker?.idNumber || ocrData?.uiNumber} placeholder="例：H801403696" key={ocrData?.uiNumber} />
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-6">
-                  <div className="grid gap-2.5">
-                    <Label htmlFor="city">所在縣市</Label>
+                  <div className="space-y-2">
+              <Label htmlFor="city">所在縣市</Label>
                     <Select name="city" defaultValue={editingWorker?.city || ""}>
                       <SelectTrigger>
                         <SelectValue placeholder="選擇縣市" />
@@ -315,12 +315,12 @@ export default function Workers() {
                   <div className="grid gap-2.5" />
                 </div>
                 <div className="grid grid-cols-2 gap-6">
-                  <div className="grid gap-2.5">
-                    <Label htmlFor="lineId">Line ID</Label>
+                  <div className="space-y-2">
+              <Label htmlFor="lineId">Line ID</Label>
                     <Input id="lineId" name="lineId" defaultValue={editingWorker?.lineId} placeholder="例：@username" />
                   </div>
-                  <div className="grid gap-2.5">
-                    <Label htmlFor="whatsappId">WhatsApp ID</Label>
+                  <div className="space-y-2">
+              <Label htmlFor="whatsappId">WhatsApp ID</Label>
                     <Input id="whatsappId" name="whatsappId" defaultValue={editingWorker?.whatsappId} placeholder="例：+886912345678" />
                   </div>
                 </div>
@@ -348,8 +348,8 @@ export default function Workers() {
                     <Label htmlFor="hasHealthCheck" className="text-sm font-normal cursor-pointer">有體檢</Label>
                   </div>
                 </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="workPermitExpiryDate" className={!hasWorkPermitChecked ? "text-muted-foreground" : ""}>工作許可到期日</Label>
+                <div className="space-y-2">
+              <Label htmlFor="workPermitExpiryDate" className={!hasWorkPermitChecked ? "text-muted-foreground" : ""}>工作許可到期日</Label>
                   <Input 
                     id="workPermitExpiryDate" 
                     name="workPermitExpiryDate" 
@@ -360,12 +360,12 @@ export default function Workers() {
                   />
                   <p className="text-xs text-muted-foreground">{hasWorkPermitChecked ? '留空表示無期限' : '請先勾選「有工作簽證」才能設定到期日'}</p>
                 </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="attendanceNotes">出勤記錄（遲到/曠職）</Label>
+                <div className="space-y-2">
+              <Label htmlFor="attendanceNotes">出勤記錄（遲到/曠職）</Label>
                   <Textarea id="attendanceNotes" name="attendanceNotes" defaultValue={editingWorker?.attendanceNotes} placeholder="記錄員工的遲到、曠職或其他出勤問題" />
                 </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="note">備註</Label>
+                <div className="space-y-2">
+              <Label htmlFor="note">備註</Label>
                   <Textarea id="note" name="note" defaultValue={editingWorker?.note} />
                 </div>
               </div>

@@ -159,62 +159,6 @@ export default function Dashboard() {
             )}
           </CardContent>
         </Card>
-
-        {/* 客戶需求分布 */}
-        <Card className="shadow-md border-border/40">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base font-medium">合作單位需求分布</CardTitle>
-            <p className="text-xs text-muted-foreground">近 30 天</p>
-          </CardHeader>
-          <CardContent>
-            {clientDistribution && clientDistribution.length > 0 ? (
-              <ResponsiveContainer width="100%" height={280}>
-                <PieChart>
-                  <Pie
-                    data={clientDistribution}
-                    dataKey="totalWorkers"
-                    nameKey="clientName"
-                    cx="50%"
-                    cy="50%"
-                    outerRadius={90}
-                    innerRadius={50}
-                    paddingAngle={2}
-                    label={false}
-                  >
-                    {clientDistribution.map((_: any, index: number) => (
-                      <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} />
-                    ))}
-                  </Pie>
-                  <Tooltip
-                    contentStyle={{ 
-                      fontSize: 13, 
-                      borderRadius: 8, 
-                      border: "1px solid #e2e8f0",
-                      padding: "8px 12px",
-                      boxShadow: "0 2px 8px rgba(0,0,0,0.1)"
-                    }}
-                    formatter={(value: number, name: string, props: any) => [
-                      `${value} 人次 (${(props.payload.percent * 100).toFixed(1)}%)`,
-                      props.payload.clientName
-                    ]}
-                  />
-                  <Legend 
-                    verticalAlign="bottom" 
-                    height={60}
-                    iconType="circle"
-                    wrapperStyle={{ fontSize: 12, paddingTop: 10 }}
-                    formatter={(value: string) => {
-                      const item = clientDistribution.find((d: any) => d.clientName === value);
-                      return item ? `${value} (${item.totalWorkers}人次)` : value;
-                    }}
-                  />
-                </PieChart>
-              </ResponsiveContainer>
-            ) : (
-              <div className="flex items-center justify-center h-[260px] text-sm text-muted-foreground">暫無資料</div>
-            )}
-          </CardContent>
-        </Card>
       </div>
 
       {/* 待審核需求單 */}

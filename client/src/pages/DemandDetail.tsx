@@ -47,6 +47,13 @@ export default function DemandDetail() {
   const [filterSchool, setFilterSchool] = useState("");
   const [filterWorkPermit, setFilterWorkPermit] = useState<string>("all"); // "all" | "yes" | "no" | "within_validity"
   const [filterHealthCheck, setFilterHealthCheck] = useState<string>("all"); // "all" | "yes" | "no"
+  
+  // 搜尋和分頁狀態
+  const [availableSearchTerm, setAvailableSearchTerm] = useState("");
+  const [unavailableSearchTerm, setUnavailableSearchTerm] = useState("");
+  const [availablePage, setAvailablePage] = useState(1);
+  const [unavailablePage, setUnavailablePage] = useState(1);
+  const ITEMS_PER_PAGE = 10;
 
   const utils = trpc.useUtils();
 
@@ -203,7 +210,7 @@ export default function DemandDetail() {
   }, [assignments]);
 
   // 計算篩選後的員工列表（排除已指派的員工）
-  const filteredAvailableWorkers = useMemo(() => {
+  const allFilteredAvailableWorkers = useMemo(() => {
     if (!feasibility) return [];
     return feasibility.availableWorkers
       .filter((worker) => !assignedWorkerIds.includes(worker.id))
@@ -224,8 +231,28 @@ export default function DemandDetail() {
       return true;
     });
   }, [feasibility, filterSchool, filterWorkPermit, filterHealthCheck]);
+  
+  // 加入搜尋功能
+  const searchedAvailableWorkers = useMemo(() => {
+    if (!availableSearchTerm) return allFilteredAvailableWorkers;
+    const term = availableSearchTerm.toLowerCase();
+    return allFilteredAvailableWorkers.filter((worker) => 
+      (worker.name || "").toLowerCase().includes(term) ||
+      (worker.phone || "").toLowerCase().includes(term) ||
+      (worker.school || "").toLowerCase().includes(term)
+    );
+  }, [allFilteredAvailableWorkers, availableSearchTerm]);
+  
+  // 加入分頁功能
+  const filteredAvailableWorkers = useMemo(() => {
+    const startIndex = (availablePage - 1) * ITEMS_PER_PAGE;
+    const endIndex = startIndex + ITEMS_PER_PAGE;
+    return searchedAvailableWorkers.slice(startIndex, endIndex);
+  }, [searchedAvailableWorkers, availablePage]);
+  
+  const availableTotalPages = Math.ceil(searchedAvailableWorkers.length / ITEMS_PER_PAGE);
 
-  const filteredUnavailableWorkers = useMemo(() => {
+  const allFilteredUnavailableWorkers = useMemo(() => {
     if (!feasibility) return [];
     return feasibility.unavailableWorkers
       .filter((uw) => uw.worker.status === "active")
@@ -246,6 +273,26 @@ export default function DemandDetail() {
         return true;
       });
   }, [feasibility, filterSchool, filterWorkPermit, filterHealthCheck]);
+  
+  // 加入搜尋功能
+  const searchedUnavailableWorkers = useMemo(() => {
+    if (!unavailableSearchTerm) return allFilteredUnavailableWorkers;
+    const term = unavailableSearchTerm.toLowerCase();
+    return allFilteredUnavailableWorkers.filter((uw) => 
+      (uw.worker.name || "").toLowerCase().includes(term) ||
+      (uw.worker.phone || "").toLowerCase().includes(term) ||
+      (uw.worker.school || "").toLowerCase().includes(term)
+    );
+  }, [allFilteredUnavailableWorkers, unavailableSearchTerm]);
+  
+  // 加入分頁功能
+  const filteredUnavailableWorkers = useMemo(() => {
+    const startIndex = (unavailablePage - 1) * ITEMS_PER_PAGE;
+    const endIndex = startIndex + ITEMS_PER_PAGE;
+    return searchedUnavailableWorkers.slice(startIndex, endIndex);
+  }, [searchedUnavailableWorkers, unavailablePage]);
+  
+  const unavailableTotalPages = Math.ceil(searchedUnavailableWorkers.length / ITEMS_PER_PAGE);
 
   // 是否有啟用任何篩選
   const hasActiveFilters = filterSchool !== "" || filterWorkPermit !== "all" || filterHealthCheck !== "all";
@@ -277,15 +324,15 @@ export default function DemandDetail() {
   const handleAutoFill = () => {
     if (!feasibility || !demand) return;
     const needed = demand.requiredWorkers - selectedWorkerIds.length;
-    // 一鍵湊滿時也套用篩選條件
-    const availableIds = filteredAvailableWorkers
+    // 一鍵湊滿時也套用篩選和搜尋條件
+    const availableIds = searchedAvailableWorkers
       .filter((w) => !selectedWorkerIds.includes(w.id))
       .slice(0, needed)
       .map((w) => w.id);
 
     if (availableIds.length < needed) {
       toast.warning(
-        `篩選後可用員工僅 ${filteredAvailableWorkers.length} 人，仍缺 ${needed - availableIds.length} 人。`
+        `篩選後可用員工僅 ${searchedAvailableWorkers.length} 人，仍缺 ${needed - availableIds.length} 人。`
       );
     } else {
       toast.success(`已自動選取 ${availableIds.length} 位員工，請確認後送出。`);
@@ -687,7 +734,7 @@ export default function DemandDetail() {
                 {gap > 0 && <span className="text-muted-foreground ml-1">（還差 {gap - (activeAssignments?.length || 0)} 人）</span>}
                 {hasActiveFilters && (
                   <span className="text-muted-foreground ml-2">
-                    · 篩選後 {filteredAvailableWorkers.length} 人可用
+                    · 篩選後 {searchedAvailableWorkers.length} 人可用
                   </span>
                 )}
               </div>
@@ -718,8 +765,8 @@ export default function DemandDetail() {
                 <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />
               </div>
               <CardTitle className="text-base font-medium">
-                可指派 ({filteredAvailableWorkers.length})
-                {hasActiveFilters && feasibility.availableWorkers.length !== filteredAvailableWorkers.length && (
+                可指派 ({searchedAvailableWorkers.length})
+                {(hasActiveFilters || availableSearchTerm) && feasibility.availableWorkers.length !== searchedAvailableWorkers.length && (
                   <span className="text-xs font-normal text-muted-foreground ml-1">
                     / 全部 {feasibility.availableWorkers.length}
                   </span>
@@ -731,13 +778,29 @@ export default function DemandDetail() {
             </CardDescription>
           </CardHeader>
           <CardContent>
+            {/* 搜尋框 */}
+            {searchedAvailableWorkers.length > 0 || availableSearchTerm ? (
+              <div className="mb-3">
+                <Input
+                  placeholder="搜尋姓名、電話、學校..."
+                  value={availableSearchTerm}
+                  onChange={(e) => {
+                    setAvailableSearchTerm(e.target.value);
+                    setAvailablePage(1); // 搜尋時重置到第一頁
+                  }}
+                  className="h-9"
+                />
+              </div>
+            ) : null}
+            
             {filteredAvailableWorkers.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground text-sm">
-                {hasActiveFilters ? "篩選條件下無可指派員工，請調整篩選條件" : "無可指派員工"}
+                {availableSearchTerm ? "搜尋無結果" : hasActiveFilters ? "篩選條件下無可指派員工，請調整篩選條件" : "無可指派員工"}
               </div>
             ) : (
-              <div className="space-y-1.5">
-                {filteredAvailableWorkers.map((worker) => (
+              <>
+                <div className="space-y-1.5">
+                  {filteredAvailableWorkers.map((worker) => (
                   <div
                     key={worker.id}
                     className={`flex items-center gap-3 p-3 rounded-lg border transition-colors cursor-pointer ${
@@ -783,8 +846,34 @@ export default function DemandDetail() {
                       <span>近7天 {worker.last7DaysCount || 0}次</span>
                     </div>
                   </div>
-                ))}
-              </div>
+                 ))}
+                </div>
+                
+                {/* 分頁控制 */}
+                {availableTotalPages > 1 && (
+                  <div className="flex items-center justify-center gap-2 mt-4 pt-3 border-t">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setAvailablePage(p => Math.max(1, p - 1))}
+                      disabled={availablePage === 1}
+                    >
+                      上一頁
+                    </Button>
+                    <span className="text-sm text-muted-foreground">
+                      {availablePage} / {availableTotalPages}
+                    </span>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setAvailablePage(p => Math.min(availableTotalPages, p + 1))}
+                      disabled={availablePage === availableTotalPages}
+                    >
+                      下一頁
+                    </Button>
+                  </div>
+                )}
+              </>
             )}
           </CardContent>
         </Card>
@@ -797,8 +886,8 @@ export default function DemandDetail() {
                 <AlertCircle className="h-3.5 w-3.5 text-amber-600" />
               </div>
               <CardTitle className="text-base font-medium">
-                不可指派 ({filteredUnavailableWorkers.length})
-                {hasActiveFilters && feasibility.unavailableWorkers.filter(uw => uw.worker.status === "active").length !== filteredUnavailableWorkers.length && (
+                不可指派 ({searchedUnavailableWorkers.length})
+                {(hasActiveFilters || unavailableSearchTerm) && feasibility.unavailableWorkers.filter(uw => uw.worker.status === "active").length !== searchedUnavailableWorkers.length && (
                   <span className="text-xs font-normal text-muted-foreground ml-1">
                     / 全部 {feasibility.unavailableWorkers.filter(uw => uw.worker.status === "active").length}
                   </span>
@@ -808,13 +897,29 @@ export default function DemandDetail() {
             <CardDescription className="text-xs">因故無法指派的員工</CardDescription>
           </CardHeader>
           <CardContent>
+            {/* 搜尋框 */}
+            {searchedUnavailableWorkers.length > 0 || unavailableSearchTerm ? (
+              <div className="mb-3">
+                <Input
+                  placeholder="搜尋姓名、電話、學校..."
+                  value={unavailableSearchTerm}
+                  onChange={(e) => {
+                    setUnavailableSearchTerm(e.target.value);
+                    setUnavailablePage(1); // 搜尋時重置到第一頁
+                  }}
+                  className="h-9"
+                />
+              </div>
+            ) : null}
+            
             {filteredUnavailableWorkers.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground text-sm">
-                {hasActiveFilters ? "篩選條件下無不可指派員工" : "無不可指派員工"}
+                {unavailableSearchTerm ? "搜尋無結果" : hasActiveFilters ? "篩選條件下無不可指派員工" : "無不可指派員工"}
               </div>
             ) : (
-              <div className="space-y-1.5">
-                {filteredUnavailableWorkers.map((uw) => (
+              <>
+                <div className="space-y-1.5">
+                  {filteredUnavailableWorkers.map((uw) => (
                   <div
                     key={uw.worker.id}
                     className="flex items-center gap-3 p-3 rounded-lg border border-border/40 bg-muted/30 opacity-60"
@@ -841,8 +946,34 @@ export default function DemandDetail() {
                       </div>
                     </div>
                   </div>
-                ))}
-              </div>
+                   ))}
+                </div>
+                
+                {/* 分頁控制 */}
+                {unavailableTotalPages > 1 && (
+                  <div className="flex items-center justify-center gap-2 mt-4 pt-3 border-t">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setUnavailablePage(p => Math.max(1, p - 1))}
+                      disabled={unavailablePage === 1}
+                    >
+                      上一頁
+                    </Button>
+                    <span className="text-sm text-muted-foreground">
+                      {unavailablePage} / {unavailableTotalPages}
+                    </span>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setUnavailablePage(p => Math.min(unavailableTotalPages, p + 1))}
+                      disabled={unavailablePage === unavailableTotalPages}
+                    >
+                      下一頁
+                    </Button>
+                  </div>
+                )}
+              </>
             )}
           </CardContent>
         </Card>
@@ -930,8 +1061,8 @@ export default function DemandDetail() {
               <DialogDescription>填寫需求單基本資料</DialogDescription>
             </DialogHeader>
             <div className="grid grid-cols-2 gap-x-6 gap-y-4 py-4">
-              <div className="col-span-2 grid gap-2">
-                <Label htmlFor="clientId">客戶 *</Label>
+              <div className="col-span-2 space-y-2">
+              <Label htmlFor="clientId">客戶 *</Label>
                 <Select name="clientId" defaultValue={demand?.clientId?.toString()} required>
                   <SelectTrigger>
                     <SelectValue placeholder="請選擇客戶" />
@@ -945,8 +1076,8 @@ export default function DemandDetail() {
                   </SelectContent>
                 </Select>
               </div>
-              <div className="grid gap-2">
-                <Label htmlFor="date">日期 *</Label>
+              <div className="space-y-2">
+              <Label htmlFor="date">日期 *</Label>
                 <Input 
                   id="date" 
                   name="date" 
@@ -958,20 +1089,20 @@ export default function DemandDetail() {
               <div className="grid gap-2">
                 {/* 空格，保持對齊 */}
               </div>
-              <div className="grid gap-2">
-                <Label htmlFor="startTime">開始時間 *</Label>
+              <div className="space-y-2">
+              <Label htmlFor="startTime">開始時間 *</Label>
                 <Input id="startTime" name="startTime" type="time" defaultValue={demand?.startTime} required />
               </div>
-              <div className="grid gap-2">
-                <Label htmlFor="endTime">結束時間 *</Label>
+              <div className="space-y-2">
+              <Label htmlFor="endTime">結束時間 *</Label>
                 <Input id="endTime" name="endTime" type="time" defaultValue={demand?.endTime} required />
               </div>
-              <div className="grid gap-2">
-                <Label htmlFor="requiredWorkers">需求人數 *</Label>
+              <div className="space-y-2">
+              <Label htmlFor="requiredWorkers">需求人數 *</Label>
                 <Input id="requiredWorkers" name="requiredWorkers" type="number" min="1" defaultValue={demand?.requiredWorkers} required />
               </div>
-              <div className="grid gap-2">
-                <Label htmlFor="breakHours">休息時間（小時）</Label>
+              <div className="space-y-2">
+              <Label htmlFor="breakHours">休息時間（小時）</Label>
                 <Input 
                   id="breakHours" 
                   name="breakHours" 
@@ -982,8 +1113,8 @@ export default function DemandDetail() {
                   defaultValue={demand?.breakHours ? (demand.breakHours / 60).toString() : "0"} 
                 />
               </div>
-              <div className="col-span-2 grid gap-2">
-                <Label htmlFor="demandTypeId">需求類別</Label>
+              <div className="col-span-2 space-y-2">
+              <Label htmlFor="demandTypeId">需求類別</Label>
                 <Select 
                   value={selectedDemandTypeId?.toString() || "none"} 
                   onValueChange={(value) => {
@@ -1005,8 +1136,8 @@ export default function DemandDetail() {
                 </Select>
               </div>
               {selectedDemandType && selectedDemandType.options && selectedDemandType.options.length > 0 && (
-                <div className="col-span-2 grid gap-3 p-4 bg-muted/30 rounded-lg">
-                  <Label className="text-sm font-medium">選擇需要的項目</Label>
+                <div className="col-span-2 p-4 bg-muted/30 rounded-lg space-y-2">
+              <Label className="text-sm font-medium">選擇需要的項目</Label>
                   <div className="space-y-2">
                     {selectedDemandType.options.map((option) => (
                       <label key={option.id} className="flex items-start gap-2 cursor-pointer">
@@ -1028,15 +1159,15 @@ export default function DemandDetail() {
                   </div>
                 </div>
               )}
-              <div className="grid gap-2">
-                <Label htmlFor="location">地點</Label>
+              <div className="space-y-2">
+              <Label htmlFor="location">地點</Label>
                 <Input id="location" name="location" placeholder="工作地點" defaultValue={demand?.location || ''} />
               </div>
               <div className="grid gap-2">
                 {/* 空格，保持對齊 */}
               </div>
-              <div className="col-span-2 grid gap-2">
-                <Label htmlFor="note">備註</Label>
+              <div className="col-span-2 space-y-2">
+              <Label htmlFor="note">備註</Label>
                 <Textarea id="note" name="note" placeholder="其他說明..." rows={3} defaultValue={demand?.note || ''} />
               </div>
             </div>

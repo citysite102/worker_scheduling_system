@@ -108,8 +108,8 @@ export default function AdminSettings() {
               <p className="text-sm text-muted-foreground">
                 如果您收到管理員邀請碼，請在下方輸入以取得管理員權限。
               </p>
-              <div className="grid gap-2">
-                <Label htmlFor="inviteCode">邀請碼</Label>
+              <div className="space-y-2">
+              <Label htmlFor="inviteCode">邀請碼</Label>
                 <Input
                   id="inviteCode"
                   value={inviteCode}
@@ -284,8 +284,8 @@ export default function AdminSettings() {
           </DialogHeader>
           {generatedCode ? (
             <div className="space-y-4 py-4">
-              <div className="p-4 bg-muted rounded-lg">
-                <Label className="text-xs text-muted-foreground mb-2 block">邀請碼</Label>
+              <div className="p-4 bg-muted rounded-lg space-y-2">
+              <Label className="text-xs text-muted-foreground mb-2 block">邀請碼</Label>
                 <div className="flex items-center gap-2">
                   <code className="flex-1 text-sm font-mono break-all">{generatedCode}</code>
                   <Button variant="outline" size="icon" className="shrink-0" onClick={() => copyToClipboard(generatedCode)}>

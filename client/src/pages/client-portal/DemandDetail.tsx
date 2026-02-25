@@ -336,8 +336,8 @@ export function DemandDetail() {
             ) : (
               <div className="space-y-6">
                 {/* 日期 */}
-                <div>
-                  <Label className="text-muted-foreground">日期</Label>
+                <div className="space-y-2">
+              <Label className="text-muted-foreground">日期</Label>
                   <p className="mt-1 font-medium">
                     {new Date(demand.date).toLocaleDateString("zh-TW", {
                       year: "numeric",
@@ -350,34 +350,34 @@ export function DemandDetail() {
 
                 {/* 時間範圍 */}
                 <div className="grid gap-4 md:grid-cols-2">
-                  <div>
-                    <Label className="text-muted-foreground">開始時間</Label>
+                  <div className="space-y-2">
+              <Label className="text-muted-foreground">開始時間</Label>
                     <p className="mt-1 font-medium">{demand.startTime}</p>
                   </div>
-                  <div>
-                    <Label className="text-muted-foreground">結束時間</Label>
+                  <div className="space-y-2">
+              <Label className="text-muted-foreground">結束時間</Label>
                     <p className="mt-1 font-medium">{demand.endTime}</p>
                   </div>
                 </div>
 
                 {/* 需求人數 */}
-                <div>
-                  <Label className="text-muted-foreground">需求人數</Label>
+                <div className="space-y-2">
+              <Label className="text-muted-foreground">需求人數</Label>
                   <p className="mt-1 font-medium">{demand.requiredWorkers} 人</p>
                 </div>
 
                 {/* 地點 */}
                 {demand.location && (
-                  <div>
-                    <Label className="text-muted-foreground">地點</Label>
+                  <div className="space-y-2">
+              <Label className="text-muted-foreground">地點</Label>
                     <p className="mt-1 font-medium">{demand.location}</p>
                   </div>
                 )}
 
                 {/* 需求類型 */}
                 {demand.demandType && (
-                  <div>
-                    <Label className="text-muted-foreground">需求類型</Label>
+                  <div className="space-y-2">
+              <Label className="text-muted-foreground">需求類型</Label>
                     <p className="mt-1 font-medium">{demand.demandType.name}</p>
                   </div>
                 )}
@@ -393,8 +393,8 @@ export function DemandDetail() {
                       );
                       if (selectedOptions.length > 0) {
                         return (
-                          <div>
-                            <Label className="text-muted-foreground">已選取的選項</Label>
+                          <div className="space-y-2">
+              <Label className="text-muted-foreground">已選取的選項</Label>
                             <ul className="mt-2 space-y-2">
                               {selectedOptions.map((option: any) => (
                                 <li key={option.id} className="flex items-start gap-2">
@@ -415,8 +415,8 @@ export function DemandDetail() {
 
                 {/* 備註 */}
                 {demand.note && (
-                  <div>
-                    <Label className="text-muted-foreground">備註</Label>
+                  <div className="space-y-2">
+              <Label className="text-muted-foreground">備註</Label>
                     <p className="mt-1 whitespace-pre-wrap">{demand.note}</p>
                   </div>
                 )}

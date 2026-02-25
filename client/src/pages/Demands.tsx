@@ -237,8 +237,8 @@ export default function Demands() {
                 <DialogDescription>填寫需求單基本資料</DialogDescription>
               </DialogHeader>
               <div className="grid grid-cols-2 gap-x-6 gap-y-4 py-4">
-                <div className="grid gap-2">
-                  <Label htmlFor="clientId">客戶 *</Label>
+                <div className="space-y-2">
+              <Label htmlFor="clientId">客戶 *</Label>
                   <Popover open={clientComboboxOpen} onOpenChange={setClientComboboxOpen}>
                     <PopoverTrigger asChild>
                       <Button
@@ -283,8 +283,8 @@ export default function Demands() {
                     </PopoverContent>
                   </Popover>
                 </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="date">日期 *</Label>
+                <div className="space-y-2">
+              <Label htmlFor="date">日期 *</Label>
                   <Input 
                     id="date" 
                     name="date" 
@@ -293,20 +293,20 @@ export default function Demands() {
                     required 
                   />
                 </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="startTime">開始時間 *</Label>
+                <div className="space-y-2">
+              <Label htmlFor="startTime">開始時間 *</Label>
                   <Input id="startTime" name="startTime" type="time" defaultValue={editingDemand?.startTime} required />
                 </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="endTime">結束時間 *</Label>
+                <div className="space-y-2">
+              <Label htmlFor="endTime">結束時間 *</Label>
                   <Input id="endTime" name="endTime" type="time" defaultValue={editingDemand?.endTime} required />
                 </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="requiredWorkers">需求人數 *</Label>
+                <div className="space-y-2">
+              <Label htmlFor="requiredWorkers">需求人數 *</Label>
                   <Input id="requiredWorkers" name="requiredWorkers" type="number" min="1" defaultValue={editingDemand?.requiredWorkers} required />
                 </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="breakHours">休息時間（小時）</Label>
+                <div className="space-y-2">
+              <Label htmlFor="breakHours">休息時間（小時）</Label>
                   <Input 
                     id="breakHours" 
                     name="breakHours" 
@@ -317,8 +317,8 @@ export default function Demands() {
                     defaultValue={editingDemand?.breakHours ? (editingDemand.breakHours / 60).toString() : "0"} 
                   />
                 </div>
-                <div className="col-span-2 grid gap-2">
-                  <Label htmlFor="demandTypeId">需求類別</Label>
+                <div className="col-span-2 space-y-2">
+              <Label htmlFor="demandTypeId">需求類別</Label>
                   <Select 
                     value={selectedDemandTypeId?.toString() || "none"} 
                     onValueChange={(value) => {
@@ -343,8 +343,8 @@ export default function Demands() {
                   const selectedType = demandTypes.find(t => t.id === selectedDemandTypeId);
                   if (selectedType && selectedType.options && selectedType.options.length > 0) {
                     return (
-                      <div className="col-span-2 grid gap-3 p-4 bg-muted/30 rounded-lg">
-                        <Label className="text-sm font-medium">選擇需要的項目</Label>
+                      <div className="col-span-2 p-4 bg-muted/30 rounded-lg space-y-2">
+              <Label className="text-sm font-medium">選擇需要的項目</Label>
                         <div className="space-y-2">
                           {selectedType.options.map((option) => (
                             <label key={option.id} className="flex items-start gap-2 cursor-pointer">
@@ -369,15 +369,15 @@ export default function Demands() {
                   }
                   return null;
                 })()}
-                <div className="grid gap-2">
-                  <Label htmlFor="location">地點</Label>
+                <div className="space-y-2">
+              <Label htmlFor="location">地點</Label>
                   <Input id="location" name="location" placeholder="工作地點" defaultValue={editingDemand?.location} />
                 </div>
                 <div className="grid gap-2">
                   {/* 空格，保持對齊 */}
                 </div>
-                <div className="col-span-2 grid gap-2">
-                  <Label htmlFor="note">備註</Label>
+                <div className="col-span-2 space-y-2">
+              <Label htmlFor="note">備註</Label>
                   <Textarea id="note" name="note" placeholder="其他說明..." rows={3} defaultValue={editingDemand?.note} />
                 </div>
               </div>
@@ -397,8 +397,8 @@ export default function Demands() {
       {/* 篩選 */}
       <Card className="mb-6 shadow-md border-border/40">
         <CardContent className="p-4">
-          <div className="flex items-center gap-3 flex-wrap">
-            <Label className="text-sm text-muted-foreground shrink-0">狀態篩選</Label>
+          <div className="flex items-center gap-3 flex-wrap space-y-2">
+              <Label className="text-sm text-muted-foreground shrink-0">狀態篩選</Label>
             <Select
               value={statusFilter || "all"}
               onValueChange={(value) => setStatusFilter(value === "all" ? undefined : value)}
@@ -467,8 +467,8 @@ export default function Demands() {
             
             {/* 自訂日期區間選擇器 */}
             {dateFilter === "custom" && (
-              <div className="flex items-center gap-2 ml-auto">
-                <Label className="text-sm text-muted-foreground shrink-0">開始日期</Label>
+              <div className="flex items-center gap-2 ml-auto space-y-2">
+              <Label className="text-sm text-muted-foreground shrink-0">開始日期</Label>
                 <Input
                   type="date"
                   value={customStartDate}

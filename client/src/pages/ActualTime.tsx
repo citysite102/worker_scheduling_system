@@ -78,8 +78,8 @@ export default function ActualTime() {
 
       <Card className="mb-6 shadow-md border-border/40">
         <CardContent className="p-4">
-          <div className="flex items-center gap-3">
-            <Label className="text-sm text-muted-foreground shrink-0">選擇日期</Label>
+          <div className="flex items-center gap-3 space-y-2">
+              <Label className="text-sm text-muted-foreground shrink-0">選擇日期</Label>
             <Input
               type="date"
               value={selectedDate}
@@ -196,8 +196,8 @@ export default function ActualTime() {
               </DialogDescription>
             </DialogHeader>
             <div className="grid gap-4 py-4">
-              <div className="grid gap-2">
-                <Label htmlFor="actualStartTime">實際開始時間 *</Label>
+              <div className="space-y-2">
+              <Label htmlFor="actualStartTime">實際開始時間 *</Label>
                 <Input
                   id="actualStartTime"
                   name="actualStartTime"
@@ -206,8 +206,8 @@ export default function ActualTime() {
                   required
                 />
               </div>
-              <div className="grid gap-2">
-                <Label htmlFor="actualEndTime">實際結束時間 *</Label>
+              <div className="space-y-2">
+              <Label htmlFor="actualEndTime">實際結束時間 *</Label>
                 <Input
                   id="actualEndTime"
                   name="actualEndTime"

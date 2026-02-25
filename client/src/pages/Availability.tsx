@@ -361,8 +361,8 @@ export default function Availability() {
           </CardHeader>
           <CardContent>
             <div className="grid gap-6 sm:grid-cols-2">
-              <div>
-                <Label className="text-sm font-medium text-muted-foreground">員工</Label>
+              <div className="space-y-2">
+              <Label className="text-sm font-medium text-muted-foreground">員工</Label>
                 <Select
                   value={selectedWorker?.toString() || ""}
                   onValueChange={(value) => setSelectedWorker(parseInt(value))}
@@ -379,8 +379,8 @@ export default function Availability() {
                   </SelectContent>
                 </Select>
               </div>
-              <div>
-                <Label className="text-sm font-medium text-muted-foreground">週次</Label>
+              <div className="space-y-2">
+              <Label className="text-sm font-medium text-muted-foreground">週次</Label>
                 <div className="flex items-center gap-2 mt-1.5">
                   <Button variant="outline" size="icon" onClick={handlePrevWeek} className="h-9 w-9 shrink-0">
                     <ChevronLeft className="h-4 w-4" />
@@ -519,8 +519,8 @@ export default function Availability() {
               return (
                 <div key={index}>
                   <div className={`flex items-end gap-2 p-3 rounded-lg border ${hasError ? "border-destructive/50 bg-destructive/5" : "border-border/60 bg-muted/30"}`}>
-                    <div className="flex-1">
-                      <Label className="text-xs text-muted-foreground">開始時間</Label>
+                    <div className="flex-1 space-y-2">
+              <Label className="text-xs text-muted-foreground">開始時間</Label>
                       <Input
                         type="time"
                         value={slot.startTime}
@@ -528,8 +528,8 @@ export default function Availability() {
                         className="mt-1 h-9"
                       />
                     </div>
-                    <div className="flex-1">
-                      <Label className="text-xs text-muted-foreground">結束時間</Label>
+                    <div className="flex-1 space-y-2">
+              <Label className="text-xs text-muted-foreground">結束時間</Label>
                       <Input
                         type="time"
                         value={slot.endTime}

@@ -232,7 +232,7 @@ export default function DemandTypes() {
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
-            <div>
+            <div className="space-y-2">
               <Label htmlFor="type-name">需求名稱 *</Label>
               <Input
                 id="type-name"
@@ -241,7 +241,7 @@ export default function DemandTypes() {
                 onChange={(e) => setEditingType(editingType ? { ...editingType, name: e.target.value } : null)}
               />
             </div>
-            <div>
+            <div className="space-y-2">
               <Label htmlFor="type-description">需求說明</Label>
               <Textarea
                 id="type-description"
