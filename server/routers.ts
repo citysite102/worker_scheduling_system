@@ -1260,6 +1260,92 @@ export const appRouter = router({
         return { success: true };
       }),
 
+    // 批次審核通過
+    batchApprove: protectedProcedure
+      .input(z.object({ 
+        ids: z.array(z.number()).min(1, "請至少選擇一筆需求單"),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        // 檢查是否為管理員
+        if (ctx.user.role !== 'admin') {
+          throw new TRPCError({ code: "FORBIDDEN", message: "只有管理員可以審核需求單" });
+        }
+        
+        const results = {
+          success: [] as number[],
+          failed: [] as { id: number; reason: string }[],
+        };
+        
+        // 逐一處理每個需求單
+        for (const id of input.ids) {
+          try {
+            const demand = await db.getDemandById(id);
+            if (!demand) {
+              results.failed.push({ id, reason: "需求單不存在" });
+              continue;
+            }
+            
+            if (demand.status !== 'pending') {
+              results.failed.push({ id, reason: "只有待審核的需求單才可以審核" });
+              continue;
+            }
+            
+            await db.updateDemand(id, { status: "confirmed" });
+            results.success.push(id);
+          } catch (error) {
+            results.failed.push({ id, reason: error instanceof Error ? error.message : "未知錯誤" });
+          }
+        }
+        
+        return results;
+      }),
+
+    // 批次拒絕
+    batchReject: protectedProcedure
+      .input(z.object({ 
+        ids: z.array(z.number()).min(1, "請至少選擇一筆需求單"),
+        reason: z.string().optional(), // 拒絕原因（可選）
+      }))
+      .mutation(async ({ input, ctx }) => {
+        // 檢查是否為管理員
+        if (ctx.user.role !== 'admin') {
+          throw new TRPCError({ code: "FORBIDDEN", message: "只有管理員可以審核需求單" });
+        }
+        
+        const results = {
+          success: [] as number[],
+          failed: [] as { id: number; reason: string }[],
+        };
+        
+        const note = input.reason ? `審核拒絕：${input.reason}` : '審核拒絕';
+        
+        // 逐一處理每個需求單
+        for (const id of input.ids) {
+          try {
+            const demand = await db.getDemandById(id);
+            if (!demand) {
+              results.failed.push({ id, reason: "需求單不存在" });
+              continue;
+            }
+            
+            if (demand.status !== 'pending') {
+              results.failed.push({ id, reason: "只有待審核的需求單才可以審核" });
+              continue;
+            }
+            
+            await db.updateDemand(id, { 
+              status: "cancelled",
+              note: demand.note ? `${demand.note}\n${note}` : note,
+            });
+            results.success.push(id);
+          } catch (error) {
+            results.failed.push({ id, reason: error instanceof Error ? error.message : "未知錯誤" });
+          }
+        }
+        
+        return results;
+      }),
+
     // 計算人力可行性
     feasibility: publicProcedure
       .input(z.object({

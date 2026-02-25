@@ -14,7 +14,15 @@ import {
 const CHART_COLORS = ["#3b82f6", "#6366f1", "#8b5cf6", "#a855f7", "#ec4899", "#f43f5e", "#f97316", "#eab308", "#22c55e", "#14b8a6"];
 
 // 待審核需求單卡片元件
-function PendingDemandCard({ demand }: { demand: any }) {
+function PendingDemandCard({ 
+  demand, 
+  isSelected, 
+  onSelect 
+}: { 
+  demand: any; 
+  isSelected: boolean;
+  onSelect: (id: number, selected: boolean) => void;
+}) {
   const utils = trpc.useUtils();
   
   const approveMutation = trpc.demands.approve.useMutation({
@@ -55,8 +63,17 @@ function PendingDemandCard({ demand }: { demand: any }) {
   };
   
   return (
-    <div className="flex items-center justify-between p-3.5 rounded-lg border border-amber-200 bg-white hover:bg-amber-50/50 transition-colors group">
-      <Link href={`/demands/${demand.id}`} className="min-w-0 flex-1 mr-3">
+    <div className="flex items-center gap-3 p-3.5 rounded-lg border border-amber-200 bg-white hover:bg-amber-50/50 transition-colors group">
+      <input
+        type="checkbox"
+        checked={isSelected}
+        onChange={(e) => {
+          e.stopPropagation();
+          onSelect(demand.id, e.target.checked);
+        }}
+        className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+      />
+      <Link href={`/demands/${demand.id}`} className="min-w-0 flex-1">
         <div className="font-medium text-sm">{demand.client?.name || "未指定客戶"}</div>
         <div className="text-xs text-muted-foreground mt-0.5">
           {new Date(demand.date).toLocaleDateString("zh-TW", { month: "short", day: "numeric" })}
@@ -98,6 +115,10 @@ export default function Dashboard() {
     d.setHours(0, 0, 0, 0);
     return d;
   });
+  
+  // 批次選取狀態
+  const [selectedDemandIds, setSelectedDemandIds] = useState<Set<number>>(new Set());
+  const utils = trpc.useUtils();
 
   const tomorrow = useMemo(() => new Date(today.getTime() + 24 * 60 * 60 * 1000), [today]);
 
@@ -111,6 +132,91 @@ export default function Dashboard() {
     status: "pending",
   });
   const pendingDemands = pendingDemandsData?.demands || [];
+  
+  // 批次審核 mutation
+  const batchApproveMutation = trpc.demands.batchApprove.useMutation({
+    onSuccess: (results) => {
+      const successCount = results.success.length;
+      const failedCount = results.failed.length;
+      if (successCount > 0) {
+        toast.success(`已審核通過 ${successCount} 筆需求單`);
+      }
+      if (failedCount > 0) {
+        toast.error(`${failedCount} 筆需求單審核失敗`);
+      }
+      setSelectedDemandIds(new Set());
+      utils.demands.list.invalidate();
+    },
+    onError: (error) => {
+      toast.error(error.message || "批次審核失敗");
+    },
+  });
+  
+  const batchRejectMutation = trpc.demands.batchReject.useMutation({
+    onSuccess: (results) => {
+      const successCount = results.success.length;
+      const failedCount = results.failed.length;
+      if (successCount > 0) {
+        toast.success(`已拒絕 ${successCount} 筆需求單`);
+      }
+      if (failedCount > 0) {
+        toast.error(`${failedCount} 筆需求單拒絕失敗`);
+      }
+      setSelectedDemandIds(new Set());
+      utils.demands.list.invalidate();
+    },
+    onError: (error) => {
+      toast.error(error.message || "批次拒絕失敗");
+    },
+  });
+  
+  // 處理單個選取
+  const handleSelect = (id: number, selected: boolean) => {
+    setSelectedDemandIds(prev => {
+      const newSet = new Set(prev);
+      if (selected) {
+        newSet.add(id);
+      } else {
+        newSet.delete(id);
+      }
+      return newSet;
+    });
+  };
+  
+  // 處理全選
+  const handleSelectAll = (selected: boolean) => {
+    if (selected) {
+      setSelectedDemandIds(new Set(pendingDemands.map((d: any) => d.id)));
+    } else {
+      setSelectedDemandIds(new Set());
+    }
+  };
+  
+  // 批次審核通過
+  const handleBatchApprove = () => {
+    if (selectedDemandIds.size === 0) {
+      toast.error("請至少選擇一筆需求單");
+      return;
+    }
+    if (confirm(`確定要審核通過 ${selectedDemandIds.size} 筆需求單嗎？`)) {
+      batchApproveMutation.mutate({ ids: Array.from(selectedDemandIds) });
+    }
+  };
+  
+  // 批次拒絕
+  const handleBatchReject = () => {
+    if (selectedDemandIds.size === 0) {
+      toast.error("請至少選擇一筆需求單");
+      return;
+    }
+    const reason = prompt(`請輸入拒絕原因（可選），將套用於 ${selectedDemandIds.size} 筆需求單：`);
+    if (reason !== null) {
+      batchRejectMutation.mutate({ ids: Array.from(selectedDemandIds), reason: reason || undefined });
+    }
+  };
+  
+  const allSelected = pendingDemands.length > 0 && selectedDemandIds.size === pendingDemands.length;
+  const someSelected = selectedDemandIds.size > 0 && selectedDemandIds.size < pendingDemands.length;
 
   const { data: todayAssignments, isLoading: assignmentsLoading } = trpc.assignments.getByDateRange.useQuery({
     startDate: today,
@@ -246,19 +352,66 @@ export default function Dashboard() {
         <Card className="shadow-md border-amber-300/50 bg-amber-50/40 hover:shadow-lg">
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
-              <CardTitle className="text-base font-medium flex items-center gap-2">
-                <AlertCircle className="h-4 w-4 text-amber-600" />
-                待審核需求單
-              </CardTitle>
-              <Badge variant="outline" className="bg-amber-100 text-amber-700 border-amber-300">
-                {pendingDemands.length} 筆
-              </Badge>
+              <div className="flex items-center gap-3">
+                <input
+                  type="checkbox"
+                  checked={allSelected}
+                  ref={(el) => {
+                    if (el) el.indeterminate = someSelected;
+                  }}
+                  onChange={(e) => handleSelectAll(e.target.checked)}
+                  className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                />
+                <CardTitle className="text-base font-medium flex items-center gap-2">
+                  <AlertCircle className="h-4 w-4 text-amber-600" />
+                  待審核需求單
+                  {selectedDemandIds.size > 0 && (
+                    <span className="text-sm font-normal text-muted-foreground">
+                      （已選 {selectedDemandIds.size} 筆）
+                    </span>
+                  )}
+                </CardTitle>
+              </div>
+              <div className="flex items-center gap-2">
+                {selectedDemandIds.size > 0 && (
+                  <>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="h-7 text-xs bg-green-50 text-green-700 border-green-300 hover:bg-green-100"
+                      onClick={handleBatchApprove}
+                      disabled={batchApproveMutation.isPending || batchRejectMutation.isPending}
+                    >
+                      <Check className="h-3 w-3 mr-1" />
+                      批次通過
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="h-7 text-xs bg-red-50 text-red-700 border-red-300 hover:bg-red-100"
+                      onClick={handleBatchReject}
+                      disabled={batchApproveMutation.isPending || batchRejectMutation.isPending}
+                    >
+                      <X className="h-3 w-3 mr-1" />
+                      批次拒絕
+                    </Button>
+                  </>
+                )}
+                <Badge variant="outline" className="bg-amber-100 text-amber-700 border-amber-300">
+                  {pendingDemands.length} 筆
+                </Badge>
+              </div>
             </div>
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
               {pendingDemands.slice(0, 5).map((demand: any) => (
-                <PendingDemandCard key={demand.id} demand={demand} />
+                <PendingDemandCard 
+                  key={demand.id} 
+                  demand={demand} 
+                  isSelected={selectedDemandIds.has(demand.id)}
+                  onSelect={handleSelect}
+                />
               ))}
             </div>
             {pendingDemands.length > 5 && (
