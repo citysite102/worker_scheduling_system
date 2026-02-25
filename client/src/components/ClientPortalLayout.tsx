@@ -17,6 +17,12 @@ export function ClientPortalLayout({ children }: { children: React.ReactNode }) 
   const [location, setLocation] = useLocation();
   const logoutMutation = trpc.auth.logout.useMutation();
 
+  // 查詢客戶資料
+  const { data: clientData } = trpc.clients.getById.useQuery(
+    { id: user?.clientId || 0 },
+    { enabled: !!user?.clientId }
+  );
+
   // 如果未登入，重新導向到登入頁面
   useEffect(() => {
     if (!loading && !user) {
@@ -71,7 +77,7 @@ export function ClientPortalLayout({ children }: { children: React.ReactNode }) 
       {/* Sidebar */}
       <aside className="w-64 border-r bg-card">
         <div className="flex h-16 items-center border-b px-6">
-          <h1 className="text-xl font-bold">客戶入口</h1>
+          <h1 className="text-xl font-bold">{clientData?.name || "客戶入口"}</h1>
         </div>
         <nav className="space-y-1 p-4">
           {navItems.map((item) => {

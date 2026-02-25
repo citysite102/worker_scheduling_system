@@ -47,7 +47,7 @@ export async function sendEmail(options: {
 
   try {
     await transporter.sendMail({
-      from: `"員工排班系統" <${process.env.EMAIL_USER}>`,
+      from: `"派工系統" <${process.env.EMAIL_USER}>`,
       to: options.to,
       subject: options.subject,
       html: options.html,
@@ -76,7 +76,7 @@ export function createNewAccountEmail(data: {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>歡迎使用員工排班系統</title>
+  <title>歡迎使用派工系統</title>
 </head>
 <body style="margin: 0; padding: 0; font-family: 'Microsoft JhengHei', Arial, sans-serif; background-color: #f5f5f5;">
   <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f5f5f5; padding: 40px 0;">
@@ -86,7 +86,7 @@ export function createNewAccountEmail(data: {
           <!-- Header -->
           <tr>
             <td style="background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%); padding: 40px; text-align: center; border-radius: 8px 8px 0 0;">
-              <h1 style="margin: 0; color: #ffffff; font-size: 28px; font-weight: 600;">歡迎使用員工排班系統</h1>
+              <h1 style="margin: 0; color: #ffffff; font-size: 28px; font-weight: 600;">歡迎使用派工系統</h1>
             </td>
           </tr>
           
@@ -160,7 +160,7 @@ export function createNewAccountEmail(data: {
           <tr>
             <td style="background-color: #f8fafc; padding: 24px; text-align: center; border-radius: 0 0 8px 8px; border-top: 1px solid #e2e8f0;">
               <p style="margin: 0; color: #94a3b8; font-size: 12px;">
-                © 2026 員工排班系統 · All rights reserved
+                © 2026 派工系統 · All rights reserved
               </p>
             </td>
           </tr>
@@ -252,7 +252,7 @@ export function createResetPasswordEmail(data: {
           <tr>
             <td style="background-color: #f8fafc; padding: 24px; text-align: center; border-radius: 0 0 8px 8px; border-top: 1px solid #e2e8f0;">
               <p style="margin: 0; color: #94a3b8; font-size: 12px;">
-                © 2026 員工排班系統 · All rights reserved
+                © 2026 派工系統 · All rights reserved
               </p>
             </td>
           </tr>

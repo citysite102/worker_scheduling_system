@@ -26,6 +26,12 @@ export default function Dashboard() {
   });
   const todayDemands = todayDemandsData?.demands || [];
 
+  // 查詢待審核的需求單
+  const { data: pendingDemandsData, isLoading: pendingLoading } = trpc.demands.list.useQuery({
+    status: "pending",
+  });
+  const pendingDemands = pendingDemandsData?.demands || [];
+
   const { data: todayAssignments, isLoading: assignmentsLoading } = trpc.assignments.getByDateRange.useQuery({
     startDate: today,
     endDate: tomorrow,
@@ -47,7 +53,7 @@ export default function Dashboard() {
     }));
   }, [assignmentTrend, demandTrend]);
 
-  if (demandsLoading || assignmentsLoading) {
+  if (demandsLoading || assignmentsLoading || pendingLoading) {
     return (
       <div className="p-6 lg:p-8 max-w-7xl mx-auto">
         <h1 className="text-2xl font-semibold mb-6">儀表板</h1>
@@ -210,6 +216,58 @@ export default function Dashboard() {
           </CardContent>
         </Card>
       </div>
+
+      {/* 待審核需求單 */}
+      {pendingDemands.length > 0 && (
+        <Card className="shadow-sm border-border/60 border-amber-200 bg-amber-50/30">
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-base font-medium flex items-center gap-2">
+                <AlertCircle className="h-4 w-4 text-amber-600" />
+                待審核需求單
+              </CardTitle>
+              <Badge variant="outline" className="bg-amber-100 text-amber-700 border-amber-300">
+                {pendingDemands.length} 筆
+              </Badge>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              {pendingDemands.slice(0, 5).map((demand: any) => (
+                <Link key={demand.id} href={`/demands/${demand.id}`}>
+                  <div className="flex items-center justify-between p-3.5 rounded-lg border border-amber-200 bg-white hover:bg-amber-50/50 cursor-pointer transition-colors group">
+                    <div className="min-w-0 flex-1 mr-3">
+                      <div className="font-medium text-sm">{demand.client?.name || "未指定客戶"}</div>
+                      <div className="text-xs text-muted-foreground mt-0.5">
+                        {new Date(demand.date).toLocaleDateString("zh-TW", { month: "short", day: "numeric" })}
+                        {" "}·{" "}
+                        {demand.startTime} - {demand.endTime}
+                        {demand.location && ` · ${demand.location}`}
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2.5 shrink-0">
+                      <span className="text-sm text-muted-foreground">
+                        {demand.requiredWorkers} 人
+                      </span>
+                      <ArrowRight className="h-3.5 w-3.5 text-muted-foreground/50 opacity-0 group-hover:opacity-100 transition-opacity" />
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+            {pendingDemands.length > 5 && (
+              <div className="mt-3 text-center">
+                <Link href="/demands?status=pending">
+                  <Button variant="ghost" size="sm" className="text-xs">
+                    查看全部 {pendingDemands.length} 筆待審核需求單
+                    <ArrowRight className="ml-1 h-3 w-3" />
+                  </Button>
+                </Link>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
       {/* 需求列表 + 指派清單 */}
       <div className="grid gap-6 lg:grid-cols-2">

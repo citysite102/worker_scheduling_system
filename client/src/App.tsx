@@ -21,7 +21,8 @@ import ClientDetail from "./pages/ClientDetail";
 import DemandTypes from "./pages/DemandTypes";
 import { ClientDashboard } from "./pages/client-portal/ClientDashboard";
 import { ClientDemands } from "./pages/client-portal/ClientDemands";
-import { CreateDemand } from "./pages/client-portal/CreateDemand";
+import { CreateDemand } from "@/pages/client-portal/CreateDemand";
+import { DemandDetail as ClientDemandDetail } from "@/pages/client-portal/DemandDetail";
 import ClientCalendar from "./pages/client-portal/ClientCalendar";
 import { RoleBasedRedirect } from "./components/RoleBasedRedirect";
 import ClientLogin from "./pages/ClientLogin";
@@ -56,6 +57,7 @@ function Router() {
       <Route path="/client-portal/dashboard" component={ClientDashboard} />
       <Route path="/client-portal/demands" component={ClientDemands} />
       <Route path="/client-portal/demands/create" component={CreateDemand} />
+      <Route path="/client-portal/demands/:id" component={ClientDemandDetail} />
       <Route path="/client-portal/calendar" component={ClientCalendar} />
       
       <Route path="/404" component={NotFound} />
