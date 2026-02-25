@@ -323,8 +323,9 @@ export default function Demands() {
               )}
               
               <div className="grid grid-cols-2 gap-x-6 gap-y-4 py-4">
+                {/* 客戶選擇 */}
                 <div className="space-y-2">
-              <Label htmlFor="clientId">客戶 *</Label>
+                  <Label htmlFor="clientId">客戶 *</Label>
                   <Popover open={clientComboboxOpen} onOpenChange={setClientComboboxOpen}>
                     <PopoverTrigger asChild>
                       <Button
@@ -375,10 +376,11 @@ export default function Demands() {
                     </PopoverContent>
                   </Popover>
                 </div>
+                
                 {/* 日期選擇：批次模式使用多選器，單一模式使用一般輸入 */}
                 {isBatchMode && !editingDemand ? (
-                  <div className="col-span-2 space-y-2">
-                    <Label htmlFor="dates">選擇日期 *</Label>
+                  <div className="space-y-2">
+                    <Label htmlFor="dates">日期 *</Label>
                     <DateMultiPicker
                       selectedDates={selectedDates}
                       onDatesChange={setSelectedDates}
@@ -402,20 +404,28 @@ export default function Demands() {
                     />
                   </div>
                 )}
+                
+                {/* 開始時間 */}
                 <div className="space-y-2">
-              <Label htmlFor="startTime">開始時間 *</Label>
+                  <Label htmlFor="startTime">開始時間 *</Label>
                   <Input id="startTime" name="startTime" type="time" defaultValue={editingDemand?.startTime} required />
                 </div>
+                
+                {/* 結束時間 */}
                 <div className="space-y-2">
-              <Label htmlFor="endTime">結束時間 *</Label>
+                  <Label htmlFor="endTime">結束時間 *</Label>
                   <Input id="endTime" name="endTime" type="time" defaultValue={editingDemand?.endTime} required />
                 </div>
+                
+                {/* 需求人數 */}
                 <div className="space-y-2">
-              <Label htmlFor="requiredWorkers">需求人數 *</Label>
+                  <Label htmlFor="requiredWorkers">需求人數 *</Label>
                   <Input id="requiredWorkers" name="requiredWorkers" type="number" min="1" defaultValue={editingDemand?.requiredWorkers} required />
                 </div>
+                
+                {/* 休息時間 */}
                 <div className="space-y-2">
-              <Label htmlFor="breakHours">休息時間（小時）</Label>
+                  <Label htmlFor="breakHours">休息時間（小時）</Label>
                   <Input 
                     id="breakHours" 
                     name="breakHours" 
