@@ -12,6 +12,11 @@ import { Check, ChevronsUpDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Textarea } from "@/components/ui/textarea";
 import { Plus, Calendar, Clock, MapPin, AlertTriangle, Loader2, ArrowRight, Copy, Edit, Trash2 } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { DateMultiPicker } from "@/components/DateMultiPicker";
+import { format } from "date-fns";
+import { zhTW } from "date-fns/locale";
 import { Pagination, PaginationContent, PaginationEllipsis, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
@@ -42,6 +47,12 @@ export default function Demands() {
   const [clientComboboxOpen, setClientComboboxOpen] = useState(false);
   const [selectedDemandTypeId, setSelectedDemandTypeId] = useState<number | undefined>(undefined);
   const [selectedOptions, setSelectedOptions] = useState<number[]>([]);
+  
+  // 批次模式狀態
+  const [isBatchMode, setIsBatchMode] = useState(false);
+  const [selectedDates, setSelectedDates] = useState<Date[]>([]);
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+  const [pendingFormData, setPendingFormData] = useState<any>(null);
 
   // 計算日期範圍
   const getDateRange = (filter: typeof dateFilter) => {
@@ -112,6 +123,24 @@ export default function Demands() {
     },
   });
 
+  const createBatchMutation = trpc.demands.createBatch.useMutation({
+    onSuccess: (result) => {
+      if (result.failed > 0) {
+        toast.warning(`已成功建立 ${result.succeeded} 筆需求單，${result.failed} 筆失敗。`);
+      } else {
+        toast.success(`已成功建立 ${result.succeeded} 筆需求單！`);
+      }
+      setIsDialogOpen(false);
+      setEditingDemand(null);
+      setIsBatchMode(false);
+      setSelectedDates([]);
+      refetch();
+    },
+    onError: (error) => {
+      toast.error(error.message || "批次建立需求單時發生錯誤，請稍後再試。");
+    },
+  });
+
   const updateMutation = trpc.demands.update.useMutation({
     onSuccess: () => {
       toast.success("需求單更新成功");
@@ -149,7 +178,7 @@ export default function Demands() {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
     const dateStr = formData.get("date") as string;
-    const date = new Date(dateStr);
+    const date = dateStr ? new Date(dateStr) : null;
 
     const startTime = formData.get("startTime") as string;
     const endTime = formData.get("endTime") as string;
@@ -160,9 +189,14 @@ export default function Demands() {
       return;
     }
 
+    // 驗證客戶選擇
+    if (!selectedClientId) {
+      toast.error("請選擇客戶");
+      return;
+    }
+
     const data = {
-      clientId: selectedClientId || parseInt(formData.get("clientId") as string),
-      date,
+      clientId: selectedClientId,
       startTime,
       endTime,
       requiredWorkers: parseInt(formData.get("requiredWorkers") as string),
@@ -173,11 +207,38 @@ export default function Demands() {
       note: (formData.get("note") as string) || undefined,
     };
 
-    if (editingDemand) {
-      updateMutation.mutate({ id: editingDemand.id, ...data });
-    } else {
-      createMutation.mutate(data);
+    // 批次模式
+    if (isBatchMode && !editingDemand) {
+      if (selectedDates.length === 0) {
+        toast.error("請至少選擇一個日期");
+        return;
+      }
+
+      // 顯示確認對話框
+      setPendingFormData({
+        ...data,
+        dates: selectedDates,
+      });
+      setShowConfirmDialog(true);
+      return;
     }
+
+    // 單一日期模式
+    if (!date) {
+      toast.error("請選擇日期");
+      return;
+    }
+
+    if (editingDemand) {
+      updateMutation.mutate({ id: editingDemand.id, ...data, date });
+    } else {
+      createMutation.mutate({ ...data, date });
+    }
+  };
+
+  const handleConfirmBatchCreate = async () => {
+    setShowConfirmDialog(false);
+    await createBatchMutation.mutateAsync(pendingFormData);
   };
 
   const handleCancel = (id: number) => {
@@ -236,6 +297,31 @@ export default function Demands() {
                 <DialogTitle>{editingDemand ? "編輯用工需求" : "新增用工需求"}</DialogTitle>
                 <DialogDescription>填寫需求單基本資料</DialogDescription>
               </DialogHeader>
+              
+              {/* 批次模式切換（僅在新增時顯示） */}
+              {!editingDemand && (
+                <div className="flex items-center justify-between p-4 bg-accent/10 rounded-lg border border-accent/20 mt-4 mx-6">
+                  <div className="space-y-0.5">
+                    <Label htmlFor="batch-mode" className="text-base font-medium">
+                      批次建立模式
+                    </Label>
+                    <p className="text-sm text-muted-foreground">
+                      一次選擇多個日期，快速建立相同設定的需求單
+                    </p>
+                  </div>
+                  <Switch
+                    id="batch-mode"
+                    checked={isBatchMode}
+                    onCheckedChange={(checked) => {
+                      setIsBatchMode(checked);
+                      if (!checked) {
+                        setSelectedDates([]);
+                      }
+                    }}
+                  />
+                </div>
+              )}
+              
               <div className="grid grid-cols-2 gap-x-6 gap-y-4 py-4">
                 <div className="space-y-2">
               <Label htmlFor="clientId">客戶 *</Label>
@@ -283,16 +369,33 @@ export default function Demands() {
                     </PopoverContent>
                   </Popover>
                 </div>
-                <div className="space-y-2">
-              <Label htmlFor="date">日期 *</Label>
-                  <Input 
-                    id="date" 
-                    name="date" 
-                    type="date" 
-                    defaultValue={editingDemand?.date ? new Date(editingDemand.date).toISOString().split('T')[0] : ''}
-                    required 
-                  />
-                </div>
+                {/* 日期選擇：批次模式使用多選器，單一模式使用一般輸入 */}
+                {isBatchMode && !editingDemand ? (
+                  <div className="col-span-2 space-y-2">
+                    <Label htmlFor="dates">選擇日期 *</Label>
+                    <DateMultiPicker
+                      selectedDates={selectedDates}
+                      onDatesChange={setSelectedDates}
+                      minDate={new Date()}
+                    />
+                    {selectedDates.length > 0 && (
+                      <p className="text-sm text-muted-foreground">
+                        已選擇 {selectedDates.length} 個日期
+                      </p>
+                    )}
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    <Label htmlFor="date">日期 *</Label>
+                    <Input 
+                      id="date" 
+                      name="date" 
+                      type="date" 
+                      defaultValue={editingDemand?.date ? new Date(editingDemand.date).toISOString().split('T')[0] : ''}
+                      required={!isBatchMode}
+                    />
+                  </div>
+                )}
                 <div className="space-y-2">
               <Label htmlFor="startTime">開始時間 *</Label>
                   <Input id="startTime" name="startTime" type="time" defaultValue={editingDemand?.startTime} required />
@@ -704,6 +807,34 @@ export default function Demands() {
           )}
         </CardContent>
       </Card>
+      
+      {/* 批次建立確認對話框 */}
+      <AlertDialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>確認批次建立需求單</AlertDialogTitle>
+            <AlertDialogDescription>
+              您將建立 {pendingFormData?.dates?.length || 0} 筆需求單，日期如下：
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="max-h-60 overflow-y-auto space-y-1 my-4">
+            {pendingFormData?.dates?.map((date: Date, index: number) => (
+              <div key={index} className="text-sm text-muted-foreground">
+                {format(date, "yyyy 年 M 月 d 日 (EEEE)", { locale: zhTW })}
+              </div>
+            ))}
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel>取消</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleConfirmBatchCreate}
+              disabled={createBatchMutation.isPending}
+            >
+              {createBatchMutation.isPending ? "建立中..." : "確認建立"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
