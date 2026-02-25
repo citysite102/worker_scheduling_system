@@ -487,6 +487,10 @@ export async function updateDemand(id: number, data: Partial<{ clientId: number;
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   await db.update(demands).set(data).where(eq(demands.id, id));
+  
+  // 返回更新後的需求單
+  const [updatedDemand] = await db.select().from(demands).where(eq(demands.id, id));
+  return updatedDemand;
 }
 
 export async function deleteDemand(id: number) {
