@@ -111,18 +111,18 @@ export default function Dashboard() {
       </div>
 
       {/* 統計卡片 */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
         {statCards.map((stat, i) => (
-          <Card key={i} className="shadow-sm border-border/60 hover:shadow-md transition-shadow">
-            <CardContent className="p-5">
-              <div className="flex items-start justify-between mb-3">
-                <span className="text-sm font-medium text-muted-foreground">{stat.title}</span>
-                <div className={`h-8 w-8 rounded-lg flex items-center justify-center ${stat.accent}`}>
-                  <stat.icon className="h-4 w-4" />
+          <Card key={i} className="shadow-md border-border/40 hover:shadow-lg transition-all hover:border-accent/30">
+            <CardContent className="p-6">
+              <div className="flex items-start justify-between mb-4">
+                <span className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">{stat.title}</span>
+                <div className={`h-10 w-10 rounded-xl flex items-center justify-center ${stat.accent} transition-transform hover:scale-110`}>
+                  <stat.icon className="h-5 w-5" />
                 </div>
               </div>
-              <div className="text-3xl font-bold tracking-tight">{stat.value}</div>
-              <p className="text-xs text-muted-foreground mt-1">{stat.subtitle}</p>
+              <div className="text-3xl font-bold tracking-tight mb-1">{stat.value}</div>
+              <p className="text-xs text-muted-foreground">{stat.subtitle}</p>
             </CardContent>
           </Card>
         ))}
@@ -131,7 +131,7 @@ export default function Dashboard() {
       {/* 圖表區域 */}
       <div className="grid gap-6 lg:grid-cols-3">
         {/* 每日派工 vs 需求趨勢 */}
-        <Card className="shadow-sm border-border/60 lg:col-span-2">
+        <Card className="shadow-md border-border/40 lg:col-span-2">
           <CardHeader className="pb-2">
             <CardTitle className="text-base font-medium">近兩週派工與需求趨勢</CardTitle>
           </CardHeader>
@@ -161,7 +161,7 @@ export default function Dashboard() {
         </Card>
 
         {/* 客戶需求分布 */}
-        <Card className="shadow-sm border-border/60">
+        <Card className="shadow-md border-border/40">
           <CardHeader className="pb-2">
             <CardTitle className="text-base font-medium">合作單位需求分布</CardTitle>
             <p className="text-xs text-muted-foreground">近 30 天</p>
@@ -219,7 +219,7 @@ export default function Dashboard() {
 
       {/* 待審核需求單 */}
       {pendingDemands.length > 0 && (
-        <Card className="shadow-sm border-border/60 border-amber-200 bg-amber-50/30">
+        <Card className="shadow-md border-amber-300/50 bg-amber-50/40 hover:shadow-lg">
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
               <CardTitle className="text-base font-medium flex items-center gap-2">
@@ -271,7 +271,7 @@ export default function Dashboard() {
 
       {/* 需求列表 + 指派清單 */}
       <div className="grid gap-6 lg:grid-cols-2">
-        <Card className="shadow-sm border-border/60">
+        <Card className="shadow-md border-border/40">
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
               <CardTitle className="text-base font-medium">今日需求列表</CardTitle>
@@ -324,7 +324,7 @@ export default function Dashboard() {
           </CardContent>
         </Card>
 
-        <Card className="shadow-sm border-border/60">
+        <Card className="shadow-md border-border/40">
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between gap-2">
               <CardTitle className="text-base font-medium">今日已指派清單</CardTitle>

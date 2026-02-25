@@ -90,11 +90,11 @@ export function ClientDashboard() {
         </div>
 
         {/* 統計卡片 */}
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-4">
           {stats.map((stat) => {
             const Icon = stat.icon;
             return (
-              <Card key={stat.title}>
+              <Card key={stat.title} className="shadow-md border-border/40 hover:shadow-lg transition-all hover:border-accent/30">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">
                     {stat.title}
@@ -115,7 +115,7 @@ export function ClientDashboard() {
         </div>
 
         {/* 近期需求單 */}
-        <Card>
+        <Card className="shadow-md border-border/40">
           <CardHeader>
             <div className="flex items-center justify-between">
               <CardTitle>近期需求單</CardTitle>

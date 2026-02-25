@@ -73,9 +73,9 @@
   --secondary: oklch(0.95 0.01 250);
   --secondary-foreground: oklch(0.3 0.04 260);
   
-  /* Accent: 淡藍色（替代橘色，更乾淨） */
-  --accent: oklch(0.95 0.02 250);
-  --accent-foreground: oklch(0.3 0.04 260);
+  /* Accent: 金黃色點綴（與頭像風格呼應） */
+  --accent: oklch(0.85 0.12 80);
+  --accent-foreground: oklch(0.25 0.06 80);
   
   /* 灰階色系 - 更冷調 */
   --gray-50: oklch(0.985 0.002 260);
@@ -94,7 +94,7 @@
   --muted-foreground: var(--gray-500);
   
   /* 圓角 - 稍大，更現代 */
-  --radius: 0.625rem;
+  --radius: 0.75rem;
   
   /* 背景 - 極淡灰 */
   --background: oklch(0.975 0.003 260);
@@ -219,6 +219,23 @@
 }
 
 @layer components {
+  /* 卡片陰影系統 */
+  .card-shadow-sm {
+    box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  }
+  
+  .card-shadow {
+    box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+  }
+  
+  .card-shadow-md {
+    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  }
+  
+  .card-shadow-lg {
+    box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  }
+  
   .container {
     width: 100%;
     margin-left: auto;
