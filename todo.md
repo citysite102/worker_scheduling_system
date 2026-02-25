@@ -1652,3 +1652,10 @@
 - [x] 修正下拉選單選項顯示問題（SelectTrigger 寬度設定為 w-full）
 - [x] 修正巢狀 anchor 標籤問題（返回按鈕與取消按鈕）
 - [x] 測試修正後的功能
+
+## 使用者回報問題（2026/02/25 - 建立需求單頁面仍有巢狀 anchor 標籤錯誤）
+
+- [x] 全面檢查 CreateDemand.tsx 和 ClientPortalLayout.tsx 中所有可能的巢狀 `<a>` 標籤來源
+- [x] 檢查是否有其他 `<Link>` 包裹互動元件的情況
+- [x] 修正所有發現的巢狀 anchor 標籤問題（ClientPortalLayout 導航選單）
+- [x] 測試修正後的功能
