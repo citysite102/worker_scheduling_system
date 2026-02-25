@@ -73,9 +73,9 @@
   --secondary: oklch(0.95 0.01 250);
   --secondary-foreground: oklch(0.3 0.04 260);
   
-  /* Accent: 金黃色點綴（與頭像風格呼應） */
-  --accent: oklch(0.85 0.12 80);
-  --accent-foreground: oklch(0.25 0.06 80);
+  /* Accent: 淺灰色（低調中性） */
+  --accent: oklch(0.95 0.005 260);
+  --accent-foreground: oklch(0.3 0.04 260);
   
   /* 灰階色系 - 更冷調 */
   --gray-50: oklch(0.985 0.002 260);
