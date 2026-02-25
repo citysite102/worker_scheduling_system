@@ -64,8 +64,6 @@ export function ClientPortalLayout({ children }: { children: React.ReactNode }) 
   const navItems = [
     { icon: LayoutDashboard, label: "儀表板", path: "/client-portal/dashboard" },
     { icon: FileText, label: "需求管理", path: "/client-portal/demands" },
-    { icon: Calendar, label: "派工行事曆", path: "/client-portal/calendar" },
-    { icon: Building2, label: "公司資料", path: "/client-portal/profile" },
   ];
 
   return (
