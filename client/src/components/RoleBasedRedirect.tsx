@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { useLocation } from "wouter";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { Spinner } from "@/components/ui/spinner";
+import { getLoginUrl } from "@/const";
 
 export function RoleBasedRedirect() {
   const { user, loading } = useAuth();
@@ -11,8 +12,8 @@ export function RoleBasedRedirect() {
     if (loading) return;
 
     if (!user) {
-      // 未登入，跳轉到登入頁面
-      window.location.href = "/api/oauth/login";
+      // 未登入，跳轉到 Manus OAuth 登入頁面
+      window.location.href = getLoginUrl();
       return;
     }
 
