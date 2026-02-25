@@ -1,16 +1,96 @@
 import { trpc } from "@/lib/trpc";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { AlertCircle, CheckCircle2, Users, ClipboardList, Loader2, TrendingUp, ArrowRight } from "lucide-react";
+import { AlertCircle, CheckCircle2, Users, ClipboardList, Loader2, TrendingUp, ArrowRight, Check, X } from "lucide-react";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { useState, useMemo } from "react";
+import { toast } from "sonner";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   LineChart, Line, PieChart, Pie, Cell, Legend,
 } from "recharts";
 
 const CHART_COLORS = ["#3b82f6", "#6366f1", "#8b5cf6", "#a855f7", "#ec4899", "#f43f5e", "#f97316", "#eab308", "#22c55e", "#14b8a6"];
+
+// 待審核需求單卡片元件
+function PendingDemandCard({ demand }: { demand: any }) {
+  const utils = trpc.useUtils();
+  
+  const approveMutation = trpc.demands.approve.useMutation({
+    onSuccess: () => {
+      toast.success("審核通過");
+      utils.demands.list.invalidate();
+    },
+    onError: (error) => {
+      toast.error(error.message || "審核失敗");
+    },
+  });
+  
+  const rejectMutation = trpc.demands.reject.useMutation({
+    onSuccess: () => {
+      toast.success("已拒絕需求單");
+      utils.demands.list.invalidate();
+    },
+    onError: (error) => {
+      toast.error(error.message || "拒絕失敗");
+    },
+  });
+  
+  const handleApprove = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (confirm(`確定要審核通過這個需求單嗎？`)) {
+      approveMutation.mutate({ id: demand.id });
+    }
+  };
+  
+  const handleReject = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const reason = prompt("請輸入拒絕原因（可選）：");
+    if (reason !== null) {
+      rejectMutation.mutate({ id: demand.id, reason: reason || undefined });
+    }
+  };
+  
+  return (
+    <div className="flex items-center justify-between p-3.5 rounded-lg border border-amber-200 bg-white hover:bg-amber-50/50 transition-colors group">
+      <Link href={`/demands/${demand.id}`} className="min-w-0 flex-1 mr-3">
+        <div className="font-medium text-sm">{demand.client?.name || "未指定客戶"}</div>
+        <div className="text-xs text-muted-foreground mt-0.5">
+          {new Date(demand.date).toLocaleDateString("zh-TW", { month: "short", day: "numeric" })}
+          {" "}·{" "}
+          {demand.startTime} - {demand.endTime}
+          {demand.location && ` · ${demand.location}`}
+        </div>
+      </Link>
+      <div className="flex items-center gap-2 shrink-0">
+        <span className="text-sm text-muted-foreground">
+          {demand.requiredWorkers} 人
+        </span>
+        <Button
+          size="sm"
+          variant="ghost"
+          className="h-7 w-7 p-0 text-green-600 hover:text-green-700 hover:bg-green-50"
+          onClick={handleApprove}
+          disabled={approveMutation.isPending || rejectMutation.isPending}
+        >
+          <Check className="h-4 w-4" />
+        </Button>
+        <Button
+          size="sm"
+          variant="ghost"
+          className="h-7 w-7 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
+          onClick={handleReject}
+          disabled={approveMutation.isPending || rejectMutation.isPending}
+        >
+          <X className="h-4 w-4" />
+        </Button>
+      </div>
+    </div>
+  );
+}
 
 export default function Dashboard() {
   const [today] = useState(() => {
@@ -178,25 +258,7 @@ export default function Dashboard() {
           <CardContent>
             <div className="space-y-2">
               {pendingDemands.slice(0, 5).map((demand: any) => (
-                <Link key={demand.id} href={`/demands/${demand.id}`}>
-                  <div className="flex items-center justify-between p-3.5 rounded-lg border border-amber-200 bg-white hover:bg-amber-50/50 cursor-pointer transition-colors group">
-                    <div className="min-w-0 flex-1 mr-3">
-                      <div className="font-medium text-sm">{demand.client?.name || "未指定客戶"}</div>
-                      <div className="text-xs text-muted-foreground mt-0.5">
-                        {new Date(demand.date).toLocaleDateString("zh-TW", { month: "short", day: "numeric" })}
-                        {" "}·{" "}
-                        {demand.startTime} - {demand.endTime}
-                        {demand.location && ` · ${demand.location}`}
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2.5 shrink-0">
-                      <span className="text-sm text-muted-foreground">
-                        {demand.requiredWorkers} 人
-                      </span>
-                      <ArrowRight className="h-3.5 w-3.5 text-muted-foreground/50 opacity-0 group-hover:opacity-100 transition-opacity" />
-                    </div>
-                  </div>
-                </Link>
+                <PendingDemandCard key={demand.id} demand={demand} />
               ))}
             </div>
             {pendingDemands.length > 5 && (

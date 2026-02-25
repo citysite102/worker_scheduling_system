@@ -1209,6 +1209,57 @@ export const appRouter = router({
         return { success: true };
       }),
 
+    // 審核通過（將 pending 改為 confirmed）
+    approve: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input, ctx }) => {
+        // 檢查是否為管理員
+        if (ctx.user.role !== 'admin') {
+          throw new TRPCError({ code: "FORBIDDEN", message: "只有管理員可以審核需求單" });
+        }
+        
+        const demand = await db.getDemandById(input.id);
+        if (!demand) throw new TRPCError({ code: "NOT_FOUND", message: "需求單不存在" });
+        
+        // 只有 pending 狀態的需求單才可以審核
+        if (demand.status !== 'pending') {
+          throw new TRPCError({ code: "BAD_REQUEST", message: "只有待審核的需求單才可以審核" });
+        }
+        
+        // 將需求單狀態設為 confirmed
+        await db.updateDemand(input.id, { status: "confirmed" });
+        return { success: true };
+      }),
+
+    // 審核拒絕（將 pending 改為 cancelled）
+    reject: protectedProcedure
+      .input(z.object({ 
+        id: z.number(),
+        reason: z.string().optional(), // 拒絕原因（可選）
+      }))
+      .mutation(async ({ input, ctx }) => {
+        // 檢查是否為管理員
+        if (ctx.user.role !== 'admin') {
+          throw new TRPCError({ code: "FORBIDDEN", message: "只有管理員可以審核需求單" });
+        }
+        
+        const demand = await db.getDemandById(input.id);
+        if (!demand) throw new TRPCError({ code: "NOT_FOUND", message: "需求單不存在" });
+        
+        // 只有 pending 狀態的需求單才可以審核
+        if (demand.status !== 'pending') {
+          throw new TRPCError({ code: "BAD_REQUEST", message: "只有待審核的需求單才可以審核" });
+        }
+        
+        // 將需求單狀態設為 cancelled，並在 note 中記錄拒絕原因
+        const note = input.reason ? `審核拒絕：${input.reason}` : '審核拒絕';
+        await db.updateDemand(input.id, { 
+          status: "cancelled",
+          note: demand.note ? `${demand.note}\n${note}` : note,
+        });
+        return { success: true };
+      }),
+
     // 計算人力可行性
     feasibility: publicProcedure
       .input(z.object({
