@@ -1,7 +1,7 @@
 import { COOKIE_NAME } from "@shared/const";
 import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
-import { publicProcedure, router } from "./_core/trpc";
+import { publicProcedure, router, protectedProcedure } from "./_core/trpc";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import * as db from "./db";
@@ -794,9 +794,8 @@ export const appRouter = router({
         };
       }),
 
-    create: publicProcedure
+    create: protectedProcedure
       .input(z.object({
-        clientId: z.number(),
         date: z.date(),
         startTime: z.string().regex(/^\d{2}:\d{2}$/, "時間格式應為 HH:mm"),
         endTime: z.string().regex(/^\d{2}:\d{2}$/, "時間格式應為 HH:mm"),
@@ -809,11 +808,25 @@ export const appRouter = router({
         status: z.enum(["draft", "confirmed", "cancelled", "closed"]).optional(),
       }))
       .mutation(async ({ input, ctx }) => {
+        // 如果是客戶角色，從 ctx.user 中取得 clientId
+        let clientId: number;
+        if (ctx.user.role === 'client') {
+          if (!ctx.user.clientId) {
+            throw new TRPCError({ code: "BAD_REQUEST", message: "客戶帳號未關聯到客戶公司" });
+          }
+          clientId = ctx.user.clientId;
+        } else {
+          // 如果是 admin 角色，從 input 中取得 clientId
+          throw new TRPCError({ code: "FORBIDDEN", message: "Admin 角色不能使用此 API 建立需求單" });
+        }
+        
         const { breakHours, ...rest } = input;
         await db.createDemand({
           ...rest,
+          clientId,
           breakHours: breakHours ? Math.round(breakHours * 60) : 0, // 轉換為分鐘
-          createdBy: ctx.user?.id, // 記錄建立者
+          createdBy: ctx.user.id, // 記錄建立者
+          status: 'pending', // 客戶提交的需求單預設為 pending 狀態
         });
         return { success: true };
       }),

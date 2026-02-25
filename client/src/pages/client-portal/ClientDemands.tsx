@@ -37,7 +37,7 @@ export function ClientDemands() {
               管理您的用工需求單
             </p>
           </div>
-          <Link href="/client-portal/demands/new">
+          <Link href="/client-portal/demands/create">
             <Button>
               <Plus className="mr-2 h-4 w-4" />
               建立需求單
@@ -92,7 +92,7 @@ export function ClientDemands() {
                           : "已取消"
                       }的需求單`}
                 </p>
-                <Link href="/client-portal/demands/new">
+                <Link href="/client-portal/demands/create">
                   <Button variant="outline" size="sm" className="mt-4">
                     建立需求單
                   </Button>

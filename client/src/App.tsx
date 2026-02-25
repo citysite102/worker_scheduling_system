@@ -21,6 +21,7 @@ import ClientDetail from "./pages/ClientDetail";
 import DemandTypes from "./pages/DemandTypes";
 import { ClientDashboard } from "./pages/client-portal/ClientDashboard";
 import { ClientDemands } from "./pages/client-portal/ClientDemands";
+import { CreateDemand } from "./pages/client-portal/CreateDemand";
 
 function Router() {
   return (
@@ -41,6 +42,7 @@ function Router() {
       {/* 客戶入口路由 */}
       <Route path="/client-portal/dashboard" component={ClientDashboard} />
       <Route path="/client-portal/demands" component={ClientDemands} />
+      <Route path="/client-portal/demands/create" component={CreateDemand} />
       
       <Route path="/404" component={NotFound} />
       <Route component={NotFound} />
