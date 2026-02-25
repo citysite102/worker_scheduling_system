@@ -134,17 +134,17 @@ export function ClientDashboard() {
                 <p className="mt-2 text-sm text-muted-foreground">
                   尚無需求單
                 </p>
-                <Link href="/client-portal/demands/new">
+                <Link href="/client-portal/demands/create">
                   <Button variant="outline" size="sm" className="mt-4">
                     建立第一筆需求單
                   </Button>
                 </Link>
               </div>
             ) : (
-              <div className="space-y-3">
+              <div className="space-y-4">
                 {recentDemands.map((demand) => (
                   <Link key={demand.id} href={`/client-portal/demands/${demand.id}`}>
-                    <div className="flex items-center justify-between rounded-lg border p-5 hover:bg-accent hover:shadow-md transition-all cursor-pointer bg-card">
+                    <div className="flex items-center justify-between rounded-lg border p-5 mb-4 hover:bg-accent hover:shadow-md transition-all cursor-pointer bg-card">
                       <div className="flex-1">
                         <div className="flex items-center gap-3 mb-2">
                           <p className="font-semibold text-base">
