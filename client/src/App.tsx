@@ -1,18 +1,66 @@
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { LoadingScreen } from "@/components/LoadingScreen";
+import { useState, useEffect } from "react";
 import NotFound from "@/pages/NotFound";
 import { Route, Switch } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
-import Home from "./pages/Home";
+import Dashboard from "./pages/Dashboard";
+import Workers from "./pages/Workers";
+import Clients from "./pages/Clients";
+import Availability from "./pages/Availability";
+import Demands from "./pages/Demands";
+import DemandDetail from "./pages/DemandDetail";
+import ActualTime from "./pages/ActualTime";
+import Reports from "./pages/Reports";
+import DashboardLayout from "./components/DashboardLayout";
+import AdminSettings from "./pages/AdminSettings";
+import WorkerDetail from "./pages/WorkerDetail";
+import ClientDetail from "./pages/ClientDetail";
+import DemandTypes from "./pages/DemandTypes";
+import { ClientDashboard } from "./pages/client-portal/ClientDashboard";
+import { ClientDemands } from "./pages/client-portal/ClientDemands";
+import { CreateDemand } from "@/pages/client-portal/CreateDemand";
+import { DemandDetail as ClientDemandDetail } from "@/pages/client-portal/DemandDetail";
+import ClientCalendar from "./pages/client-portal/ClientCalendar";
+import { RoleBasedRedirect } from "./components/RoleBasedRedirect";
+import ClientLogin from "./pages/ClientLogin";
+import ChangePassword from "./pages/ChangePassword";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
 
 function Router() {
-  // make sure to consider if you need authentication for certain routes
   return (
     <Switch>
-      <Route path={"/"} component={Home} />
-      <Route path={"/404"} component={NotFound} />
-      {/* Final fallback route */}
+      <Route path="/" component={RoleBasedRedirect} />
+      <Route path="/dashboard" component={() => <DashboardLayout><Dashboard /></DashboardLayout>} />
+      <Route path="/workers" component={() => <DashboardLayout><Workers /></DashboardLayout>} />
+      <Route path="/workers/:id" component={() => <DashboardLayout><WorkerDetail /></DashboardLayout>} />
+      <Route path="/clients" component={() => <DashboardLayout><Clients /></DashboardLayout>} />
+      <Route path="/clients/:id" component={() => <DashboardLayout><ClientDetail /></DashboardLayout>} />
+      <Route path="/availability" component={() => <DashboardLayout><Availability /></DashboardLayout>} />
+      <Route path="/demands" component={() => <DashboardLayout><Demands /></DashboardLayout>} />
+      <Route path="/demands/:id" component={() => <DashboardLayout><DemandDetail /></DashboardLayout>} />
+      <Route path="/actual-time" component={() => <DashboardLayout><ActualTime /></DashboardLayout>} />
+      <Route path="/reports" component={() => <DashboardLayout><Reports /></DashboardLayout>} />
+      <Route path="/demand-types" component={() => <DashboardLayout><DemandTypes /></DashboardLayout>} />
+      <Route path="/admin" component={() => <DashboardLayout><AdminSettings /></DashboardLayout>} />
+      
+      {/* 客戶登入 */}
+      <Route path="/client-login" component={ClientLogin} />
+      <Route path="/forgot-password" component={ForgotPassword} />
+      <Route path="/client-portal/change-password" component={ChangePassword} />
+      <Route path="/client-portal/reset-password" component={ResetPassword} />
+      
+      {/* 客戶入口路由 */}
+      <Route path="/client-portal/dashboard" component={ClientDashboard} />
+      <Route path="/client-portal/demands" component={ClientDemands} />
+      <Route path="/client-portal/demands/create" component={CreateDemand} />
+      <Route path="/client-portal/demands/:id" component={ClientDemandDetail} />
+      <Route path="/client-portal/calendar" component={ClientCalendar} />
+      
+      <Route path="/404" component={NotFound} />
       <Route component={NotFound} />
     </Switch>
   );
@@ -24,8 +72,20 @@ function Router() {
 // - If you want to make theme switchable, pass `switchable` ThemeProvider and use `useTheme` hook
 
 function App() {
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    // 模擬應用程式初始化
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 1000);
+
+    return () => clearTimeout(timer);
+  }, []);
+
   return (
     <ErrorBoundary>
+      <LoadingScreen isLoading={isLoading} />
       <ThemeProvider
         defaultTheme="light"
         // switchable

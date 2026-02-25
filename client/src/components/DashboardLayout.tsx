@@ -21,15 +21,23 @@ import {
 } from "@/components/ui/sidebar";
 import { getLoginUrl } from "@/const";
 import { useIsMobile } from "@/hooks/useMobile";
-import { LayoutDashboard, LogOut, PanelLeft, Users } from "lucide-react";
+import { LayoutDashboard, LogOut, PanelLeft, Users, Building2, Calendar, ClipboardList, Clock, FileText, ShieldCheck, Tags } from "lucide-react";
 import { CSSProperties, useEffect, useRef, useState } from "react";
 import { useLocation } from "wouter";
 import { DashboardLayoutSkeleton } from './DashboardLayoutSkeleton';
+import { LoadingScreen } from './LoadingScreen';
 import { Button } from "./ui/button";
 
 const menuItems = [
-  { icon: LayoutDashboard, label: "Page 1", path: "/" },
-  { icon: Users, label: "Page 2", path: "/some-path" },
+  { icon: LayoutDashboard, label: "儀表板", path: "/" },
+  { icon: Users, label: "員工管理", path: "/workers" },
+  { icon: Building2, label: "客戶管理", path: "/clients" },
+  { icon: Calendar, label: "排班時間設置", path: "/availability" },
+  { icon: ClipboardList, label: "需求管理", path: "/demands" },
+  { icon: Tags, label: "需求類型管理", path: "/demand-types" },
+  { icon: Clock, label: "實際工時回填", path: "/actual-time" },
+  { icon: FileText, label: "報表輸出", path: "/reports" },
+  { icon: ShieldCheck, label: "管理員設定", path: "/admin" },
 ];
 
 const SIDEBAR_WIDTH_KEY = "sidebar-width";
@@ -58,7 +66,7 @@ export default function DashboardLayout({
 
   if (!user) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="flex items-center justify-center min-h-screen relative">
         <div className="flex flex-col items-center gap-8 p-8 max-w-md w-full">
           <div className="flex flex-col items-center gap-6">
             <h1 className="text-2xl font-semibold tracking-tight text-center">
@@ -77,6 +85,15 @@ export default function DashboardLayout({
           >
             Sign in
           </Button>
+        </div>
+        
+        {/* 版權聲明 */}
+        <div className="absolute bottom-8 left-0 right-0">
+          <p className="text-xs text-muted-foreground text-center leading-relaxed">
+            &copy; 2026 台灣長誠控股有限公司
+            <br />
+            All rights reserved.
+          </p>
         </div>
       </div>
     );
@@ -108,6 +125,19 @@ function DashboardLayoutContent({
 }: DashboardLayoutContentProps) {
   const { user, logout } = useAuth();
   const [location, setLocation] = useLocation();
+  const [isPageLoading, setIsPageLoading] = useState(false);
+  const prevLocation = useRef(location);
+
+  useEffect(() => {
+    if (prevLocation.current !== location) {
+      setIsPageLoading(true);
+      const timer = setTimeout(() => {
+        setIsPageLoading(false);
+        prevLocation.current = location;
+      }, 300);
+      return () => clearTimeout(timer);
+    }
+  }, [location]);
   const { state, toggleSidebar } = useSidebar();
   const isCollapsed = state === "collapsed";
   const [isResizing, setIsResizing] = useState(false);
@@ -153,6 +183,7 @@ function DashboardLayoutContent({
 
   return (
     <>
+      <LoadingScreen isLoading={isPageLoading} />
       <div className="relative" ref={sidebarRef}>
         <Sidebar
           collapsible="icon"
@@ -166,12 +197,12 @@ function DashboardLayoutContent({
                 className="h-8 w-8 flex items-center justify-center hover:bg-accent rounded-lg transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-ring shrink-0"
                 aria-label="Toggle navigation"
               >
-                <PanelLeft className="h-4 w-4 text-muted-foreground" />
+                <PanelLeft className="h-4 w-4 text-sidebar-foreground" />
               </button>
               {!isCollapsed ? (
                 <div className="flex items-center gap-2 min-w-0">
                   <span className="font-semibold tracking-tight truncate">
-                    Navigation
+                    排班系統
                   </span>
                 </div>
               ) : null}
@@ -191,7 +222,7 @@ function DashboardLayoutContent({
                       className={`h-10 transition-all font-normal`}
                     >
                       <item.icon
-                        className={`h-4 w-4 ${isActive ? "text-primary" : ""}`}
+                        className={`h-4 w-4 ${isActive ? "text-sidebar-accent-foreground" : "text-sidebar-foreground"}`}
                       />
                       <span>{item.label}</span>
                     </SidebarMenuButton>
@@ -230,6 +261,15 @@ function DashboardLayoutContent({
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
+            
+            {/* 版權聲明 */}
+            <div className="mt-3 pt-3 border-t border-sidebar-border group-data-[collapsible=icon]:hidden">
+              <p className="text-xs text-muted-foreground text-center leading-relaxed">
+                &copy; 2026 台灣長誠控股有限公司
+                <br />
+                All rights reserved.
+              </p>
+            </div>
           </SidebarFooter>
         </Sidebar>
         <div

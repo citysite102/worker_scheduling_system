@@ -1,0 +1,9 @@
+{
+  "query": "\nDELETE a FROM assignments a \nINNER JOIN demands d ON a.demandId = d.id \nINNER JOIN clients c ON d.clientId = c.id \nWHERE c.name LIKE '%測試%' OR c.name LIKE '%test%';\n\nDELETE av FROM availability av\nINNER JOIN workers w ON av.workerId = w.id\nWHERE w.name LIKE '%測試%' OR w.name LIKE '%test%';\n\nDELETE a FROM assignments a\nINNER JOIN workers w ON a.workerId = w.id\nWHERE w.name LIKE '%測試%' OR w.name LIKE '%test%';\n\nDELETE d FROM demands d\nINNER JOIN clients c ON d.clientId = c.id\nWHERE c.name LIKE '%測試%' OR c.name LIKE '%test%';\n\nDELETE FROM workers WHERE name LIKE '%測試%' OR name LIKE '%test%';\n\nDELETE FROM clients WHERE name LIKE '%測試%' OR name LIKE '%test%';\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2iEKifVQ9gKtEas.df925e926073 --database LzctYumsgUPHufBWpYPJuY --execute \nDELETE a FROM assignments a \nINNER JOIN demands d ON a.demandId = d.id \nINNER JOIN clients c ON d.clientId = c.id \nWHERE c.name LIKE '%測試%' OR c.name LIKE '%test%';\n\nDELETE av FROM availability av\nINNER JOIN workers w ON av.workerId = w.id\nWHERE w.name LIKE '%測試%' OR w.name LIKE '%test%';\n\nDELETE a FROM assignments a\nINNER JOIN workers w ON a.workerId = w.id\nWHERE w.name LIKE '%測試%' OR w.name LIKE '%test%';\n\nDELETE d FROM demands d\nINNER JOIN clients c ON d.clientId = c.id\nWHERE c.name LIKE '%測試%' OR c.name LIKE '%test%';\n\nDELETE FROM workers WHERE name LIKE '%測試%' OR name LIKE '%test%';\n\nDELETE FROM clients WHERE name LIKE '%測試%' OR name LIKE '%test%';\n",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 2736
+}

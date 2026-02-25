@@ -1,0 +1,1 @@
+ALTER TABLE `demands` ADD `breakHours` int DEFAULT 0 NOT NULL;

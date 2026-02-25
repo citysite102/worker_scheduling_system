@@ -25,6 +25,9 @@ export function useAuth(options?: UseAuthOptions) {
   });
 
   const logout = useCallback(async () => {
+    // 在登出前儲存使用者角色，用於決定跳轉頁面
+    const userRole = meQuery.data?.role;
+    
     try {
       await logoutMutation.mutateAsync();
     } catch (error: unknown) {
@@ -38,8 +41,15 @@ export function useAuth(options?: UseAuthOptions) {
     } finally {
       utils.auth.me.setData(undefined, null);
       await utils.auth.me.invalidate();
+      
+      // 根據使用者角色決定登出後的跳轉頁面
+      if (userRole === 'client') {
+        window.location.href = '/client-portal/login';
+      } else {
+        window.location.href = getLoginUrl();
+      }
     }
-  }, [logoutMutation, utils]);
+  }, [logoutMutation, utils, meQuery.data?.role]);
 
   const state = useMemo(() => {
     localStorage.setItem(

@@ -1,5 +1,104 @@
 {
   "version": "7",
   "dialect": "mysql",
-  "entries": []
+  "entries": [
+    {
+      "idx": 0,
+      "version": "5",
+      "when": 1770651683403,
+      "tag": "0000_clear_meltdown",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "5",
+      "when": 1770651842376,
+      "tag": "0001_vengeful_blackheart",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1770657947179,
+      "tag": "0002_chief_ozymandias",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "5",
+      "when": 1770732006980,
+      "tag": "0003_aromatic_katie_power",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "5",
+      "when": 1770741633019,
+      "tag": "0004_moaning_scarecrow",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "5",
+      "when": 1770827140638,
+      "tag": "0005_dizzy_donald_blake",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "5",
+      "when": 1770991334192,
+      "tag": "0006_odd_alice",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "5",
+      "when": 1770993937400,
+      "tag": "0007_mighty_professor_monster",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "5",
+      "when": 1771947938946,
+      "tag": "0008_chief_speed",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "5",
+      "when": 1771952071230,
+      "tag": "0009_melted_phalanx",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "5",
+      "when": 1771953560194,
+      "tag": "0010_dizzy_green_goblin",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "5",
+      "when": 1771989080134,
+      "tag": "0011_sharp_nuke",
+      "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "5",
+      "when": 1771997776331,
+      "tag": "0012_famous_moonstone",
+      "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "5",
+      "when": 1772001302549,
+      "tag": "0013_heavy_bromley",
+      "breakpoints": true
+    }
+  ]
 }
