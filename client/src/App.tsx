@@ -22,11 +22,14 @@ import DemandTypes from "./pages/DemandTypes";
 import { ClientDashboard } from "./pages/client-portal/ClientDashboard";
 import { ClientDemands } from "./pages/client-portal/ClientDemands";
 import { CreateDemand } from "./pages/client-portal/CreateDemand";
+import ClientCalendar from "./pages/client-portal/ClientCalendar";
+import { RoleBasedRedirect } from "./components/RoleBasedRedirect";
 
 function Router() {
   return (
     <Switch>
-      <Route path="/" component={() => <DashboardLayout><Dashboard /></DashboardLayout>} />
+      <Route path="/" component={RoleBasedRedirect} />
+      <Route path="/dashboard" component={() => <DashboardLayout><Dashboard /></DashboardLayout>} />
       <Route path="/workers" component={() => <DashboardLayout><Workers /></DashboardLayout>} />
       <Route path="/workers/:id" component={() => <DashboardLayout><WorkerDetail /></DashboardLayout>} />
       <Route path="/clients" component={() => <DashboardLayout><Clients /></DashboardLayout>} />
@@ -43,6 +46,7 @@ function Router() {
       <Route path="/client-portal/dashboard" component={ClientDashboard} />
       <Route path="/client-portal/demands" component={ClientDemands} />
       <Route path="/client-portal/demands/create" component={CreateDemand} />
+      <Route path="/client-portal/calendar" component={ClientCalendar} />
       
       <Route path="/404" component={NotFound} />
       <Route component={NotFound} />
