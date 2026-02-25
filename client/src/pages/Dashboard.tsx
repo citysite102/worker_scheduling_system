@@ -21,9 +21,10 @@ export default function Dashboard() {
 
   const tomorrow = useMemo(() => new Date(today.getTime() + 24 * 60 * 60 * 1000), [today]);
 
-  const { data: todayDemands, isLoading: demandsLoading } = trpc.demands.list.useQuery({
+  const { data: todayDemandsData, isLoading: demandsLoading } = trpc.demands.list.useQuery({
     date: today,
   });
+  const todayDemands = todayDemandsData?.demands || [];
 
   const { data: todayAssignments, isLoading: assignmentsLoading } = trpc.assignments.getByDateRange.useQuery({
     startDate: today,
@@ -57,8 +58,8 @@ export default function Dashboard() {
     );
   }
 
-  const confirmedDemands = todayDemands?.filter(d => d.status === "confirmed") || [];
-  const totalRequired = confirmedDemands.reduce((sum, d) => sum + d.requiredWorkers, 0);
+  const confirmedDemands = todayDemands.filter((d: any) => d.status === "confirmed");
+  const totalRequired = confirmedDemands.reduce((sum: number, d: any) => sum + d.requiredWorkers, 0);
   // 只計算非 cancelled 狀態的指派，避免已取消的指派影響完成度
   const totalAssigned = todayAssignments?.filter(a => a.status !== "cancelled").length || 0;
   const completionRate = totalRequired > 0 ? Math.round((totalAssigned / totalRequired) * 100) : 0;
@@ -226,7 +227,7 @@ export default function Dashboard() {
               <div className="text-center py-10 text-muted-foreground text-sm">今日無需求</div>
             ) : (
               <div className="space-y-2">
-                {confirmedDemands.map((demand) => {
+                {confirmedDemands.map((demand: any) => {
                   const shortage = demand.requiredWorkers - demand.assignedCount;
                   return (
                     <Link key={demand.id} href={`/demands/${demand.id}`}>

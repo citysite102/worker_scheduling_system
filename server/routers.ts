@@ -614,10 +614,31 @@ export const appRouter = router({
       .input(z.object({
         status: z.string().optional(),
         date: z.date().optional(),
+        page: z.number().min(1).default(1),
+        pageSize: z.number().min(1).max(100).default(20),
       }).optional())
       .query(async ({ input }) => {
-        // getAllDemands 已經使用 JOIN 查詢，直接返回結果即可
-        return await db.getAllDemands(input?.status, input?.date);
+        const page = input?.page || 1;
+        const pageSize = input?.pageSize || 20;
+        
+        // 獲取所有符合條件的需求單（不分頁）
+        const allDemands = await db.getAllDemands(input?.status, input?.date);
+        const total = allDemands.length;
+        const totalPages = Math.ceil(total / pageSize);
+        
+        // 分頁擷取資料
+        const offset = (page - 1) * pageSize;
+        const demands = allDemands.slice(offset, offset + pageSize);
+        
+        return {
+          demands,
+          pagination: {
+            total,
+            totalPages,
+            currentPage: page,
+            pageSize,
+          },
+        };
       }),
 
     listByClientAndMonth: publicProcedure

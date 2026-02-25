@@ -12,6 +12,7 @@ import { Check, ChevronsUpDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Textarea } from "@/components/ui/textarea";
 import { Plus, Calendar, Clock, MapPin, AlertTriangle, Loader2, ArrowRight, Copy, Edit, Trash2 } from "lucide-react";
+import { Pagination, PaginationContent, PaginationEllipsis, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { useLocation } from "wouter";
@@ -35,6 +36,8 @@ export default function Demands() {
   const [customStartDate, setCustomStartDate] = useState<string>("");
   const [customEndDate, setCustomEndDate] = useState<string>("");
   const [clientFilter, setClientFilter] = useState<number | undefined>(undefined);
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 20;
   const [selectedClientId, setSelectedClientId] = useState<number | undefined>(undefined);
   const [clientComboboxOpen, setClientComboboxOpen] = useState(false);
   const [selectedDemandTypeId, setSelectedDemandTypeId] = useState<number | undefined>(undefined);
@@ -85,9 +88,14 @@ export default function Demands() {
     }
   };
 
-  const { data: demands, isLoading, refetch } = trpc.demands.list.useQuery({
+  const { data: demandsData, isLoading, refetch } = trpc.demands.list.useQuery({
     status: statusFilter,
+    page: currentPage,
+    pageSize,
   });
+  
+  const demands = demandsData?.demands || [];
+  const pagination = demandsData?.pagination;
 
   const { data: clients } = trpc.clients.list.useQuery({});
   const { data: demandTypes = [] } = trpc.demandTypes.list.useQuery();
@@ -503,7 +511,7 @@ export default function Demands() {
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
             <CardTitle className="text-base font-medium">需求單列表</CardTitle>
-            <span className="text-xs text-muted-foreground">{demands?.length || 0} 筆需求</span>
+            <span className="text-xs text-muted-foreground">{pagination?.total || 0} 筆需求</span>
           </div>
         </CardHeader>
         <CardContent>
@@ -628,6 +636,72 @@ export default function Demands() {
               </div>
             );
           })()}
+          
+          {/* 分頁元件 */}
+          {pagination && pagination.totalPages > 1 && (
+            <div className="mt-4 flex items-center justify-between">
+              <div className="text-xs text-muted-foreground">
+                第 {pagination.currentPage} / {pagination.totalPages} 頁，共 {pagination.total} 筆
+              </div>
+              <Pagination>
+                <PaginationContent>
+                  <PaginationItem>
+                    <PaginationPrevious 
+                      onClick={() => {
+                        if (pagination.currentPage > 1) {
+                          setCurrentPage(pagination.currentPage - 1);
+                        }
+                      }}
+                      className={pagination.currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                    />
+                  </PaginationItem>
+                  
+                  {/* 頁碼按鈕 */}
+                  {Array.from({ length: pagination.totalPages }, (_, i) => i + 1).map((page) => {
+                    // 只顯示當前頁前後 2 頁
+                    if (
+                      page === 1 ||
+                      page === pagination.totalPages ||
+                      (page >= pagination.currentPage - 1 && page <= pagination.currentPage + 1)
+                    ) {
+                      return (
+                        <PaginationItem key={page}>
+                          <PaginationLink
+                            onClick={() => setCurrentPage(page)}
+                            isActive={page === pagination.currentPage}
+                            className="cursor-pointer"
+                          >
+                            {page}
+                          </PaginationLink>
+                        </PaginationItem>
+                      );
+                    } else if (
+                      page === pagination.currentPage - 2 ||
+                      page === pagination.currentPage + 2
+                    ) {
+                      return (
+                        <PaginationItem key={page}>
+                          <PaginationEllipsis />
+                        </PaginationItem>
+                      );
+                    }
+                    return null;
+                  })}
+                  
+                  <PaginationItem>
+                    <PaginationNext 
+                      onClick={() => {
+                        if (pagination.currentPage < pagination.totalPages) {
+                          setCurrentPage(pagination.currentPage + 1);
+                        }
+                      }}
+                      className={pagination.currentPage === pagination.totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                    />
+                  </PaginationItem>
+                </PaginationContent>
+              </Pagination>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>

@@ -1417,3 +1417,22 @@
 - [x] 修正需求管理頁面標題：將「用工需求管理」改為「需求管理」
 - [x] 優化需求管理頁面的資料庫查詢邏輯，提高載入速度
 - [x] 分析效能瓶頸：檢查 demands.list API 的查詢邏輯，減少不必要的 JOIN 或查詢
+
+## 使用者新增需求（2026/02/25 - 需求單列表分頁功能）
+
+- [ ] 後端 API 加入分頁參數：在 demands.list API 加入 page 和 pageSize 參數
+- [ ] 後端 API 返回分頁資訊：返回 total（總筆數）、totalPages（總頁數）、currentPage（當前頁數）
+- [ ] 修改資料庫查詢邏輯：使用 LIMIT 和 OFFSET 實作分頁查詢
+- [ ] 前端加入分頁狀態管理：追蹤當前頁碼（currentPage）
+- [ ] 前端加入 Pagination 元件：使用 shadcn/ui 的 Pagination 元件
+- [ ] 顯示分頁資訊：顯示總筆數、當前頁數、總頁數
+- [ ] 測試分頁功能：確保換頁、跳頁功能正常運作
+
+## 使用者新增需求（2026/02/25 - 需求單列表分頁功能）
+
+- [x] 後端 API 加入分頁參數（page, pageSize）與返回分頁資訊
+- [x] 前端加入分頁狀態管理（currentPage, pageSize）
+- [x] 使用 shadcn/ui Pagination 元件建立分頁 UI
+- [x] 顯示分頁資訊（第 X / Y 頁，共 Z 筆）
+- [x] 實作換頁功能（Previous, Next, 頁碼按鈕）
+- [x] 修正 Dashboard.tsx 的 TypeScript 類型錯誤（todayDemands 分頁結構）
