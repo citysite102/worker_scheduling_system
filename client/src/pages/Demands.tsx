@@ -395,7 +395,7 @@ export default function Demands() {
       </div>
 
       {/* 篩選 */}
-      <Card className="mb-6 shadow-sm border-border/60">
+      <Card className="mb-6 shadow-md border-border/40">
         <CardContent className="p-4">
           <div className="flex items-center gap-3 flex-wrap">
             <Label className="text-sm text-muted-foreground shrink-0">狀態篩選</Label>
@@ -507,7 +507,7 @@ export default function Demands() {
       </Card>
 
       {/* 需求單列表 */}
-      <Card className="shadow-sm border-border/60">
+      <Card className="shadow-md border-border/40">
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
             <CardTitle className="text-base font-medium">需求單列表</CardTitle>

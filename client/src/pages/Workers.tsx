@@ -381,7 +381,7 @@ export default function Workers() {
       </div>
 
       {/* 搜尋與篩選 */}
-      <Card className="mb-6 shadow-sm border-border/60">
+      <Card className="mb-6 shadow-md border-border/40">
         <CardContent className="p-4">
           <div className="flex gap-3">
             <div className="relative flex-1">
@@ -482,7 +482,7 @@ export default function Workers() {
       </Card>
 
       {/* 員工列表 */}
-      <Card className="shadow-sm border-border/60">
+      <Card className="shadow-md border-border/40">
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">

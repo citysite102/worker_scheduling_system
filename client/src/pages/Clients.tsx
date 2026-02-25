@@ -209,7 +209,7 @@ export default function Clients() {
       </div>
 
       {/* 搜尋與篩選 */}
-      <Card className="mb-6 shadow-sm border-border/60">
+      <Card className="mb-6 shadow-md border-border/40">
         <CardContent className="p-4">
           <div className="flex gap-3">
             <div className="relative flex-1">
@@ -239,7 +239,7 @@ export default function Clients() {
       </Card>
 
       {/* 客戶列表 */}
-      <Card className="shadow-sm border-border/60">
+      <Card className="shadow-md border-border/40">
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
             <CardTitle className="text-base font-medium">客戶列表</CardTitle>

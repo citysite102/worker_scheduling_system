@@ -96,7 +96,7 @@ export default function AdminSettings() {
           <p className="text-sm text-muted-foreground mt-1">使用邀請碼成為管理員</p>
         </div>
 
-        <Card className="shadow-sm border-border/60">
+        <Card className="shadow-md border-border/40">
           <CardHeader>
             <CardTitle className="text-base font-medium flex items-center gap-2">
               <KeyRound className="h-4 w-4" />
@@ -147,7 +147,7 @@ export default function AdminSettings() {
       </div>
 
       {/* 管理員列表 */}
-      <Card className="shadow-sm border-border/60">
+      <Card className="shadow-md border-border/40">
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
             <CardTitle className="text-base font-medium flex items-center gap-2">
@@ -195,7 +195,7 @@ export default function AdminSettings() {
       </Card>
 
       {/* 邀請碼列表 */}
-      <Card className="shadow-sm border-border/60">
+      <Card className="shadow-md border-border/40">
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
             <CardTitle className="text-base font-medium flex items-center gap-2">

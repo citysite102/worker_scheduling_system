@@ -101,7 +101,7 @@ export default function Reports() {
       </div>
 
       <div className="grid gap-6">
-        <Card className="shadow-sm border-border/60">
+        <Card className="shadow-md border-border/40">
           <CardHeader className="pb-4">
             <CardTitle className="text-base font-medium">報表設定</CardTitle>
             <CardDescription className="text-xs">選擇報表類型與日期區間</CardDescription>
@@ -218,7 +218,7 @@ export default function Reports() {
         </Card>
 
         {hasGenerated && (
-          <Card className="shadow-sm border-border/60">
+          <Card className="shadow-md border-border/40">
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
                 <div>

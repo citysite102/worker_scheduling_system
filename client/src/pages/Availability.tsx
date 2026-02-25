@@ -354,7 +354,7 @@ export default function Availability() {
       </div>
 
       <div className="grid gap-6">
-        <Card className="shadow-sm border-border/60">
+        <Card className="shadow-md border-border/40">
           <CardHeader className="pb-4">
             <CardTitle className="text-base font-medium">選擇員工與週次</CardTitle>
             <CardDescription>選擇員工後，設定該週的可排班時段</CardDescription>
@@ -398,7 +398,7 @@ export default function Availability() {
         </Card>
 
         {selectedWorker && (
-          <Card className="shadow-sm border-border/60">
+          <Card className="shadow-md border-border/40">
             <CardHeader className="pb-4">
               <div className="flex items-center justify-between">
                 <div>

@@ -236,6 +236,12 @@
     box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
   }
   
+  /* 行u52d5u88ddu7f6eu512au5316：u89f8u63a7u5340u57df */
+  .touch-target {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
   .container {
     width: 100%;
     margin-left: auto;

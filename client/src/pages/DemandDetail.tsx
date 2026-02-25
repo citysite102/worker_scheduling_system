@@ -402,7 +402,7 @@ export default function DemandDetail() {
       <div className="grid gap-5 mb-6">
         {/* 需求資訊 + 可行性 */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-          <Card className="shadow-sm border-border/60">
+          <Card className="shadow-md border-border/40">
             <CardHeader className="pb-3">
               <CardTitle className="text-base font-medium">需求資訊</CardTitle>
             </CardHeader>
@@ -467,7 +467,7 @@ export default function DemandDetail() {
             </CardContent>
           </Card>
 
-          <Card className="shadow-sm border-border/60">
+          <Card className="shadow-md border-border/40">
             <CardHeader className="pb-3">
               <CardTitle className="text-base font-medium">人力可行性</CardTitle>
             </CardHeader>
@@ -497,7 +497,7 @@ export default function DemandDetail() {
         </div>
 
         {/* 篩選器 */}
-        <Card className="shadow-sm border-border/60">
+        <Card className="shadow-md border-border/40">
           <CardContent className="p-4">
             <div className="flex items-center justify-between mb-0">
               <button
@@ -598,7 +598,7 @@ export default function DemandDetail() {
 
         {/* 已指派員工 */}
         {assignments && assignments.length > 0 && (
-          <Card className="shadow-sm border-border/60">
+          <Card className="shadow-md border-border/40">
             <CardHeader className="pb-3">
               <div className="flex items-center gap-2">
                 <div className="h-5 w-5 rounded-full bg-blue-50 flex items-center justify-center">
@@ -677,7 +677,7 @@ export default function DemandDetail() {
         )}
 
         {/* 操作列 */}
-        <Card className="shadow-sm border-border/60">
+        <Card className="shadow-md border-border/40">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div className="text-sm">
@@ -711,7 +711,7 @@ export default function DemandDetail() {
         </Card>
 
         {/* 可指派 */}
-        <Card className="shadow-sm border-border/60">
+        <Card className="shadow-md border-border/40">
           <CardHeader className="pb-3">
             <div className="flex items-center gap-2">
               <div className="h-5 w-5 rounded-full bg-emerald-50 flex items-center justify-center">
@@ -790,7 +790,7 @@ export default function DemandDetail() {
         </Card>
 
         {/* 不可指派 */}
-        <Card className="shadow-sm border-border/60">
+        <Card className="shadow-md border-border/40">
           <CardHeader className="pb-3">
             <div className="flex items-center gap-2">
               <div className="h-5 w-5 rounded-full bg-amber-50 flex items-center justify-center">
@@ -849,7 +849,7 @@ export default function DemandDetail() {
 
         {/* 已停用 */}
         <Collapsible open={isInactiveExpanded} onOpenChange={setIsInactiveExpanded}>
-          <Card className="shadow-sm border-border/60">
+          <Card className="shadow-md border-border/40">
             <CardHeader className="pb-3">
               <CollapsibleTrigger asChild>
                 <div className="flex items-center justify-between cursor-pointer">
