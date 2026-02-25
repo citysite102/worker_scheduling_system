@@ -16,7 +16,10 @@ export const users = mysqlTable("users", {
   name: text("name"),
   email: varchar("email", { length: 320 }),
   loginMethod: varchar("loginMethod", { length: 64 }),
-  role: mysqlEnum("role", ["user", "admin"]).default("user").notNull(),
+  role: mysqlEnum("role", ["user", "admin", "client"]).default("user").notNull(),
+  clientId: int("clientId"),
+  position: varchar("position", { length: 100 }),
+  phone: varchar("phone", { length: 50 }),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
   lastSignedIn: timestamp("lastSignedIn").defaultNow().notNull(),
@@ -109,7 +112,8 @@ export const demands = mysqlTable("demands", {
   selectedOptions: text("selectedOptions"), // 已勾選的選項 ID（JSON 陣列，例如："[1,3,5]"）
   location: varchar("location", { length: 200 }),
   note: text("note"),
-  status: mysqlEnum("status", ["draft", "confirmed", "cancelled", "closed"]).default("draft").notNull(),
+  status: mysqlEnum("status", ["draft", "pending", "confirmed", "assigned", "completed", "cancelled", "closed"]).default("draft").notNull(),
+  createdBy: int("createdBy"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });

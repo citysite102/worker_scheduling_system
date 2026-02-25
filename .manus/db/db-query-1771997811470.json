@@ -1,0 +1,9 @@
+{
+  "query": "ALTER TABLE `demands` MODIFY COLUMN `status` enum('draft','pending','confirmed','assigned','completed','cancelled','closed') NOT NULL DEFAULT 'draft';\nALTER TABLE `users` MODIFY COLUMN `role` enum('user','admin','client') NOT NULL DEFAULT 'user';\nALTER TABLE `demands` ADD `createdBy` int;\nALTER TABLE `users` ADD `clientId` int;\nALTER TABLE `users` ADD `position` varchar(100);\nALTER TABLE `users` ADD `phone` varchar(50);",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2iEKifVQ9gKtEas.9cbf5414b428 --database CMgr35KntT8tLtgpfJPejw --execute ALTER TABLE `demands` MODIFY COLUMN `status` enum('draft','pending','confirmed','assigned','completed','cancelled','closed') NOT NULL DEFAULT 'draft';\nALTER TABLE `users` MODIFY COLUMN `role` enum('user','admin','client') NOT NULL DEFAULT 'user';\nALTER TABLE `demands` ADD `createdBy` int;\nALTER TABLE `users` ADD `clientId` int;\nALTER TABLE `users` ADD `position` varchar(100);\nALTER TABLE `users` ADD `phone` varchar(50);",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 5128
+}

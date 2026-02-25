@@ -43,3 +43,24 @@ export const adminProcedure = t.procedure.use(
     });
   }),
 );
+
+export const clientProcedure = t.procedure.use(
+  t.middleware(async opts => {
+    const { ctx, next } = opts;
+
+    if (!ctx.user || ctx.user.role !== 'client') {
+      throw new TRPCError({ code: "FORBIDDEN", message: "只有客戶可以存取此功能" });
+    }
+
+    if (!ctx.user.clientId) {
+      throw new TRPCError({ code: "FORBIDDEN", message: "客戶帳號未關聯到客戶公司" });
+    }
+
+    return next({
+      ctx: {
+        ...ctx,
+        user: ctx.user,
+      },
+    });
+  }),
+);

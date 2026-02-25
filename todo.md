@@ -1436,3 +1436,80 @@
 - [x] 顯示分頁資訊（第 X / Y 頁，共 Z 筆）
 - [x] 實作換頁功能（Previous, Next, 頁碼按鈕）
 - [x] 修正 Dashboard.tsx 的 TypeScript 類型錯誤（todayDemands 分頁結構）
+
+## 使用者新增需求（2026/02/25 - 客戶入口系統）
+
+### Phase 1: 資料庫與後端 API
+
+#### 資料庫 Schema 調整
+- [x] 擴充 `users` 表：加入 `clientId`、`position`、`phone` 欄位
+- [x] 擴充 `demands` 表：加入 `createdBy` 欄位
+- [x] 擴充 `demands` 表的 `status` 欄位：支援 `'pending'`、`'assigned'`、`'completed'` 狀態
+- [x] 生成並執行資料庫遷移 SQL
+
+#### 權限控管
+- [x] 建立 `clientProcedure` 權限檢查中介層（只有 role='client' 可呼叫）
+- [x] 調整 `protectedProcedure`，支援依 role 區分權限
+
+#### 客戶使用者管理 API
+- [x] 新增 `clients.createUser` API（為客戶建立使用者帳號）
+- [x] 新增 `clients.listUsers` API（列出客戶的所有使用者）
+- [x] 新增 `clients.updateUser` API（更新使用者資訊、啟用/停用）
+- [ ] 新增 `clients.resetUserPassword` API（重設使用者密碼）
+- [x] 新增 `clients.deleteUser` API（刪除使用者帳號）
+
+#### 需求單審核與篩選 API
+- [x] 調整 `demands.list` API，支援依 `clientId` 篩選（客戶只能看到自己的需求單）
+- [x] 調整 `demands.getById` API，加入權限檢查（客戶只能看到自己的需求單）
+- [x] 調整 `demands.create` API，自動記錄 `createdBy`（建立者的 userId）
+- [ ] 新增 `demands.approve` API（審核需求單，將狀態從 pending 改為 confirmed）
+- [ ] 調整 `assignments.list` API，支援依 `clientId` 篩選
+
+### Phase 2: 客戶入口前端介面
+
+#### 路由與 Dashboard
+- [ ] 建立客戶入口路由結構（`/client-portal/*`）
+- [ ] 建立客戶入口 Layout 元件（ClientPortalLayout）
+- [ ] 建立客戶入口 Dashboard 頁面（待審核、進行中、已完成需求單統計）
+- [ ] 實作登入後自動跳轉邏輯（Admin → /admin/dashboard, Client → /client-portal/dashboard）
+
+#### 需求單管理
+- [ ] 建立客戶建立需求單頁面（填寫需求資訊，提交後狀態為 pending）
+- [ ] 建立客戶需求單列表頁面（顯示建立者、狀態篩選）
+- [ ] 建立客戶需求單詳情頁面（顯示已指派員工，但隱藏敏感資訊）
+- [ ] 實作需求單編輯功能（僅 draft 和 pending 狀態可編輯）
+- [ ] 實作需求單刪除功能（僅 draft 和 pending 狀態可刪除）
+
+#### Calendar 與客戶資料
+- [ ] 建立客戶派工 Calendar 頁面（顯示所有需求單與已指派員工）
+- [ ] 建立客戶資料頁面（顯示公司資訊與使用者列表）
+- [ ] 實作客戶資料編輯功能（僅聯絡人、電話可編輯）
+
+### Phase 3: 內部管理介面調整
+
+#### 客戶使用者管理
+- [ ] 在客戶詳情頁面加入「使用者管理」區塊
+- [ ] 實作「新增使用者」功能（對話框表單）
+- [ ] 實作「使用者列表」顯示（表格，顯示姓名、Email、職位、啟用狀態）
+- [ ] 實作「啟用/停用使用者」功能
+- [ ] 實作「重設使用者密碼」功能
+- [ ] 實作「刪除使用者」功能
+
+#### 需求單審核
+- [ ] 在需求管理頁面加入「審核」按鈕（僅顯示 pending 狀態的需求單）
+- [ ] 實作需求單審核對話框（確認需求資訊無誤後，點擊「審核通過」）
+- [ ] 調整需求單狀態顯示邏輯（pending、confirmed、assigned、completed、cancelled）
+- [ ] 在需求單列表顯示「建立者」欄位（顯示是哪位客戶使用者建立的）
+
+### Phase 4: 測試與優化
+
+#### 測試案例
+- [ ] 撰寫客戶使用者管理 API 測試案例
+- [ ] 撰寫需求單審核 API 測試案例
+- [ ] 撰寫權限控管測試案例（多使用者場景）
+- [ ] 撰寫端到端測試案例（多使用者提交需求 → 內部審核 → 指派員工 → 客戶查看）
+
+#### 優化
+- [ ] 優化客戶入口的使用者體驗與介面細節
+- [ ] 優化內部管理介面的使用者管理流程
+- [ ] 確保所有測試案例通過

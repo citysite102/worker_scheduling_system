@@ -431,6 +431,59 @@ export const appRouter = router({
         await db.updateClient(id, data);
         return { success: true };
       }),
+
+    // 客戶使用者管理 API
+    listUsers: publicProcedure
+      .input(z.object({ clientId: z.number() }))
+      .query(async ({ input }) => {
+        const users = await db.getClientUsers(input.clientId);
+        return users;
+      }),
+
+    createUser: publicProcedure
+      .input(z.object({
+        clientId: z.number(),
+        name: z.string().min(1, "姓名不可為空"),
+        email: z.string().email("Email 格式不正確"),
+        position: z.string().optional(),
+        phone: z.string().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        // 生成一個臨時的 openId（實際上應該由 OAuth 系統生成）
+        const openId = `temp_${Date.now()}_${Math.random().toString(36).substring(7)}`;
+        
+        await db.createClientUser({
+          clientId: input.clientId,
+          name: input.name,
+          email: input.email,
+          position: input.position,
+          phone: input.phone,
+          openId,
+        });
+        
+        return { success: true };
+      }),
+
+    updateUser: publicProcedure
+      .input(z.object({
+        userId: z.number(),
+        name: z.string().optional(),
+        email: z.string().email("Email 格式不正確").optional(),
+        position: z.string().optional(),
+        phone: z.string().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const { userId, ...data } = input;
+        await db.updateClientUser(userId, data);
+        return { success: true };
+      }),
+
+    deleteUser: publicProcedure
+      .input(z.object({ userId: z.number() }))
+      .mutation(async ({ input }) => {
+        await db.deleteClientUser(input.userId);
+        return { success: true };
+      }),
   }),
 
   // ============ Availability ============
@@ -614,15 +667,22 @@ export const appRouter = router({
       .input(z.object({
         status: z.string().optional(),
         date: z.date().optional(),
+        clientId: z.number().optional(),
         page: z.number().min(1).default(1),
         pageSize: z.number().min(1).max(100).default(20),
       }).optional())
-      .query(async ({ input }) => {
+      .query(async ({ input, ctx }) => {
         const page = input?.page || 1;
         const pageSize = input?.pageSize || 20;
         
+        // 如果是客戶角色，只能查看自己的需求單
+        let clientId = input?.clientId;
+        if (ctx.user && ctx.user.role === 'client') {
+          clientId = ctx.user.clientId || undefined;
+        }
+        
         // 獲取所有符合條件的需求單（不分頁）
-        const allDemands = await db.getAllDemands(input?.status, input?.date);
+        const allDemands = await db.getAllDemands(input?.status, input?.date, clientId);
         const total = allDemands.length;
         const totalPages = Math.ceil(total / pageSize);
         
@@ -692,9 +752,16 @@ export const appRouter = router({
 
     getById: publicProcedure
       .input(z.object({ id: z.number() }))
-      .query(async ({ input }) => {
+      .query(async ({ input, ctx }) => {
         const demand = await db.getDemandById(input.id);
         if (!demand) throw new Error("需求單不存在");
+        
+        // 如果是客戶角色，只能查看自己的需求單
+        if (ctx.user && ctx.user.role === 'client') {
+          if (demand.clientId !== ctx.user.clientId) {
+            throw new TRPCError({ code: "FORBIDDEN", message: "您沒有權限查看此需求單" });
+          }
+        }
         
         const client = await db.getClientById(demand.clientId);
         const assignments = await db.getAssignmentsByDemand(demand.id);
@@ -741,11 +808,12 @@ export const appRouter = router({
         note: z.string().optional(),
         status: z.enum(["draft", "confirmed", "cancelled", "closed"]).optional(),
       }))
-      .mutation(async ({ input }) => {
+      .mutation(async ({ input, ctx }) => {
         const { breakHours, ...rest } = input;
         await db.createDemand({
           ...rest,
           breakHours: breakHours ? Math.round(breakHours * 60) : 0, // 轉換為分鐘
+          createdBy: ctx.user?.id, // 記錄建立者
         });
         return { success: true };
       }),

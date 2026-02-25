@@ -345,7 +345,7 @@ export async function upsertAvailability(data: { workerId: number; weekStartDate
 }
 
 // ============ Demands ============
-export async function getAllDemands(statusFilter?: string, dateFilter?: Date) {
+export async function getAllDemands(statusFilter?: string, dateFilter?: Date, clientIdFilter?: number) {
   const db = await getDb();
   if (!db) return [];
 
@@ -395,6 +395,10 @@ export async function getAllDemands(statusFilter?: string, dateFilter?: Date) {
 
   if (statusFilter) {
     conditions.push(eq(demands.status, statusFilter as any));
+  }
+  
+  if (clientIdFilter) {
+    conditions.push(eq(demands.clientId, clientIdFilter));
   }
 
   if (dateFilter) {
@@ -456,7 +460,7 @@ export async function getDemandsByClientId(clientId: number) {
   return await db.select().from(demands).where(eq(demands.clientId, clientId)).orderBy(desc(demands.date));
 }
 
-export async function createDemand(data: { clientId: number; date: Date; startTime: string; endTime: string; requiredWorkers: number; breakHours?: number; location?: string; note?: string; status?: "draft" | "confirmed" | "cancelled" | "closed" }) {
+export async function createDemand(data: { clientId: number; date: Date; startTime: string; endTime: string; requiredWorkers: number; breakHours?: number; location?: string; note?: string; status?: "draft" | "pending" | "confirmed" | "assigned" | "completed" | "cancelled" | "closed"; createdBy?: number }) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   // 明確指定要插入的欄位，確保 clientId 正確傳遞
@@ -471,6 +475,7 @@ export async function createDemand(data: { clientId: number; date: Date; startTi
   };
   if (data.location) insertData.location = data.location;
   if (data.note) insertData.note = data.note;
+  if (data.createdBy) insertData.createdBy = data.createdBy;
   
   const result = await db.insert(demands).values(insertData);
   // 返回新建立的完整 demand 物件
@@ -723,4 +728,92 @@ export async function updateDemandTypeOptionsOrder(updates: { id: number; sortOr
       .set({ sortOrder: update.sortOrder })
       .where(eq(demandTypeOptions.id, update.id));
   }
+}
+
+// ============ Client Users Management ============
+
+/**
+ * 為客戶建立使用者帳號
+ */
+export async function createClientUser(data: {
+  clientId: number;
+  name: string;
+  email: string;
+  position?: string;
+  phone?: string;
+  openId: string;
+}) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  await db.insert(users).values({
+    openId: data.openId,
+    name: data.name,
+    email: data.email,
+    role: "client",
+    clientId: data.clientId,
+    position: data.position || null,
+    phone: data.phone || null,
+  });
+}
+
+/**
+ * 列出客戶的所有使用者
+ */
+export async function getClientUsers(clientId: number) {
+  const db = await getDb();
+  if (!db) return [];
+
+  const result = await db
+    .select()
+    .from(users)
+    .where(eq(users.clientId, clientId));
+
+  return result;
+}
+
+/**
+ * 更新客戶使用者資訊
+ */
+export async function updateClientUser(userId: number, data: {
+  name?: string;
+  email?: string;
+  position?: string;
+  phone?: string;
+}) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  await db
+    .update(users)
+    .set(data)
+    .where(eq(users.id, userId));
+}
+
+/**
+ * 刪除客戶使用者
+ */
+export async function deleteClientUser(userId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  await db
+    .delete(users)
+    .where(eq(users.id, userId));
+}
+
+/**
+ * 根據 userId 取得使用者資訊
+ */
+export async function getUserById(userId: number) {
+  const db = await getDb();
+  if (!db) return null;
+
+  const result = await db
+    .select()
+    .from(users)
+    .where(eq(users.id, userId))
+    .limit(1);
+
+  return result[0] || null;
 }
