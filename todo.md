@@ -1534,3 +1534,47 @@
 - [x] 實作使用者編輯功能（修改姓名、職位、電話、啟用/停用）
 - [x] 實作使用者刪除功能
 - [x] 測試完整的使用者管理流程
+
+## 使用者新增需求（2026/02/25 - 客戶使用者密碼登入機制）
+
+### 資料庫 Schema 調整
+- [x] 擴充 `users` 表：加入 `password`（加密後的密碼）、`passwordResetToken`（重設密碼 token）、`passwordResetExpires`（token 過期時間）、`mustChangePassword`（首次登入標記）欄位
+- [x] 生成並執行資料庫遷移 SQL
+
+### 密碼加密與驗證
+- [x] 安裝 bcrypt 套件（密碼加密）
+- [x] 實作密碼加密函式（hashPassword）
+- [x] 實作密碼驗證函式（verifyPassword）
+
+### 建立帳號時自動生成密碼並寄送 Email
+- [x] 實作隨機密碼生成函式（generateRandomPassword）
+- [x] 修改 `clients.createUser` API：生成隨機密碼、加密儲存、寄送 Email
+- [ ] 實作 Email 發送功能（使用 Manus 內建 API 或 nodemailer）
+- [ ] 設計 Email 範本（包含帳號資訊、密碼、登入連結）
+
+### 客戶登入功能
+- [x] 建立客戶登入頁面（`/client-login`）
+- [x] 實作登入表單（Email + 密碼）
+- [x] 實作 `auth.clientLogin` API（驗證密碼、建立 session）
+- [x] 登入成功後跳轉到客戶入口（`/client-portal/dashboard`）
+
+### 首次登入修改密碼
+- [x] 檢查 `mustChangePassword` 標記，首次登入時強制跳轉到修改密碼頁面
+- [x] 建立修改密碼頁面（`/client-portal/change-password`）
+- [x] 實作修改密碼表單（舊密碼、新密碼、確認新密碼）
+- [x] 實作 `auth.changePassword` API（驗證舊密碼、更新新密碼、清除 `mustChangePassword` 標記）
+
+### 忘記密碼功能
+- [x] 建立忘記密碼頁面（`/forgot-password`）
+- [x] 實作忘記密碼表單（輸入 Email）
+- [x] 實作 `auth.forgotPassword` API（生成 token、寄送重設密碼 Email）
+- [x] 建立重設密碼頁面（`/client-portal/reset-password?token=xxx`）
+- [x] 實作重設密碼表單（新密碼、確認新密碼）
+- [x] 實作 `auth.resetPassword` API（驗證 token、更新密碼、清除 token）
+
+### 測試
+- [ ] 測試建立帳號後是否收到 Email
+- [x] 測試客戶登入功能
+- [x] 測試首次登入強制修改密碼
+- [x] 測試忘記密碼與重設密碼流程
+- [x] 測試密碼加密與驗證邏輯

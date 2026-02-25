@@ -24,6 +24,10 @@ import { ClientDemands } from "./pages/client-portal/ClientDemands";
 import { CreateDemand } from "./pages/client-portal/CreateDemand";
 import ClientCalendar from "./pages/client-portal/ClientCalendar";
 import { RoleBasedRedirect } from "./components/RoleBasedRedirect";
+import ClientLogin from "./pages/ClientLogin";
+import ChangePassword from "./pages/ChangePassword";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
 
 function Router() {
   return (
@@ -41,6 +45,12 @@ function Router() {
       <Route path="/reports" component={() => <DashboardLayout><Reports /></DashboardLayout>} />
       <Route path="/demand-types" component={() => <DashboardLayout><DemandTypes /></DashboardLayout>} />
       <Route path="/admin" component={() => <DashboardLayout><AdminSettings /></DashboardLayout>} />
+      
+      {/* 客戶登入 */}
+      <Route path="/client-login" component={ClientLogin} />
+      <Route path="/forgot-password" component={ForgotPassword} />
+      <Route path="/client-portal/change-password" component={ChangePassword} />
+      <Route path="/client-portal/reset-password" component={ResetPassword} />
       
       {/* 客戶入口路由 */}
       <Route path="/client-portal/dashboard" component={ClientDashboard} />

@@ -20,6 +20,10 @@ export const users = mysqlTable("users", {
   clientId: int("clientId"),
   position: varchar("position", { length: 100 }),
   phone: varchar("phone", { length: 50 }),
+  password: varchar("password", { length: 255 }), // 加密後的密碼（僅用於 client 角色）
+  passwordResetToken: varchar("passwordResetToken", { length: 255 }), // 重設密碼 token
+  passwordResetExpires: timestamp("passwordResetExpires"), // token 過期時間
+  mustChangePassword: int("mustChangePassword").default(0).notNull(), // 0=不需要, 1=首次登入必須修改密碼
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
   lastSignedIn: timestamp("lastSignedIn").defaultNow().notNull(),

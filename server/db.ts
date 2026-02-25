@@ -742,6 +742,8 @@ export async function createClientUser(data: {
   position?: string;
   phone?: string;
   openId: string;
+  password?: string;
+  mustChangePassword?: number;
 }) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
@@ -754,6 +756,8 @@ export async function createClientUser(data: {
     clientId: data.clientId,
     position: data.position || null,
     phone: data.phone || null,
+    password: data.password || null,
+    mustChangePassword: data.mustChangePassword || 0,
   });
 }
 

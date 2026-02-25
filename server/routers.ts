@@ -1,14 +1,18 @@
-import { COOKIE_NAME } from "@shared/const";
 import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
 import { publicProcedure, router, protectedProcedure } from "./_core/trpc";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
+import { COOKIE_NAME } from "../shared/const";
+import { eq } from "drizzle-orm";
+import { users } from "../drizzle/schema";
 import * as db from "./db";
+import { getDb } from "./db";
 import * as logic from "./businessLogic";
 import crypto from "crypto";
 import { recognizeWorkPermit } from "./gemini-ocr";
 import { storagePut } from "./storage";
+import { hashPassword, generateRandomPassword } from "./password";
 
 export const appRouter = router({
   system: systemRouter,
@@ -21,6 +25,210 @@ export const appRouter = router({
         success: true,
       } as const;
     }),
+
+    /**
+     * 客戶使用者登入（Email + 密碼）
+     */
+    clientLogin: publicProcedure
+      .input(z.object({
+        email: z.string().email("請輸入有效的 Email"),
+        password: z.string().min(1, "請輸入密碼"),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const db = await getDb();
+        if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database not available" });
+
+        // 查詢使用者
+        const [user] = await db
+          .select()
+          .from(users)
+          .where(eq(users.email, input.email))
+          .limit(1);
+
+        if (!user) {
+          throw new TRPCError({ code: "UNAUTHORIZED", message: "Email 或密碼錯誤" });
+        }
+
+        // 檢查角色是否為 client
+        if (user.role !== "client") {
+          throw new TRPCError({ code: "FORBIDDEN", message: "此帳號無法使用客戶登入" });
+        }
+
+        // 驗證密碼
+        if (!user.password) {
+          throw new TRPCError({ code: "UNAUTHORIZED", message: "帳號尚未設定密碼" });
+        }
+
+        const { verifyPassword } = await import("./password");
+        const isPasswordValid = await verifyPassword(input.password, user.password);
+
+        if (!isPasswordValid) {
+          throw new TRPCError({ code: "UNAUTHORIZED", message: "Email 或密碼錯誤" });
+        }
+
+        // 建立 session cookie（使用與 OAuth 相同的機制）
+        const { sdk } = await import("./_core/sdk");
+        const { ONE_YEAR_MS } = await import("../shared/const");
+        
+        const sessionToken = await sdk.createSessionToken(user.openId, {
+          name: user.name || "",
+          expiresInMs: ONE_YEAR_MS,
+        });
+
+        const cookieOptions = getSessionCookieOptions(ctx.req);
+        ctx.res.cookie(COOKIE_NAME, sessionToken, { ...cookieOptions, maxAge: ONE_YEAR_MS });
+
+        return {
+          success: true,
+          user: {
+            id: user.id,
+            name: user.name,
+            email: user.email,
+            role: user.role,
+            clientId: user.clientId,
+            mustChangePassword: user.mustChangePassword === 1,
+          },
+        };
+      }),
+
+    /**
+     * 修改密碼（需要登入）
+     */
+    changePassword: protectedProcedure
+      .input(z.object({
+        currentPassword: z.string().min(1, "請輸入目前密碼"),
+        newPassword: z.string().min(8, "新密碼長度至少 8 個字元"),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        if (!ctx.user) {
+          throw new TRPCError({ code: "UNAUTHORIZED", message: "請先登入" });
+        }
+
+        const db = await getDb();
+        if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database not available" });
+
+        // 查詢使用者
+        const [user] = await db
+          .select()
+          .from(users)
+          .where(eq(users.id, ctx.user.id))
+          .limit(1);
+
+        if (!user || !user.password) {
+          throw new TRPCError({ code: "NOT_FOUND", message: "使用者不存在" });
+        }
+
+        // 驗證目前密碼
+        const { verifyPassword, hashPassword } = await import("./password");
+        const isPasswordValid = await verifyPassword(input.currentPassword, user.password);
+
+        if (!isPasswordValid) {
+          throw new TRPCError({ code: "UNAUTHORIZED", message: "目前密碼錯誤" });
+        }
+
+        // 加密新密碼
+        const hashedNewPassword = await hashPassword(input.newPassword);
+
+        // 更新密碼，並移除 mustChangePassword 標記
+        await db
+          .update(users)
+          .set({
+            password: hashedNewPassword,
+            mustChangePassword: 0,
+          })
+          .where(eq(users.id, ctx.user.id));
+
+        return { success: true };
+      }),
+
+    /**
+     * 忘記密碼（發送重設連結）
+     */
+    forgotPassword: publicProcedure
+      .input(z.object({
+        email: z.string().email("請輸入有效的 Email"),
+      }))
+      .mutation(async ({ input }) => {
+        const db = await getDb();
+        if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database not available" });
+
+        // 查詢使用者
+        const [user] = await db
+          .select()
+          .from(users)
+          .where(eq(users.email, input.email))
+          .limit(1);
+
+        // 即使使用者不存在，也返回成功（避免 Email 枚舉）
+        if (!user || user.role !== "client") {
+          return { success: true };
+        }
+
+        // 生成重設 token
+        const { generateResetToken } = await import("./password");
+        const resetToken = generateResetToken();
+        const resetExpires = new Date(Date.now() + 3600000); // 1 小時後過期
+
+        // 儲存 token
+        await db
+          .update(users)
+          .set({
+            passwordResetToken: resetToken,
+            passwordResetExpires: resetExpires,
+          })
+          .where(eq(users.id, user.id));
+
+        // TODO: 寄送 Email
+        console.log(`[忘記密碼] Email: ${input.email}, 重設連結: /client-portal/reset-password?token=${resetToken}`);
+
+        return { success: true };
+      }),
+
+    /**
+     * 重設密碼
+     */
+    resetPassword: publicProcedure
+      .input(z.object({
+        token: z.string().min(1, "請提供重設 token"),
+        newPassword: z.string().min(8, "新密碼長度至少 8 個字元"),
+      }))
+      .mutation(async ({ input }) => {
+        const db = await getDb();
+        if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database not available" });
+
+        // 查詢 token
+        const [user] = await db
+          .select()
+          .from(users)
+          .where(eq(users.passwordResetToken, input.token))
+          .limit(1);
+
+        if (!user) {
+          throw new TRPCError({ code: "BAD_REQUEST", message: "重設連結無效" });
+        }
+
+        // 檢查 token 是否過期
+        if (!user.passwordResetExpires || new Date() > user.passwordResetExpires) {
+          throw new TRPCError({ code: "BAD_REQUEST", message: "重設連結已過期，請重新申請" });
+        }
+
+        // 加密新密碼
+        const { hashPassword } = await import("./password");
+        const hashedPassword = await hashPassword(input.newPassword);
+
+        // 更新密碼，並清除 token
+        await db
+          .update(users)
+          .set({
+            password: hashedPassword,
+            passwordResetToken: null,
+            passwordResetExpires: null,
+            mustChangePassword: 0,
+          })
+          .where(eq(users.id, user.id));
+
+        return { success: true };
+      }),
   }),
 
   // ============ Workers ============
@@ -452,6 +660,11 @@ export const appRouter = router({
         // 生成一個臨時的 openId（實際上應該由 OAuth 系統生成）
         const openId = `temp_${Date.now()}_${Math.random().toString(36).substring(7)}`;
         
+        // 生成隨機密碼
+        const randomPassword = generateRandomPassword();
+        const hashedPassword = await hashPassword(randomPassword);
+        
+        // 建立使用者帳號
         await db.createClientUser({
           clientId: input.clientId,
           name: input.name,
@@ -459,9 +672,19 @@ export const appRouter = router({
           position: input.position,
           phone: input.phone,
           openId,
+          password: hashedPassword,
+          mustChangePassword: 1, // 首次登入必須修改密碼
         });
         
-        return { success: true };
+        // TODO: 寄送 Email 通知客戶（包含帳號、密碼、登入連結）
+        // 目前先返回密碼供測試使用，正式環境應該移除
+        console.log(`[新增使用者] Email: ${input.email}, 密碼: ${randomPassword}`);
+        
+        return { 
+          success: true,
+          // 測試用：返回密碼
+          tempPassword: randomPassword,
+        };
       }),
 
     updateUser: publicProcedure
