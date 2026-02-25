@@ -15,7 +15,7 @@ import { trpc } from "@/lib/trpc";
 import { useState } from "react";
 import { useLocation } from "wouter";
 import { ArrowLeft, Loader2 } from "lucide-react";
-import { Link } from "wouter";
+
 import { toast } from "sonner";
 
 export function CreateDemand() {
@@ -90,12 +90,14 @@ export function CreateDemand() {
     <ClientPortalLayout>
       <div className="space-y-6">
         <div className="flex items-center gap-4">
-          <Link href="/client-portal/demands">
-            <Button variant="ghost" size="sm">
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              返回需求列表
-            </Button>
-          </Link>
+          <Button 
+            variant="ghost" 
+            size="sm"
+            onClick={() => setLocation("/client-portal/demands")}
+          >
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            返回需求列表
+          </Button>
         </div>
 
         <Card className="max-w-2xl">
@@ -172,7 +174,7 @@ export function CreateDemand() {
               <div className="space-y-2">
                 <Label htmlFor="demandTypeId">需求類型</Label>
                 <Select name="demandTypeId">
-                  <SelectTrigger>
+                  <SelectTrigger className="w-full">
                     <SelectValue placeholder="請選擇需求類型" />
                   </SelectTrigger>
                   <SelectContent>
@@ -204,11 +206,13 @@ export function CreateDemand() {
                   )}
                   提交需求單
                 </Button>
-                <Link href="/client-portal/demands">
-                  <Button type="button" variant="outline">
-                    取消
-                  </Button>
-                </Link>
+                <Button 
+                  type="button" 
+                  variant="outline"
+                  onClick={() => setLocation("/client-portal/demands")}
+                >
+                  取消
+                </Button>
               </div>
             </form>
           </CardContent>

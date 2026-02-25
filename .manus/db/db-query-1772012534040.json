@@ -1,0 +1,24 @@
+{
+  "query": "SELECT * FROM demandTypes LIMIT 10;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2iEKifVQ9gKtEas.9cbf5414b428 --database CMgr35KntT8tLtgpfJPejw --execute SELECT * FROM demandTypes LIMIT 10;",
+  "rows": [
+    {
+      "id": "1",
+      "name": "櫃檯服務",
+      "description": "NULL",
+      "createdAt": "2026-02-24 17:14:01",
+      "updatedAt": "2026-02-24 17:14:01"
+    },
+    {
+      "id": "2",
+      "name": "房務清潔服務",
+      "description": "NULL",
+      "createdAt": "2026-02-24 17:27:53",
+      "updatedAt": "2026-02-24 17:27:53"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\tdescription\tcreatedAt\tupdatedAt\n1\t櫃檯服務\tNULL\t2026-02-24 17:14:01\t2026-02-24 17:14:01\n2\t房務清潔服務\tNULL\t2026-02-24 17:27:53\t2026-02-24 17:27:53\n",
+  "stderr": "",
+  "execution_time_ms": 1554
+}
