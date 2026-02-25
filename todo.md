@@ -1468,14 +1468,14 @@
 ### Phase 2: 客戶入口前端介面
 
 #### 路由與 Dashboard
-- [ ] 建立客戶入口路由結構（`/client-portal/*`）
-- [ ] 建立客戶入口 Layout 元件（ClientPortalLayout）
-- [ ] 建立客戶入口 Dashboard 頁面（待審核、進行中、已完成需求單統計）
+- [x] 建立客戶入口路由結構（`/client-portal/*`）
+- [x] 建立客戶入口 Layout 元件（ClientPortalLayout）
+- [x] 建立客戶入口 Dashboard 頁面（待審核、進行中、已完成需求單統計）
 - [ ] 實作登入後自動跳轉邏輯（Admin → /admin/dashboard, Client → /client-portal/dashboard）
 
 #### 需求單管理
 - [ ] 建立客戶建立需求單頁面（填寫需求資訊，提交後狀態為 pending）
-- [ ] 建立客戶需求單列表頁面（顯示建立者、狀態篩選）
+- [x] 建立客戶需求單列表頁面（顯示建立者、狀態篩選）
 - [ ] 建立客戶需求單詳情頁面（顯示已指派員工，但隱藏敏感資訊）
 - [ ] 實作需求單編輯功能（僅 draft 和 pending 狀態可編輯）
 - [ ] 實作需求單刪除功能（僅 draft 和 pending 狀態可刪除）
