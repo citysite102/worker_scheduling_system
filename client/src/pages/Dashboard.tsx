@@ -129,9 +129,9 @@ export default function Dashboard() {
       </div>
 
       {/* 圖表區域 */}
-      <div className="grid gap-6 lg:grid-cols-3">
-        {/* 每日派工 vs 需求趨勢 */}
-        <Card className="shadow-md border-border/40 lg:col-span-2">
+      <div className="grid gap-6">
+        {/* 每日派工 vs 需求趋勢 */}
+        <Card className="shadow-md border-border/40">
           <CardHeader className="pb-2">
             <CardTitle className="text-base font-medium">近兩週派工與需求趨勢</CardTitle>
           </CardHeader>
