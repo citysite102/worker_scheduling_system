@@ -326,10 +326,10 @@ export default function Dashboard() {
 
         <Card className="shadow-sm border-border/60">
           <CardHeader className="pb-3">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between gap-2">
               <CardTitle className="text-base font-medium">今日已指派清單</CardTitle>
-              <span className="text-xs text-muted-foreground">
-                共 {todayAssignments?.length || 0} 筆排班
+              <span className="text-xs text-muted-foreground whitespace-nowrap">
+                共 {todayAssignments?.length || 0} 筆
               </span>
             </div>
           </CardHeader>
