@@ -30,7 +30,10 @@ export default function ForgotPassword() {
       return;
     }
 
-    forgotPasswordMutation.mutate({ email });
+    forgotPasswordMutation.mutate({ 
+      email,
+      origin: window.location.origin, // 前端 origin，用於建立重設連結
+    });
   };
 
   if (submitted) {

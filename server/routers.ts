@@ -12,7 +12,8 @@ import * as logic from "./businessLogic";
 import crypto from "crypto";
 import { recognizeWorkPermit } from "./gemini-ocr";
 import { storagePut } from "./storage";
-import { hashPassword, generateRandomPassword } from "./password";
+import { hashPassword, generateRandomPassword, verifyPassword, generateResetToken } from "./password";
+import { sendEmail, createNewAccountEmail, createResetPasswordEmail } from "./email";
 
 export const appRouter = router({
   system: systemRouter,
@@ -147,6 +148,7 @@ export const appRouter = router({
     forgotPassword: publicProcedure
       .input(z.object({
         email: z.string().email("請輸入有效的 Email"),
+        origin: z.string().optional(), // 前端 origin，用於建立重設連結
       }))
       .mutation(async ({ input }) => {
         const db = await getDb();
@@ -178,8 +180,24 @@ export const appRouter = router({
           })
           .where(eq(users.id, user.id));
 
-        // TODO: 寄送 Email
-        console.log(`[忘記密碼] Email: ${input.email}, 重設連結: /client-portal/reset-password?token=${resetToken}`);
+        // 寄送 Email
+        const resetUrl = `${input.origin || 'https://your-domain.com'}/client-portal/reset-password?token=${resetToken}`;
+        const emailHtml = createResetPasswordEmail({
+          email: input.email,
+          resetUrl,
+          expiresIn: '1 小時',
+        });
+        
+        const emailSent = await sendEmail({
+          to: input.email,
+          subject: '重設密碼請求 - 員工排班系統',
+          html: emailHtml,
+        });
+        
+        if (!emailSent) {
+          // 如果 Email 發送失敗，在 console 顯示重設連結
+          console.log(`[忘記密碼] Email: ${input.email}, 重設連結: ${resetUrl}`);
+        }
 
         return { success: true };
       }),
@@ -655,6 +673,7 @@ export const appRouter = router({
         email: z.string().email("Email 格式不正確"),
         position: z.string().optional(),
         phone: z.string().optional(),
+        origin: z.string().optional(), // 前端 origin，用於建立登入連結
       }))
       .mutation(async ({ input }) => {
         // 生成一個臨時的 openId（實際上應該由 OAuth 系統生成）
@@ -676,9 +695,25 @@ export const appRouter = router({
           mustChangePassword: 1, // 首次登入必須修改密碼
         });
         
-        // TODO: 寄送 Email 通知客戶（包含帳號、密碼、登入連結）
-        // 目前先返回密碼供測試使用，正式環境應該移除
-        console.log(`[新增使用者] Email: ${input.email}, 密碼: ${randomPassword}`);
+        // 寄送 Email 通知客戶
+        const loginUrl = `${input.origin || 'https://your-domain.com'}/client-login`;
+        const emailHtml = createNewAccountEmail({
+          name: input.name,
+          email: input.email,
+          password: randomPassword,
+          loginUrl,
+        });
+        
+        const emailSent = await sendEmail({
+          to: input.email,
+          subject: '歡迎使用員工排班系統 - 您的帳號已建立',
+          html: emailHtml,
+        });
+        
+        if (!emailSent) {
+          // 如果 Email 發送失敗，在 console 顯示密碼
+          console.log(`[新增使用者] Email: ${input.email}, 密碼: ${randomPassword}`);
+        }
         
         return { 
           success: true,

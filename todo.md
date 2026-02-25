@@ -1578,3 +1578,21 @@
 - [x] 測試首次登入強制修改密碼
 - [x] 測試忘記密碼與重設密碼流程
 - [x] 測試密碼加密與驗證邏輯
+
+## 使用者新增需求（2026/02/25 - Email 發送功能）
+
+### Email 發送模組
+- [x] 檢查 Manus 內建 Email API 或使用 nodemailer
+- [x] 實作 Email 發送函式（sendEmail）
+- [x] 設計新帳號通知 Email 範本（包含帳號資訊、密碼、登入連結）
+- [x] 設計重設密碼 Email 範本（包含重設連結、有效期限）
+
+### 整合到現有流程
+- [x] 修改 `clients.createUser` API：寄送新帳號通知 Email
+- [x] 修改 `auth.forgotPassword` API：寄送重設密碼 Email
+- [x] 移除 console.log，改為實際發送 Email（如果未設定 EMAIL_USER/EMAIL_PASS，則在 console 顯示）
+
+### 測試
+- [x] 測試 Email 範本生成功能
+- [ ] 測試建立帳號後是否收到 Email（需要正確的 Gmail 應用程式密碼）
+- [ ] 測試忘記密碼後是否收到重設連結 Email（需要正確的 Gmail 應用程式密碼）

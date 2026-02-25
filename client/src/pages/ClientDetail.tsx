@@ -985,6 +985,7 @@ export default function ClientDetail() {
                 email: formData.get("email") as string,
                 position: formData.get("position") as string || undefined,
                 phone: formData.get("phone") as string || undefined,
+                origin: window.location.origin, // 前端 origin，用於建立登入連結
               });
             }}
           >
