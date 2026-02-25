@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -32,9 +33,15 @@ export default function ClientDetail() {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
+  const [isAddUserDialogOpen, setIsAddUserDialogOpen] = useState(false);
+  const [isEditUserDialogOpen, setIsEditUserDialogOpen] = useState(false);
+  const [editingUser, setEditingUser] = useState<any>(null);
+  const [isDeleteUserDialogOpen, setIsDeleteUserDialogOpen] = useState(false);
+  const [deletingUserId, setDeletingUserId] = useState<number | null>(null);
 
   const { data: clientDetail, isLoading: isLoadingClient } = trpc.clients.getDetailById.useQuery({ id: clientId });
   const { data: demandTypes = [] } = trpc.demandTypes.list.useQuery();
+  const { data: users = [], isLoading: isLoadingUsers, refetch: refetchUsers } = trpc.clients.listUsers.useQuery({ clientId });
   
   const { data: monthDemands, isLoading: isLoadingDemands, refetch } = trpc.demands.listByClientAndMonth.useQuery({
     clientId,
@@ -64,6 +71,41 @@ export default function ClientDetail() {
     },
     onError: (error) => {
       toast.error(`更新失敗：${error.message}`);
+    },
+  });
+
+  const createUserMutation = trpc.clients.createUser.useMutation({
+    onSuccess: () => {
+      toast.success("使用者已建立");
+      setIsAddUserDialogOpen(false);
+      refetchUsers();
+    },
+    onError: (error) => {
+      toast.error(`建立失敗：${error.message}`);
+    },
+  });
+
+  const updateUserMutation = trpc.clients.updateUser.useMutation({
+    onSuccess: () => {
+      toast.success("使用者資料已更新");
+      setIsEditUserDialogOpen(false);
+      setEditingUser(null);
+      refetchUsers();
+    },
+    onError: (error) => {
+      toast.error(`更新失敗：${error.message}`);
+    },
+  });
+
+  const deleteUserMutation = trpc.clients.deleteUser.useMutation({
+    onSuccess: () => {
+      toast.success("使用者已刪除");
+      refetchUsers();
+      setIsDeleteUserDialogOpen(false);
+      setDeletingUserId(null);
+    },
+    onError: (error) => {
+      toast.error(`刪除失敗：${error.message}`);
     },
   });
 
@@ -137,6 +179,22 @@ export default function ClientDetail() {
 
   const handleNextMonth = () => {
     setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1));
+  };
+
+  const handleEditUser = (user: any) => {
+    setEditingUser(user);
+    setIsEditUserDialogOpen(true);
+  };
+
+  const handleDeleteUser = (userId: number) => {
+    setDeletingUserId(userId);
+    setIsDeleteUserDialogOpen(true);
+  };
+
+  const confirmDeleteUser = () => {
+    if (deletingUserId) {
+      deleteUserMutation.mutate({ userId: deletingUserId });
+    }
   };
 
   const handleDateClick = (date: Date) => {
@@ -440,6 +498,75 @@ export default function ClientDetail() {
           </CardContent>
         </Card>
       </div>
+
+      {/* 使用者管理區塊 */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <CardTitle>使用者管理</CardTitle>
+            <Button size="sm" className="gap-2" onClick={() => setIsAddUserDialogOpen(true)}>
+              <Plus className="w-4 h-4" />
+              新增使用者
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {isLoadingUsers ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="w-6 h-6 animate-spin text-primary" />
+            </div>
+          ) : users && users.length > 0 ? (
+            <div className="space-y-3">
+              {users.map((user) => (
+                <div
+                  key={user.id}
+                  className="flex items-center justify-between p-4 border border-border rounded-lg hover:bg-accent/50 transition-colors"
+                >
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium">{user.name}</span>
+                      <Badge variant={user.role === "admin" ? "default" : "secondary"}>
+                        {user.role === "admin" ? "管理員" : "客戶"}
+                      </Badge>
+                    </div>
+                    <div className="text-sm text-muted-foreground mt-1">
+                      {user.email && <span>{user.email}</span>}
+                      {user.position && <span className="ml-4">職位：{user.position}</span>}
+                      {user.phone && <span className="ml-4">電話：{user.phone}</span>}
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="gap-2"
+                      onClick={() => handleEditUser(user)}
+                    >
+                      <Edit className="w-4 h-4" />
+                      編輯
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="gap-2 text-destructive hover:text-destructive"
+                      onClick={() => handleDeleteUser(user.id)}
+                    >
+                      <Trash2 className="w-4 h-4" />
+                      刪除
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-12 text-muted-foreground">
+              <Users className="w-12 h-12 mx-auto mb-4 opacity-50" />
+              <p>尚無使用者帳號</p>
+              <p className="text-sm mt-1">點擊「新增使用者」為該客戶建立帳號</p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       {/* 月曆與需求單 */}
       <Card>
@@ -838,6 +965,140 @@ export default function ClientDetail() {
           </form>
         </DialogContent>
       </Dialog>
+
+      {/* 新增使用者對話框 */}
+      <Dialog open={isAddUserDialogOpen} onOpenChange={setIsAddUserDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>新增使用者</DialogTitle>
+            <DialogDescription>
+              為 {clientDetail?.name} 建立新的使用者帳號
+            </DialogDescription>
+          </DialogHeader>
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              const formData = new FormData(e.currentTarget);
+              createUserMutation.mutate({
+                clientId,
+                name: formData.get("name") as string,
+                email: formData.get("email") as string,
+                position: formData.get("position") as string || undefined,
+                phone: formData.get("phone") as string || undefined,
+              });
+            }}
+          >
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label htmlFor="name">姓名 *</Label>
+                <Input id="name" name="name" required />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="email">Email *</Label>
+                <Input id="email" name="email" type="email" required />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="position">職位</Label>
+                <Input id="position" name="position" />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="phone">電話</Label>
+                <Input id="phone" name="phone" />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setIsAddUserDialogOpen(false)}>
+                取消
+              </Button>
+              <Button type="submit" disabled={createUserMutation.isPending}>
+                {createUserMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                建立帳號
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* 編輯使用者對話框 */}
+      <Dialog open={isEditUserDialogOpen} onOpenChange={setIsEditUserDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>編輯使用者</DialogTitle>
+            <DialogDescription>
+              修改 {editingUser?.name} 的資訊
+            </DialogDescription>
+          </DialogHeader>
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              const formData = new FormData(e.currentTarget);
+              updateUserMutation.mutate({
+                userId: editingUser.id,
+                name: formData.get("name") as string,
+                position: formData.get("position") as string || undefined,
+                phone: formData.get("phone") as string || undefined,
+              });
+            }}
+          >
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label htmlFor="edit-name">姓名 *</Label>
+                <Input id="edit-name" name="name" defaultValue={editingUser?.name} required />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="edit-email">Email</Label>
+                <Input id="edit-email" value={editingUser?.email} disabled className="bg-muted" />
+                <p className="text-xs text-muted-foreground">Email 無法修改</p>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="edit-position">職位</Label>
+                <Input id="edit-position" name="position" defaultValue={editingUser?.position} />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="edit-phone">電話</Label>
+                <Input id="edit-phone" name="phone" defaultValue={editingUser?.phone} />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setIsEditUserDialogOpen(false)}>
+                取消
+              </Button>
+              <Button type="submit" disabled={updateUserMutation.isPending}>
+                {updateUserMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                儲存更改
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* 刪除使用者確認對話框 */}
+      <AlertDialog open={isDeleteUserDialogOpen} onOpenChange={setIsDeleteUserDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>確定要刪除這個使用者帳號嗎？</AlertDialogTitle>
+            <AlertDialogDescription>
+              此操作無法復原。刪除後，該使用者將無法再登入系統。
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => {
+              setIsDeleteUserDialogOpen(false);
+              setDeletingUserId(null);
+            }}>
+              取消
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmDeleteUser}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              disabled={deleteUserMutation.isPending}
+            >
+              {deleteUserMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              確定刪除
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
