@@ -141,24 +141,24 @@ export function ClientDashboard() {
                 </Link>
               </div>
             ) : (
-              <div className="space-y-4">
+              <div className="space-y-3">
                 {recentDemands.map((demand) => (
                   <Link key={demand.id} href={`/client-portal/demands/${demand.id}`}>
-                    <div className="flex items-center justify-between rounded-lg border p-4 hover:bg-accent transition-colors cursor-pointer">
+                    <div className="flex items-center justify-between rounded-lg border p-5 hover:bg-accent hover:shadow-md transition-all cursor-pointer bg-card">
                       <div className="flex-1">
-                        <div className="flex items-center gap-2">
-                          <p className="font-medium">
+                        <div className="flex items-center gap-3 mb-2">
+                          <p className="font-semibold text-base">
                             {new Date(demand.date).toLocaleDateString("zh-TW", {
                               year: "numeric",
                               month: "long",
                               day: "numeric",
                             })}
                           </p>
-                          <span className="text-sm text-muted-foreground">
+                          <span className="text-sm text-muted-foreground font-medium">
                             {demand.startTime} - {demand.endTime}
                           </span>
                         </div>
-                        <p className="text-sm text-muted-foreground mt-1">
+                        <p className="text-sm text-muted-foreground">
                           需求人數：{demand.requiredWorkers} 人 | 已指派：
                           {demand.assignedCount} 人
                         </p>
