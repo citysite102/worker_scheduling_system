@@ -277,11 +277,17 @@ export default function ClientDetail() {
 
   return (
     <div className="container mx-auto py-6 space-y-6">
-      {/* 返回按鈕 */}
-      <Button variant="ghost" onClick={() => setLocation("/clients")} className="gap-2">
-        <ArrowLeft className="w-4 h-4" />
-        返回客戶列表
-      </Button>
+      {/* 返回按鈕與快速操作 */}
+      <div className="flex items-center justify-between">
+        <Button variant="ghost" onClick={() => setLocation("/clients")} className="gap-2">
+          <ArrowLeft className="w-4 h-4" />
+          返回客戶列表
+        </Button>
+        <Button variant="default" onClick={() => setLocation(`/demands?clientId=${clientId}`)} className="gap-2">
+          <FileText className="w-4 h-4" />
+          前往需求管理
+        </Button>
+      </div>
 
       {/* 客戶基本資訊卡片 */}
       <Card className="border-2">

@@ -12,12 +12,22 @@ import { Check, ChevronsUpDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Textarea } from "@/components/ui/textarea";
 import { Plus, Calendar, Clock, MapPin, AlertTriangle, Loader2, ArrowRight, Copy, Edit, Trash2 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { useLocation } from "wouter";
 
 export default function Demands() {
-  const [, setLocation] = useLocation();
+  const [location, setLocation] = useLocation();
+  
+  // 從 URL 參數讀取 clientId
+  useEffect(() => {
+    const params = new URLSearchParams(location.split('?')[1]);
+    const clientIdParam = params.get('clientId');
+    if (clientIdParam) {
+      const clientId = parseInt(clientIdParam);
+      setClientFilter(clientId);
+    }
+  }, [location]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingDemand, setEditingDemand] = useState<any>(null);
   const [statusFilter, setStatusFilter] = useState<string | undefined>(undefined);

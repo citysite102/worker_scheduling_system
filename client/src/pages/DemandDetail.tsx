@@ -359,7 +359,7 @@ export default function DemandDetail() {
         <div>
           <h1 className="text-2xl font-semibold text-foreground">
             需求單：
-            <Link href={`/clients/${demand.clientId}`} className="hover:underline hover:text-primary transition-colors">
+            <Link href={`/clients/${demand.clientId}`} className="text-primary underline underline-offset-4 hover:text-primary/80 transition-colors font-medium">
               {demand.client?.name}
             </Link>
           </h1>
