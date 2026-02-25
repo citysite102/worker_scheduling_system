@@ -616,24 +616,8 @@ export const appRouter = router({
         date: z.date().optional(),
       }).optional())
       .query(async ({ input }) => {
-        const demands = await db.getAllDemands(input?.status, input?.date);
-        
-        // 附加客戶資訊與已指派人數
-        const result = await Promise.all(
-          demands.map(async (demand) => {
-            const client = await db.getClientById(demand.clientId);
-            const assignments = await db.getAssignmentsByDemand(demand.id);
-            const assignedCount = assignments.filter(a => a.status !== "cancelled").length;
-            
-            return {
-              ...demand,
-              client,
-              assignedCount,
-            };
-          })
-        );
-        
-        return result;
+        // getAllDemands 已經使用 JOIN 查詢，直接返回結果即可
+        return await db.getAllDemands(input?.status, input?.date);
       }),
 
     listByClientAndMonth: publicProcedure

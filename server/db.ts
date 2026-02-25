@@ -349,7 +349,48 @@ export async function getAllDemands(statusFilter?: string, dateFilter?: Date) {
   const db = await getDb();
   if (!db) return [];
 
-  let query = db.select().from(demands).orderBy(desc(demands.createdAt));
+  // 使用 JOIN 查詢一次取得所有需要的資料，避免 N+1 問題
+  let query = db
+    .select({
+      // demand 欄位
+      id: demands.id,
+      clientId: demands.clientId,
+      date: demands.date,
+      startTime: demands.startTime,
+      endTime: demands.endTime,
+      requiredWorkers: demands.requiredWorkers,
+      breakHours: demands.breakHours,
+      location: demands.location,
+      status: demands.status,
+      note: demands.note,
+      demandTypeId: demands.demandTypeId,
+      selectedOptions: demands.selectedOptions,
+      createdAt: demands.createdAt,
+      updatedAt: demands.updatedAt,
+      
+      // client 欄位（直接 JOIN）
+      clientName: clients.name,
+      clientLogoUrl: clients.logoUrl,
+      clientStatus: clients.status,
+      clientContactName: clients.contactName,
+      clientContactEmail: clients.contactEmail,
+      clientContactPhone: clients.contactPhone,
+      clientAddress: clients.address,
+      clientBillingType: clients.billingType,
+      clientClientCode: clients.clientCode,
+      
+      // 已指派人數（使用子查詢）
+      assignedCount: sql<number>`(
+        SELECT COUNT(*) 
+        FROM ${assignments} 
+        WHERE ${assignments.demandId} = ${demands.id} 
+        AND ${assignments.status} != 'cancelled'
+      )`,
+    })
+    .from(demands)
+    .leftJoin(clients, eq(demands.clientId, clients.id))
+    .orderBy(desc(demands.createdAt));
+  
   const conditions = [];
 
   if (statusFilter) {
@@ -368,7 +409,38 @@ export async function getAllDemands(statusFilter?: string, dateFilter?: Date) {
     query = query.where(and(...conditions)) as any;
   }
 
-  return await query;
+  const results = await query;
+  
+  // 將查詢結果轉換為原本的格式（demand + client 嵌套物件）
+  return results.map(row => ({
+    id: row.id,
+    clientId: row.clientId,
+    date: row.date,
+    startTime: row.startTime,
+    endTime: row.endTime,
+    requiredWorkers: row.requiredWorkers,
+    breakHours: row.breakHours,
+    location: row.location,
+    status: row.status,
+    note: row.note,
+    demandTypeId: row.demandTypeId,
+    selectedOptions: row.selectedOptions,
+    createdAt: row.createdAt,
+    updatedAt: row.updatedAt,
+    client: {
+      id: row.clientId,
+      name: row.clientName,
+      logoUrl: row.clientLogoUrl,
+      status: row.clientStatus,
+      contactName: row.clientContactName,
+      contactEmail: row.clientContactEmail,
+      contactPhone: row.clientContactPhone,
+      address: row.clientAddress,
+      billingType: row.clientBillingType,
+      clientCode: row.clientClientCode,
+    },
+    assignedCount: row.assignedCount,
+  }));
 }
 
 export async function getDemandById(id: number) {

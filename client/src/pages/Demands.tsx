@@ -188,7 +188,7 @@ export default function Demands() {
   if (isLoading) {
     return (
       <div className="p-6 lg:p-8 max-w-6xl mx-auto">
-        <h1 className="text-2xl font-semibold mb-6">用工需求管理</h1>
+          <h1 className="text-2xl font-semibold mb-6">需求管理</h1>
         <div className="flex items-center justify-center py-12">
           <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
         </div>
@@ -200,7 +200,7 @@ export default function Demands() {
     <div className="p-6 lg:p-8 max-w-6xl mx-auto">
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-2xl font-semibold text-foreground">用工需求管理</h1>
+          <h1 className="text-2xl font-semibold text-foreground">需求管理</h1>
           <p className="text-sm text-muted-foreground mt-1">管理客戶的用工需求單與人力指派</p>
         </div>
         <Dialog open={isDialogOpen} onOpenChange={(open) => {
