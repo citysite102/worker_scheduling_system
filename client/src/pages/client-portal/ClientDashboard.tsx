@@ -2,7 +2,7 @@ import { ClientPortalLayout } from "@/components/ClientPortalLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { trpc } from "@/lib/trpc";
 import { FileText, Clock, CheckCircle2, AlertCircle } from "lucide-react";
-import { Link, useLocation } from "wouter";
+import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 
 export function ClientDashboard() {
@@ -83,12 +83,10 @@ export function ClientDashboard() {
               })}
             </p>
           </div>
-          <Link href="/client-portal/demands/new">
-            <Button>
-              <FileText className="mr-2 h-4 w-4" />
-              建立需求單
-            </Button>
-          </Link>
+          <Button onClick={() => setLocation("/client-portal/demands/create")}>
+            <FileText className="mr-2 h-4 w-4" />
+            建立需求單
+          </Button>
         </div>
 
         {/* 統計卡片 */}
@@ -121,11 +119,13 @@ export function ClientDashboard() {
           <CardHeader>
             <div className="flex items-center justify-between">
               <CardTitle>近期需求單</CardTitle>
-              <Link href="/client-portal/demands">
-                <Button variant="outline" size="sm">
-                  查看全部
-                </Button>
-              </Link>
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => setLocation("/client-portal/demands")}
+              >
+                查看全部
+              </Button>
             </div>
           </CardHeader>
           <CardContent>
@@ -135,11 +135,14 @@ export function ClientDashboard() {
                 <p className="mt-2 text-sm text-muted-foreground">
                   尚無需求單
                 </p>
-                <Link href="/client-portal/demands/create">
-                  <Button variant="outline" size="sm" className="mt-4">
-                    建立第一筆需求單
-                  </Button>
-                </Link>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="mt-4"
+                  onClick={() => setLocation("/client-portal/demands/create")}
+                >
+                  建立第一筆需求單
+                </Button>
               </div>
             ) : (
               <div className="space-y-4">
