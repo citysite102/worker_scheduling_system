@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Select,
   SelectContent,
@@ -22,6 +23,8 @@ export function CreateDemand() {
   const [, setLocation] = useLocation();
 
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [selectedDemandTypeId, setSelectedDemandTypeId] = useState<number | null>(null);
+  const [selectedOptionIds, setSelectedOptionIds] = useState<number[]>([]);
 
   // 取得需求類型列表
   const { data: demandTypes } = trpc.demandTypes.list.useQuery();
@@ -49,6 +52,9 @@ export function CreateDemand() {
     const location = formData.get("location") as string;
     const demandTypeId = formData.get("demandTypeId") as string;
     const note = formData.get("note") as string;
+
+    // 將選取的選項 ID 轉為 JSON 字串
+    const selectedOptionsJson = selectedOptionIds.length > 0 ? JSON.stringify(selectedOptionIds) : undefined;
 
     // 驗證必填欄位
     if (!date || !startTime || !endTime || !requiredWorkers) {
@@ -79,6 +85,7 @@ export function CreateDemand() {
         requiredWorkers,
         location: location || undefined,
         demandTypeId: demandTypeId ? parseInt(demandTypeId) : undefined,
+        selectedOptions: selectedOptionsJson,
         note: note || undefined,
       });
     } catch (error) {
@@ -173,7 +180,14 @@ export function CreateDemand() {
               {/* 需求類型 */}
               <div className="space-y-2">
                 <Label htmlFor="demandTypeId">需求類型</Label>
-                <Select name="demandTypeId">
+                <Select 
+                  name="demandTypeId"
+                  onValueChange={(value) => {
+                    const typeId = parseInt(value);
+                    setSelectedDemandTypeId(typeId);
+                    setSelectedOptionIds([]); // 清空已選取的選項
+                  }}
+                >
                   <SelectTrigger className="w-full">
                     <SelectValue placeholder="請選擇需求類型" />
                   </SelectTrigger>
@@ -186,6 +200,42 @@ export function CreateDemand() {
                   </SelectContent>
                 </Select>
               </div>
+
+              {/* 需求類型選項 */}
+              {selectedDemandTypeId && (() => {
+                const selectedType = demandTypes?.find(t => t.id === selectedDemandTypeId);
+                if (!selectedType || !selectedType.options || selectedType.options.length === 0) {
+                  return null;
+                }
+                return (
+                  <div className="space-y-3">
+                    <Label>選項清單</Label>
+                    <div className="space-y-2 rounded-lg border p-4">
+                      {selectedType.options.map((option) => (
+                        <div key={option.id} className="flex items-start gap-3">
+                          <Checkbox
+                            id={`option-${option.id}`}
+                            checked={selectedOptionIds.includes(option.id)}
+                            onCheckedChange={(checked) => {
+                              if (checked) {
+                                setSelectedOptionIds([...selectedOptionIds, option.id]);
+                              } else {
+                                setSelectedOptionIds(selectedOptionIds.filter(id => id !== option.id));
+                              }
+                            }}
+                          />
+                          <Label
+                            htmlFor={`option-${option.id}`}
+                            className="cursor-pointer font-normal leading-relaxed"
+                          >
+                            {option.content}
+                          </Label>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })()}
 
               {/* 備註 */}
               <div className="space-y-2">
