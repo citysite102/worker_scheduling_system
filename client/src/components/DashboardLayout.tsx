@@ -204,6 +204,9 @@ function DashboardLayoutContent({
                   <span className="font-semibold tracking-tight truncate">
                     排班系統
                   </span>
+                  <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-md bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-400 leading-none shrink-0 border border-amber-200 dark:border-amber-800">
+                    Beta
+                  </span>
                 </div>
               ) : null}
             </div>

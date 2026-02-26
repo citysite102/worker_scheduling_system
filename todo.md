@@ -36,3 +36,7 @@
 - [x] 驗證專案可正常啟動（dev server running）
 - [x] 驗證核心測試通過（businessLogic、auth、break-hours、conflict-detection 等）
 - [x] 儲存 checkpoint
+
+## 後續功能調整
+
+- [x] 在系統名稱後加上「(Beta)」標註
