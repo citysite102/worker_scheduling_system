@@ -244,6 +244,17 @@ export async function calculateDemandFeasibility(
         }
       }
 
+      // 檢查工作許可是否已過期（有工作許可但已過期）
+      if (worker.hasWorkPermit && worker.workPermitExpiryDate) {
+        const expiryDate = new Date(worker.workPermitExpiryDate);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        if (expiryDate < today) {
+          const expiryStr = expiryDate.toLocaleDateString('zh-TW', { year: 'numeric', month: '2-digit', day: '2-digit' });
+          reasons.push(`PERMIT_EXPIRED:工作許可已於 ${expiryStr} 過期`);
+        }
+      }
+
       return { worker, reasons };
     })
   );
@@ -254,7 +265,12 @@ export async function calculateDemandFeasibility(
   
   const unavailableWorkers = workerChecks
     .filter(check => check.reasons.length > 0)
-    .map(check => ({ worker: check.worker, reasons: check.reasons }));
+    .map(check => ({
+      worker: check.worker,
+      reasons: check.reasons,
+      // 標記是否僅因「許可已過期」而不可指派（其他時段、衝突等屬於真正不可指派）
+      isExpiredPermitOnly: check.reasons.length > 0 && check.reasons.every(r => r.startsWith('PERMIT_EXPIRED:')),
+    }));
 
   // 計算本週已排工時與近 7 天排班次數（用於排序）
   // 批次查詢：並行查詢所有可用員工的 assignments

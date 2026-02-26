@@ -13,7 +13,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import {
   AlertCircle, CheckCircle2, ChevronDown, ChevronUp, ArrowLeft, Loader2,
   Calendar, Clock, MapPin, Users, Filter, GraduationCap, FileCheck, Stethoscope, X,
-  Edit, Copy, Trash2
+  Edit, Copy, Trash2, ShieldAlert
 } from "lucide-react";
 import { useRoute, useLocation, Link } from "wouter";;
 import { useState, useMemo } from "react";
@@ -36,6 +36,7 @@ export default function DemandDetail() {
 
   const [selectedWorkerIds, setSelectedWorkerIds] = useState<number[]>([]);
   const [isInactiveExpanded, setIsInactiveExpanded] = useState(false);
+  const [isExpiredPermitExpanded, setIsExpiredPermitExpanded] = useState(false);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
   const [assignmentToCancel, setAssignmentToCancel] = useState<number | null>(null);
@@ -393,6 +394,10 @@ export default function DemandDetail() {
   const gap = demand.requiredWorkers - selectedWorkerIds.length;
   const inactiveWorkers = feasibility.unavailableWorkers.filter(
     (uw) => uw.worker.status === "inactive"
+  );
+  // 許可已過期的員工：狀態為 active，且僅因許可過期而不可指派
+  const expiredPermitWorkers = feasibility.unavailableWorkers.filter(
+    (uw) => uw.worker.status === "active" && (uw as any).isExpiredPermitOnly === true
   );
 
   return (
@@ -977,6 +982,83 @@ export default function DemandDetail() {
             )}
           </CardContent>
         </Card>
+
+        {/* 許可已過期（可強制指派） */}
+        {expiredPermitWorkers.length > 0 && (
+          <Collapsible open={isExpiredPermitExpanded} onOpenChange={setIsExpiredPermitExpanded}>
+            <Card className="shadow-md border-amber-200 bg-amber-50/30">
+              <CardHeader className="pb-3">
+                <CollapsibleTrigger asChild>
+                  <div className="flex items-center justify-between cursor-pointer">
+                    <div className="flex items-center gap-2">
+                      <ShieldAlert className="h-4 w-4 text-amber-600" />
+                      <CardTitle className="text-base font-medium text-amber-700">
+                        許可已過期 ({expiredPermitWorkers.length})
+                      </CardTitle>
+                    </div>
+                    {isExpiredPermitExpanded ? <ChevronUp className="h-4 w-4 text-amber-600" /> : <ChevronDown className="h-4 w-4 text-amber-600" />}
+                  </div>
+                </CollapsibleTrigger>
+                <CardDescription className="text-xs text-amber-600">
+                  工作許可已過期的員工，可強制指派但請注意合規風险
+                </CardDescription>
+              </CardHeader>
+              <CollapsibleContent>
+                <CardContent>
+                  <div className="space-y-1.5">
+                    {expiredPermitWorkers.map((uw) => {
+                      const isSelected = selectedWorkerIds.includes(uw.worker.id);
+                      const isAlreadyAssigned = assignedWorkerIds.includes(uw.worker.id);
+                      const expiryMsg = uw.reasons.find(r => r.startsWith('PERMIT_EXPIRED:'))?.replace('PERMIT_EXPIRED:', '') || '許可已過期';
+                      return (
+                        <div
+                          key={uw.worker.id}
+                          className={`flex items-center gap-3 p-3 rounded-lg border transition-colors ${
+                            isAlreadyAssigned
+                              ? 'border-border/30 bg-muted/20 opacity-50 cursor-not-allowed'
+                              : isSelected
+                              ? 'border-amber-300 bg-amber-50 cursor-pointer'
+                              : 'border-amber-200/60 bg-amber-50/20 hover:bg-amber-50/50 cursor-pointer'
+                          }`}
+                          onClick={() => !isAlreadyAssigned && handleToggleWorker(uw.worker.id)}
+                        >
+                          <Checkbox
+                            checked={isSelected}
+                            disabled={isAlreadyAssigned}
+                          />
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <Link href={`/workers/${uw.worker.id}`} className="font-medium text-sm hover:underline hover:text-primary transition-colors" onClick={(e) => e.stopPropagation()}>
+                                {uw.worker.name}
+                              </Link>
+                              {uw.worker.school && (
+                                <Badge variant="outline" className="text-[10px] px-1.5 py-0 font-normal text-muted-foreground">
+                                  <GraduationCap className="h-2.5 w-2.5 mr-0.5" />
+                                  {uw.worker.school}
+                                </Badge>
+                              )}
+                              <Badge className="text-[10px] px-1.5 py-0 bg-amber-100 text-amber-700 border-amber-300 hover:bg-amber-100">
+                                <ShieldAlert className="h-2.5 w-2.5 mr-0.5" />
+                                許可已過期
+                              </Badge>
+                              {isAlreadyAssigned && (
+                                <Badge variant="outline" className="text-[10px] px-1.5 py-0 text-muted-foreground">已指派</Badge>
+                              )}
+                            </div>
+                            <div className="text-xs text-amber-600 mt-0.5">{expiryMsg}</div>
+                            {uw.worker.phone && (
+                              <div className="text-xs text-muted-foreground">{uw.worker.phone}</div>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </CardContent>
+              </CollapsibleContent>
+            </Card>
+          </Collapsible>
+        )}
 
         {/* 已停用 */}
         <Collapsible open={isInactiveExpanded} onOpenChange={setIsInactiveExpanded}>
