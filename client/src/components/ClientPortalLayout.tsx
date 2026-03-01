@@ -92,7 +92,12 @@ export function ClientPortalLayout({ children }: { children: React.ReactNode }) 
         <ClientOnboarding
           clientName={clientData?.name || ""}
           userName={user.name || ""}
-          onComplete={() => setShowOnboarding(false)}
+          onComplete={(navigateToDemand) => {
+            setShowOnboarding(false);
+            if (navigateToDemand) {
+              setLocation("/client-portal/demands/create");
+            }
+          }}
         />
       )}
       {/* Sidebar */}

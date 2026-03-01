@@ -12,12 +12,13 @@ import {
   ClipboardList,
   Eye,
   PartyPopper,
+  ArrowRight,
 } from "lucide-react";
 
 interface ClientOnboardingProps {
   clientName: string;
   userName: string;
-  onComplete: () => void;
+  onComplete: (navigateToDemand?: boolean) => void;
 }
 
 const steps = [
@@ -108,13 +109,15 @@ export function ClientOnboarding({ clientName, userName, onComplete }: ClientOnb
   const [currentStep, setCurrentStep] = useState(0);
   const [isCompleting, setIsCompleting] = useState(false);
 
+  const [navigateAfter, setNavigateAfter] = useState(false);
+
   const completeOnboarding = trpc.auth.completeOnboarding.useMutation({
     onSuccess: () => {
-      onComplete();
+      onComplete(navigateAfter);
     },
     onError: () => {
       // 即使 API 失敗也繼續（不阻擋用戶）
-      onComplete();
+      onComplete(navigateAfter);
     },
   });
 
@@ -125,10 +128,17 @@ export function ClientOnboarding({ clientName, userName, onComplete }: ClientOnb
   const handleNext = () => {
     if (isLast) {
       setIsCompleting(true);
+      setNavigateAfter(false);
       completeOnboarding.mutate();
     } else {
       setCurrentStep((prev) => prev + 1);
     }
+  };
+
+  const handleGoToDemand = () => {
+    setIsCompleting(true);
+    setNavigateAfter(true);
+    completeOnboarding.mutate();
   };
 
   const handlePrev = () => {
@@ -259,15 +269,36 @@ export function ClientOnboarding({ clientName, userName, onComplete }: ClientOnb
                   </motion.div>
                   <div className="text-center space-y-1">
                     <p className="text-sm text-gray-600">你現在可以開始建立需求單</p>
-                    <p className="text-sm text-gray-600">如有任何問題，請聯繫我們的客服團隊</p>
+                    <p className="text-sm text-gray-600">如有任何問題，請聯絡我們的客服團隊</p>
                   </div>
-                  <div className="flex flex-wrap gap-2 justify-center mt-2">
+                  <div className="flex flex-wrap gap-2 justify-center mt-1">
                     {["建立需求單", "查看需求進度", "查看指派員工"].map((tag) => (
                       <span key={tag} className="text-xs bg-emerald-50 text-emerald-600 px-3 py-1 rounded-full font-medium">
                         ✓ {tag}
                       </span>
                     ))}
                   </div>
+                  {/* CTA 按鈕 */}
+                  <motion.div
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.4 }}
+                    className="w-full mt-1"
+                  >
+                    <button
+                      onClick={handleGoToDemand}
+                      disabled={isCompleting}
+                      className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-gradient-to-r from-blue-500 to-violet-500 text-white text-sm font-semibold shadow-md hover:shadow-lg hover:opacity-95 transition-all disabled:opacity-60"
+                    >
+                      {isCompleting && navigateAfter ? (
+                        <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                      ) : (
+                        <FileText className="w-4 h-4" />
+                      )}
+                      立即建立第一張需求單
+                      <ArrowRight className="w-4 h-4" />
+                    </button>
+                  </motion.div>
                 </div>
               )}
             </motion.div>
