@@ -247,6 +247,62 @@ export const appRouter = router({
 
         return { success: true };
       }),
+
+    /**
+     * 完成 Onboarding
+     */
+    completeOnboarding: protectedProcedure
+      .mutation(async ({ ctx }) => {
+        if (!ctx.user) {
+          throw new TRPCError({ code: "UNAUTHORIZED", message: "請先登入" });
+        }
+        const dbInstance = await getDb();
+        if (!dbInstance) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database not available" });
+        await dbInstance
+          .update(users)
+          .set({ onboardingCompleted: 1 })
+          .where(eq(users.id, ctx.user.id));
+        return { success: true };
+      }),
+
+    /**
+     * 查詢 Onboarding 狀態
+     */
+    onboardingStatus: protectedProcedure
+      .query(async ({ ctx }) => {
+        if (!ctx.user) {
+          throw new TRPCError({ code: "UNAUTHORIZED", message: "請先登入" });
+        }
+        const dbInstance = await getDb();
+        if (!dbInstance) return { onboardingCompleted: true };
+        const [userRow] = await dbInstance
+          .select({ onboardingCompleted: users.onboardingCompleted })
+          .from(users)
+          .where(eq(users.id, ctx.user.id))
+          .limit(1);
+        return { onboardingCompleted: userRow?.onboardingCompleted === 1 };
+      }),
+
+    /**
+     * 管理員專用：重置指定用戶的 Onboarding 狀態
+     */
+    resetOnboarding: protectedProcedure
+      .input(z.object({ userId: z.number().int().positive() }))
+      .mutation(async ({ ctx, input }) => {
+        if (!ctx.user) {
+          throw new TRPCError({ code: "UNAUTHORIZED", message: "請先登入" });
+        }
+        if (ctx.user.role !== "admin") {
+          throw new TRPCError({ code: "FORBIDDEN", message: "僅管理員可執行此操作" });
+        }
+        const dbInstance = await getDb();
+        if (!dbInstance) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "資料庫連線失敗" });
+        await dbInstance
+          .update(users)
+          .set({ onboardingCompleted: 0 })
+          .where(eq(users.id, input.userId));
+        return { success: true };
+      }),
   }),
 
   // ============ Workers ============

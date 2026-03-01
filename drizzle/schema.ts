@@ -24,6 +24,7 @@ export const users = mysqlTable("users", {
   passwordResetToken: varchar("passwordResetToken", { length: 255 }), // 重設密碼 token
   passwordResetExpires: timestamp("passwordResetExpires"), // token 過期時間
   mustChangePassword: int("mustChangePassword").default(0).notNull(), // 0=不需要, 1=首次登入必須修改密碼
+  onboardingCompleted: int("onboardingCompleted").default(0).notNull(), // 0=未完成 Onboarding, 1=已完成
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
   lastSignedIn: timestamp("lastSignedIn").defaultNow().notNull(),
