@@ -12,7 +12,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { 
   ArrowLeft, Building2, Phone, Mail, MapPin, Calendar, Users, 
   CheckCircle2, XCircle, Clock, Loader2, Plus, FileText, 
-  TrendingUp, Briefcase, Copy, Edit, Trash2
+  TrendingUp, Briefcase, Copy, Edit, Trash2, RotateCcw
 } from "lucide-react";
 import { useParams, useLocation } from "wouter";
 import { useState } from "react";
@@ -106,6 +106,15 @@ export default function ClientDetail() {
     },
     onError: (error) => {
       toast.error(`刪除失敗：${error.message}`);
+    },
+  });
+
+  const resetOnboardingMutation = trpc.auth.resetOnboarding.useMutation({
+    onSuccess: () => {
+      toast.success("已重置引導狀態，該用戶下次登入時將再次看到引導流程");
+    },
+    onError: (error) => {
+      toast.error(`重置失敗：${error.message}`);
     },
   });
 
@@ -544,6 +553,21 @@ export default function ClientDetail() {
                     >
                       <Edit className="w-4 h-4" />
                       編輯
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="gap-2 text-amber-600 hover:text-amber-700 hover:bg-amber-50"
+                      title="重置引導後，該用戶下次登入將再次看到 Onboarding 引導流程"
+                      disabled={resetOnboardingMutation.isPending}
+                      onClick={() => resetOnboardingMutation.mutate({ userId: user.id })}
+                    >
+                      {resetOnboardingMutation.isPending ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <RotateCcw className="w-4 h-4" />
+                      )}
+                      重置引導
                     </Button>
                     <Button
                       variant="outline"
