@@ -1,0 +1,22 @@
+{
+  "query": "SELECT id, email, name, role FROM users WHERE email IN ('jacob.wang0419@gmail.com', 'lulu0127.yeh@gmail.com');",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2iEKifVQ9gKtEas.9cbf5414b428 --database CMgr35KntT8tLtgpfJPejw --execute SELECT id, email, name, role FROM users WHERE email IN ('jacob.wang0419@gmail.com', 'lulu0127.yeh@gmail.com');",
+  "rows": [
+    {
+      "id": "270061",
+      "email": "jacob.wang0419@gmail.com",
+      "name": "jacob 王",
+      "role": "user"
+    },
+    {
+      "id": "360107",
+      "email": "lulu0127.yeh@gmail.com",
+      "name": "Lulu Yeh",
+      "role": "user"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\temail\tname\trole\n270061\tjacob.wang0419@gmail.com\tjacob 王\tuser\n360107\tlulu0127.yeh@gmail.com\tLulu Yeh\tuser\n",
+  "stderr": "",
+  "execution_time_ms": 1651
+}
