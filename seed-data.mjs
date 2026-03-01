@@ -1,9 +1,31 @@
 import mysql from 'mysql2/promise';
 import 'dotenv/config';
 
-const connection = await mysql.createConnection(process.env.DATABASE_URL);
+// ============================================================
+// 環境守衛（Environment Guard）
+// 防止 seed data 在非測試環境執行，避免污染正式資料庫
+// ============================================================
+if (process.env.NODE_ENV === 'production') {
+  console.error('[SEED GUARD] ❌ 禁止在 production 環境執行 seed data。');
+  console.error('[SEED GUARD] 此腳本只能在測試環境中執行。');
+  process.exit(1);
+}
 
-console.log('開始建立測試資料...');
+if (!process.env.TEST_DATABASE_URL) {
+  console.error('[SEED GUARD] ❌ 未設定 TEST_DATABASE_URL 環境變數。');
+  console.error('[SEED GUARD] seed-data.mjs 必須使用 TEST_DATABASE_URL 連線到測試專用資料庫。');
+  console.error('[SEED GUARD] 請複製 .env.test.example 為 .env.test 並設定 TEST_DATABASE_URL。');
+  process.exit(1);
+}
+
+// 使用 TEST_DATABASE_URL（測試專用），而非正式環境的 DATABASE_URL
+const dbUrl = process.env.TEST_DATABASE_URL;
+console.log('[SEED GUARD] ✅ 環境檢查通過，使用測試資料庫連線');
+console.log(`[SEED GUARD] 目標資料庫：${dbUrl.replace(/:[^:@]+@/, ':****@')}`);
+
+const connection = await mysql.createConnection(dbUrl);
+
+console.log('開始建立測試資料...'); 
 
 try {
   // 1. 建立移工資料（8 位，其中 2 位停用）

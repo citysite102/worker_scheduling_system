@@ -10,7 +10,11 @@
     "check": "tsc --noEmit",
     "format": "prettier --write .",
     "test": "vitest run",
-    "db:push": "drizzle-kit generate && drizzle-kit migrate"
+    "db:push": "drizzle-kit generate && drizzle-kit migrate",
+    "test:unit": "vitest run server/auth.logout.test.ts server/break-hours.test.ts server/businessLogic.test.ts server/onboarding.test.ts server/env-secrets.test.ts",
+    "test:db": "dotenv -e .env.test -- vitest run",
+    "seed": "dotenv -e .env.test -- node seed-data.mjs",
+    "db:clear": "dotenv -e .env.test -- node --import tsx server/clear-test-data.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.693.0",
