@@ -1030,7 +1030,33 @@ export const appRouter = router({
         }
         
         const client = await db.getClientById(demand.clientId);
-        const assignments = await db.getAssignmentsByDemand(demand.id);
+        const rawAssignments = await db.getAssignmentsByDemand(demand.id);
+        
+        // 附加員工資訊，客戶端過濾敏感資料
+        const isClientRole = ctx.user?.role === 'client';
+        const assignments = await Promise.all(
+          rawAssignments.map(async (assignment) => {
+            const worker = await db.getWorkerById(assignment.workerId);
+            const workerInfo = worker ? {
+              id: worker.id,
+              name: worker.name,
+              school: worker.school,
+              nationality: worker.nationality,
+              hasWorkPermit: worker.hasWorkPermit,
+              hasHealthCheck: worker.hasHealthCheck,
+              avatarUrl: worker.avatarUrl,
+              // 客戶端不暴露敏感聯絡資訊
+              ...(isClientRole ? {} : {
+                phone: worker.phone,
+                email: worker.email,
+                idNumber: worker.idNumber,
+                lineId: worker.lineId,
+                whatsappId: worker.whatsappId,
+              }),
+            } : null;
+            return { ...assignment, worker: workerInfo };
+          })
+        );
         
         // 如果有需求類型，查詢需求類型與選項
         let demandType = null;

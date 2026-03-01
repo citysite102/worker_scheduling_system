@@ -16,7 +16,8 @@ import {
 import { trpc } from "@/lib/trpc";
 import { useState, useEffect } from "react";
 import { useLocation, useRoute } from "wouter";
-import { ArrowLeft, Loader2, Edit, Save, X } from "lucide-react";
+import { ArrowLeft, Loader2, Edit, Save, X, Users, GraduationCap, Globe, FileCheck, Stethoscope, User } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
 
 export function DemandDetail() {
@@ -424,6 +425,75 @@ export function DemandDetail() {
             )}
           </CardContent>
         </Card>
+
+        {/* 已指派員工資訊 */}
+        {(() => {
+          const activeAssignments = (demand.assignments as any[])?.filter(
+            (a: any) => a.status !== 'cancelled' && a.worker
+          ) || [];
+          if (activeAssignments.length === 0) return null;
+          return (
+            <Card className="max-w-2xl">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-base">
+                  <Users className="h-4 w-4 text-primary" />
+                  已指派員工
+                  <Badge variant="secondary" className="ml-1">{activeAssignments.length} 人</Badge>
+                </CardTitle>
+                <p className="text-sm text-muted-foreground">以下為本次指派的員工資訊</p>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  {activeAssignments.map((assignment: any) => {
+                    const w = assignment.worker;
+                    return (
+                      <div key={assignment.id} className="flex items-start gap-3 p-3 rounded-lg border border-border/50 bg-muted/20">
+                        {/* 頭像 */}
+                        <div className="flex-shrink-0 w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden">
+                          {w.avatarUrl ? (
+                            <img src={w.avatarUrl} alt={w.name} className="w-full h-full object-cover" />
+                          ) : (
+                            <User className="h-5 w-5 text-primary" />
+                          )}
+                        </div>
+                        {/* 資訊 */}
+                        <div className="flex-1 min-w-0">
+                          <div className="font-medium text-sm">{w.name}</div>
+                          <div className="flex flex-wrap gap-2 mt-1.5">
+                            {w.school && (
+                              <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
+                                <GraduationCap className="h-3 w-3" />
+                                {w.school}
+                              </span>
+                            )}
+                            {w.nationality && (
+                              <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
+                                <Globe className="h-3 w-3" />
+                                {w.nationality}
+                              </span>
+                            )}
+                            {w.hasWorkPermit === 1 && (
+                              <span className="inline-flex items-center gap-1 text-xs text-emerald-600">
+                                <FileCheck className="h-3 w-3" />
+                                有工作許可
+                              </span>
+                            )}
+                            {w.hasHealthCheck === 1 && (
+                              <span className="inline-flex items-center gap-1 text-xs text-blue-600">
+                                <Stethoscope className="h-3 w-3" />
+                                健康檢查
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </CardContent>
+            </Card>
+          );
+        })()}
       </div>
     </ClientPortalLayout>
   );
