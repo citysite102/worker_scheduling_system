@@ -1,0 +1,80 @@
+{
+  "query": "SELECT id, email, name, role, onboardingCompleted FROM users ORDER BY id;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2iEKifVQ9gKtEas.9cbf5414b428 --database CMgr35KntT8tLtgpfJPejw --execute SELECT id, email, name, role, onboardingCompleted FROM users ORDER BY id;",
+  "rows": [
+    {
+      "id": "1",
+      "email": "citysite1025@gmail.com",
+      "name": "Samuel",
+      "role": "admin",
+      "onboardingCompleted": "0"
+    },
+    {
+      "id": "210033",
+      "email": "yu.hr523@gmail.com",
+      "name": "嶼",
+      "role": "user",
+      "onboardingCompleted": "0"
+    },
+    {
+      "id": "270061",
+      "email": "jacob.wang0419@gmail.com",
+      "name": "jacob 王",
+      "role": "admin",
+      "onboardingCompleted": "0"
+    },
+    {
+      "id": "360107",
+      "email": "lulu0127.yeh@gmail.com",
+      "name": "Lulu Yeh",
+      "role": "admin",
+      "onboardingCompleted": "0"
+    },
+    {
+      "id": "810028",
+      "email": "ethernettw@gmail.com",
+      "name": "tw ethernet",
+      "role": "user",
+      "onboardingCompleted": "0"
+    },
+    {
+      "id": "1141000",
+      "email": "garden.vc.tw@gmail.com",
+      "name": "Garden Venture Capital Co.,Ltd",
+      "role": "user",
+      "onboardingCompleted": "0"
+    },
+    {
+      "id": "2670001",
+      "email": "aberswang@gmail.com",
+      "name": "Abers Wang",
+      "role": "user",
+      "onboardingCompleted": "0"
+    },
+    {
+      "id": "6210143",
+      "email": "3224wrestle@gmail.com",
+      "name": "Jacob",
+      "role": "user",
+      "onboardingCompleted": "0"
+    },
+    {
+      "id": "7350058",
+      "email": "garden.vc.tw@gmail.com",
+      "name": "Garden Venture Capital Co.,Ltd",
+      "role": "client",
+      "onboardingCompleted": "0"
+    },
+    {
+      "id": "7500007",
+      "email": "garden.vc.hr@gmail.com",
+      "name": "smail",
+      "role": "client",
+      "onboardingCompleted": "0"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\temail\tname\trole\tonboardingCompleted\n1\tcitysite1025@gmail.com\tSamuel\tadmin\t0\n210033\tyu.hr523@gmail.com\t嶼\tuser\t0\n270061\tjacob.wang0419@gmail.com\tjacob 王\tadmin\t0\n360107\tlulu0127.yeh@gmail.com\tLulu Yeh\tadmin\t0\n810028\tethernettw@gmail.com\ttw ethernet\tuser\t0\n1141000\tgarden.vc.tw@gmail.com\tGarden Venture Capital Co.,Ltd\tuser\t0\n2670001\taberswang@gmail.com\tAbers Wang\tuser\t0\n6210143\t3224wrestle@gmail.com\tJacob\tuser\t0\n7350058\tgarden.vc.tw@gmail.com\tGarden Venture Capital Co.,Ltd\tclient\t0\n7500007\tgarden.vc.hr@gmail.com\tsmail\tclient\t0\n",
+  "stderr": "",
+  "execution_time_ms": 1572
+}

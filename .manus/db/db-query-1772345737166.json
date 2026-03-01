@@ -1,0 +1,9 @@
+{
+  "query": "\n-- 先刪除測試客戶相關的 assignments\nDELETE assignments FROM assignments\nINNER JOIN demands ON assignments.demandId = demands.id\nINNER JOIN clients ON demands.clientId = clients.id\nWHERE clients.name LIKE '%測試%' OR clients.name LIKE '%TEST%';\n\n-- 再刪除測試客戶相關的 demands\nDELETE demands FROM demands\nINNER JOIN clients ON demands.clientId = clients.id\nWHERE clients.name LIKE '%測試%' OR clients.name LIKE '%TEST%';\n\n-- 最後刪除測試客戶\nDELETE FROM clients WHERE name LIKE '%測試%' OR name LIKE '%TEST%';\n\n-- 刪除測試員工相關的 assignments\nDELETE assignments FROM assignments\nINNER JOIN workers ON assignments.workerId = workers.id\nWHERE workers.name LIKE '%測試%' OR workers.name LIKE '%TEST%';\n\n-- 刪除測試員工\nDELETE FROM workers WHERE name LIKE '%測試%' OR name LIKE '%TEST%';\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2iEKifVQ9gKtEas.9cbf5414b428 --database CMgr35KntT8tLtgpfJPejw --execute \n-- 先刪除測試客戶相關的 assignments\nDELETE assignments FROM assignments\nINNER JOIN demands ON assignments.demandId = demands.id\nINNER JOIN clients ON demands.clientId = clients.id\nWHERE clients.name LIKE '%測試%' OR clients.name LIKE '%TEST%';\n\n-- 再刪除測試客戶相關的 demands\nDELETE demands FROM demands\nINNER JOIN clients ON demands.clientId = clients.id\nWHERE clients.name LIKE '%測試%' OR clients.name LIKE '%TEST%';\n\n-- 最後刪除測試客戶\nDELETE FROM clients WHERE name LIKE '%測試%' OR name LIKE '%TEST%';\n\n-- 刪除測試員工相關的 assignments\nDELETE assignments FROM assignments\nINNER JOIN workers ON assignments.workerId = workers.id\nWHERE workers.name LIKE '%測試%' OR workers.name LIKE '%TEST%';\n\n-- 刪除測試員工\nDELETE FROM workers WHERE name LIKE '%測試%' OR name LIKE '%TEST%';\n",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 4704
+}
