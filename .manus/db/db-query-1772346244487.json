@@ -1,0 +1,29 @@
+{
+  "query": "\nSELECT '客戶' AS 資料類型, COUNT(*) AS 筆數 FROM clients\nUNION ALL\nSELECT '員工', COUNT(*) FROM workers\nUNION ALL\nSELECT '需求單', COUNT(*) FROM demands\nUNION ALL\nSELECT '指派記錄', COUNT(*) FROM assignments;\n\n-- 確認保留的客戶是正確的\nSELECT id, name, contactName, status, createdAt FROM clients;\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2iEKifVQ9gKtEas.9cbf5414b428 --database CMgr35KntT8tLtgpfJPejw --execute \nSELECT '客戶' AS 資料類型, COUNT(*) AS 筆數 FROM clients\nUNION ALL\nSELECT '員工', COUNT(*) FROM workers\nUNION ALL\nSELECT '需求單', COUNT(*) FROM demands\nUNION ALL\nSELECT '指派記錄', COUNT(*) FROM assignments;\n\n-- 確認保留的客戶是正確的\nSELECT id, name, contactName, status, createdAt FROM clients;\n",
+  "rows": [
+    {
+      "資料類型": "需求單",
+      "筆數": "0"
+    },
+    {
+      "資料類型": "客戶",
+      "筆數": "1"
+    },
+    {
+      "資料類型": "員工",
+      "筆數": "0"
+    },
+    {
+      "資料類型": "指派記錄",
+      "筆數": "0"
+    }
+  ],
+  "messages": [
+    "id\tname\tcontactName\tstatus\tcreatedAt",
+    "630001\t米窩\tNULL\tactive\t2026-02-26 07:31:14"
+  ],
+  "stdout": "資料類型\t筆數\n需求單\t0\n客戶\t1\n員工\t0\n指派記錄\t0\nid\tname\tcontactName\tstatus\tcreatedAt\n630001\t米窩\tNULL\tactive\t2026-02-26 07:31:14\n",
+  "stderr": "",
+  "execution_time_ms": 1700
+}

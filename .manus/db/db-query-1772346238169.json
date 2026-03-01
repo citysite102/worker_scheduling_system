@@ -1,0 +1,25 @@
+{
+  "query": "\n-- 步驟 1：刪除測試客戶相關的 assignments\nDELETE assignments FROM assignments\nINNER JOIN demands ON assignments.demandId = demands.id\nWHERE demands.clientId != 630001;\n\n-- 步驟 2：刪除測試客戶相關的 demands\nDELETE FROM demands WHERE clientId != 630001;\n\n-- 步驟 3：刪除所有測試客戶（保留 id=630001 的米窩）\nDELETE FROM clients WHERE id != 630001;\n\n-- 步驟 4：確認結果\nSELECT COUNT(*) AS remaining_clients FROM clients;\nSELECT COUNT(*) AS remaining_demands FROM demands;\nSELECT COUNT(*) AS remaining_assignments FROM assignments;\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2iEKifVQ9gKtEas.9cbf5414b428 --database CMgr35KntT8tLtgpfJPejw --execute \n-- 步驟 1：刪除測試客戶相關的 assignments\nDELETE assignments FROM assignments\nINNER JOIN demands ON assignments.demandId = demands.id\nWHERE demands.clientId != 630001;\n\n-- 步驟 2：刪除測試客戶相關的 demands\nDELETE FROM demands WHERE clientId != 630001;\n\n-- 步驟 3：刪除所有測試客戶（保留 id=630001 的米窩）\nDELETE FROM clients WHERE id != 630001;\n\n-- 步驟 4：確認結果\nSELECT COUNT(*) AS remaining_clients FROM clients;\nSELECT COUNT(*) AS remaining_demands FROM demands;\nSELECT COUNT(*) AS remaining_assignments FROM assignments;\n",
+  "rows": [
+    {
+      "remaining_clients": "1"
+    },
+    {
+      "remaining_clients": "remaining_demands"
+    },
+    {
+      "remaining_clients": "0"
+    },
+    {
+      "remaining_clients": "remaining_assignments"
+    },
+    {
+      "remaining_clients": "0"
+    }
+  ],
+  "messages": [],
+  "stdout": "remaining_clients\n1\nremaining_demands\n0\nremaining_assignments\n0\n",
+  "stderr": "",
+  "execution_time_ms": 2716
+}

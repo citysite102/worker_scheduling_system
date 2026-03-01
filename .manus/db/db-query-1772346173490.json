@@ -1,0 +1,274 @@
+{
+  "query": "\n-- 查看全部客戶，方便比對真實 vs 測試資料\nSELECT id, name, contactName, contactEmail, status, createdAt \nFROM clients \nORDER BY createdAt ASC;\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2iEKifVQ9gKtEas.9cbf5414b428 --database CMgr35KntT8tLtgpfJPejw --execute \n-- 查看全部客戶，方便比對真實 vs 測試資料\nSELECT id, name, contactName, contactEmail, status, createdAt \nFROM clients \nORDER BY createdAt ASC;\n",
+  "rows": [
+    {
+      "id": "630001",
+      "name": "米窩",
+      "contactName": "NULL",
+      "contactEmail": "NULL",
+      "status": "active",
+      "createdAt": "2026-02-26 07:31:14"
+    },
+    {
+      "id": "660080",
+      "name": "測試客戶公司-派工同步",
+      "contactName": "測試聯絡人",
+      "contactEmail": "NULL",
+      "status": "active",
+      "createdAt": "2026-03-01 06:15:44"
+    },
+    {
+      "id": "660081",
+      "name": "測試客戶公司-核心流程",
+      "contactName": "測試聯絡人",
+      "contactEmail": "NULL",
+      "status": "active",
+      "createdAt": "2026-03-01 06:15:44"
+    },
+    {
+      "id": "660082",
+      "name": "測試客戶-端到端",
+      "contactName": "測試聯絡人",
+      "contactEmail": "NULL",
+      "status": "active",
+      "createdAt": "2026-03-01 06:15:44"
+    },
+    {
+      "id": "660083",
+      "name": "時間邏輯測試客戶",
+      "contactName": "測試聯絡人",
+      "contactEmail": "NULL",
+      "status": "active",
+      "createdAt": "2026-03-01 06:15:44"
+    },
+    {
+      "id": "660088",
+      "name": "測試客戶公司名稱唯一性",
+      "contactName": "張三",
+      "contactEmail": "test@example.com",
+      "status": "active",
+      "createdAt": "2026-03-01 06:15:56"
+    },
+    {
+      "id": "660089",
+      "name": "測試公司A",
+      "contactName": "聯絡人A",
+      "contactEmail": "test@example.com",
+      "status": "active",
+      "createdAt": "2026-03-01 06:15:57"
+    },
+    {
+      "id": "660090",
+      "name": "衝突檢測測試客戶",
+      "contactName": "NULL",
+      "contactEmail": "NULL",
+      "status": "active",
+      "createdAt": "2026-03-01 06:15:57"
+    },
+    {
+      "id": "660091",
+      "name": "測試公司B",
+      "contactName": "聯絡人B",
+      "contactEmail": "test@example.com",
+      "status": "active",
+      "createdAt": "2026-03-01 06:15:58"
+    },
+    {
+      "id": "660092",
+      "name": "測試客戶ID作為Value",
+      "contactName": "張三",
+      "contactEmail": "test@example.com",
+      "status": "active",
+      "createdAt": "2026-03-01 06:15:58"
+    },
+    {
+      "id": "660093",
+      "name": "測試客戶-休息時間",
+      "contactName": "測試聯絡人",
+      "contactEmail": "NULL",
+      "status": "active",
+      "createdAt": "2026-03-01 06:15:58"
+    },
+    {
+      "id": "660099",
+      "name": "測試批次建立需求單公司",
+      "contactName": "NULL",
+      "contactEmail": "batch-test@example.com",
+      "status": "active",
+      "createdAt": "2026-03-01 06:16:11"
+    },
+    {
+      "id": "660100",
+      "name": "測試客戶公司-派工同步",
+      "contactName": "測試聯絡人",
+      "contactEmail": "NULL",
+      "status": "active",
+      "createdAt": "2026-03-01 06:16:26"
+    },
+    {
+      "id": "660101",
+      "name": "測試客戶-端到端",
+      "contactName": "測試聯絡人",
+      "contactEmail": "NULL",
+      "status": "active",
+      "createdAt": "2026-03-01 06:16:26"
+    },
+    {
+      "id": "660102",
+      "name": "時間邏輯測試客戶",
+      "contactName": "測試聯絡人",
+      "contactEmail": "NULL",
+      "status": "active",
+      "createdAt": "2026-03-01 06:16:26"
+    },
+    {
+      "id": "660103",
+      "name": "自動狀態測試客戶",
+      "contactName": "NULL",
+      "contactEmail": "NULL",
+      "status": "active",
+      "createdAt": "2026-03-01 06:16:26"
+    },
+    {
+      "id": "660108",
+      "name": "測試客戶公司名稱唯一性",
+      "contactName": "張三",
+      "contactEmail": "test@example.com",
+      "status": "active",
+      "createdAt": "2026-03-01 06:16:37"
+    },
+    {
+      "id": "660109",
+      "name": "測試公司A",
+      "contactName": "聯絡人A",
+      "contactEmail": "test@example.com",
+      "status": "active",
+      "createdAt": "2026-03-01 06:16:38"
+    },
+    {
+      "id": "660110",
+      "name": "測試公司B",
+      "contactName": "聯絡人B",
+      "contactEmail": "test@example.com",
+      "status": "active",
+      "createdAt": "2026-03-01 06:16:39"
+    },
+    {
+      "id": "660112",
+      "name": "測試客戶ID作為Value",
+      "contactName": "張三",
+      "contactEmail": "test@example.com",
+      "status": "active",
+      "createdAt": "2026-03-01 06:16:39"
+    },
+    {
+      "id": "660119",
+      "name": "測試批次建立需求單公司",
+      "contactName": "NULL",
+      "contactEmail": "batch-test@example.com",
+      "status": "active",
+      "createdAt": "2026-03-01 06:16:53"
+    },
+    {
+      "id": "660120",
+      "name": "測試客戶公司名稱唯一性",
+      "contactName": "張三",
+      "contactEmail": "test@example.com",
+      "status": "active",
+      "createdAt": "2026-03-01 06:17:08"
+    },
+    {
+      "id": "660123",
+      "name": "測試公司A",
+      "contactName": "聯絡人A",
+      "contactEmail": "test@example.com",
+      "status": "active",
+      "createdAt": "2026-03-01 06:17:09"
+    },
+    {
+      "id": "660124",
+      "name": "測試公司B",
+      "contactName": "聯絡人B",
+      "contactEmail": "test@example.com",
+      "status": "active",
+      "createdAt": "2026-03-01 06:17:09"
+    },
+    {
+      "id": "660125",
+      "name": "測試客戶ID作為Value",
+      "contactName": "張三",
+      "contactEmail": "test@example.com",
+      "status": "active",
+      "createdAt": "2026-03-01 06:17:10"
+    },
+    {
+      "id": "660126",
+      "name": "測試客戶公司名稱唯一性",
+      "contactName": "張三",
+      "contactEmail": "test@example.com",
+      "status": "active",
+      "createdAt": "2026-03-01 06:17:27"
+    },
+    {
+      "id": "660127",
+      "name": "測試公司A",
+      "contactName": "聯絡人A",
+      "contactEmail": "test@example.com",
+      "status": "active",
+      "createdAt": "2026-03-01 06:17:28"
+    },
+    {
+      "id": "660128",
+      "name": "測試公司B",
+      "contactName": "聯絡人B",
+      "contactEmail": "test@example.com",
+      "status": "active",
+      "createdAt": "2026-03-01 06:17:28"
+    },
+    {
+      "id": "660129",
+      "name": "測試客戶ID作為Value",
+      "contactName": "張三",
+      "contactEmail": "test@example.com",
+      "status": "active",
+      "createdAt": "2026-03-01 06:17:29"
+    },
+    {
+      "id": "660130",
+      "name": "測試客戶公司名稱唯一性",
+      "contactName": "張三",
+      "contactEmail": "test@example.com",
+      "status": "active",
+      "createdAt": "2026-03-01 06:17:37"
+    },
+    {
+      "id": "660131",
+      "name": "測試公司A",
+      "contactName": "聯絡人A",
+      "contactEmail": "test@example.com",
+      "status": "active",
+      "createdAt": "2026-03-01 06:17:38"
+    },
+    {
+      "id": "660132",
+      "name": "測試公司B",
+      "contactName": "聯絡人B",
+      "contactEmail": "test@example.com",
+      "status": "active",
+      "createdAt": "2026-03-01 06:17:38"
+    },
+    {
+      "id": "660133",
+      "name": "測試客戶ID作為Value",
+      "contactName": "張三",
+      "contactEmail": "test@example.com",
+      "status": "active",
+      "createdAt": "2026-03-01 06:17:39"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\tcontactName\tcontactEmail\tstatus\tcreatedAt\n630001\t米窩\tNULL\tNULL\tactive\t2026-02-26 07:31:14\n660080\t測試客戶公司-派工同步\t測試聯絡人\tNULL\tactive\t2026-03-01 06:15:44\n660081\t測試客戶公司-核心流程\t測試聯絡人\tNULL\tactive\t2026-03-01 06:15:44\n660082\t測試客戶-端到端\t測試聯絡人\tNULL\tactive\t2026-03-01 06:15:44\n660083\t時間邏輯測試客戶\t測試聯絡人\tNULL\tactive\t2026-03-01 06:15:44\n660088\t測試客戶公司名稱唯一性\t張三\ttest@example.com\tactive\t2026-03-01 06:15:56\n660089\t測試公司A\t聯絡人A\ttest@example.com\tactive\t2026-03-01 06:15:57\n660090\t衝突檢測測試客戶\tNULL\tNULL\tactive\t2026-03-01 06:15:57\n660091\t測試公司B\t聯絡人B\ttest@example.com\tactive\t2026-03-01 06:15:58\n660092\t測試客戶ID作為Value\t張三\ttest@example.com\tactive\t2026-03-01 06:15:58\n660093\t測試客戶-休息時間\t測試聯絡人\tNULL\tactive\t2026-03-01 06:15:58\n660099\t測試批次建立需求單公司\tNULL\tbatch-test@example.com\tactive\t2026-03-01 06:16:11\n660100\t測試客戶公司-派工同步\t測試聯絡人\tNULL\tactive\t2026-03-01 06:16:26\n660101\t測試客戶-端到端\t測試聯絡人\tNULL\tactive\t2026-03-01 06:16:26\n660102\t時間邏輯測試客戶\t測試聯絡人\tNULL\tactive\t2026-03-01 06:16:26\n660103\t自動狀態測試客戶\tNULL\tNULL\tactive\t2026-03-01 06:16:26\n660108\t測試客戶公司名稱唯一性\t張三\ttest@example.com\tactive\t2026-03-01 06:16:37\n660109\t測試公司A\t聯絡人A\ttest@example.com\tactive\t2026-03-01 06:16:38\n660110\t測試公司B\t聯絡人B\ttest@example.com\tactive\t2026-03-01 06:16:39\n660112\t測試客戶ID作為Value\t張三\ttest@example.com\tactive\t2026-03-01 06:16:39\n660119\t測試批次建立需求單公司\tNULL\tbatch-test@example.com\tactive\t2026-03-01 06:16:53\n660120\t測試客戶公司名稱唯一性\t張三\ttest@example.com\tactive\t2026-03-01 06:17:08\n660123\t測試公司A\t聯絡人A\ttest@example.com\tactive\t2026-03-01 06:17:09\n660124\t測試公司B\t聯絡人B\ttest@example.com\tactive\t2026-03-01 06:17:09\n660125\t測試客戶ID作為Value\t張三\ttest@example.com\tactive\t2026-03-01 06:17:10\n660126\t測試客戶公司名稱唯一性\t張三\ttest@example.com\tactive\t2026-03-01 06:17:27\n660127\t測試公司A\t聯絡人A\ttest@example.com\tactive\t2026-03-01 06:17:28\n660128\t測試公司B\t聯絡人B\ttest@example.com\tactive\t2026-03-01 06:17:28\n660129\t測試客戶ID作為Value\t張三\ttest@example.com\tactive\t2026-03-01 06:17:29\n660130\t測試客戶公司名稱唯一性\t張三\ttest@example.com\tactive\t2026-03-01 06:17:37\n660131\t測試公司A\t聯絡人A\ttest@example.com\tactive\t2026-03-01 06:17:38\n660132\t測試公司B\t聯絡人B\ttest@example.com\tactive\t2026-03-01 06:17:38\n660133\t測試客戶ID作為Value\t張三\ttest@example.com\tactive\t2026-03-01 06:17:39\n",
+  "stderr": "",
+  "execution_time_ms": 1559
+}
