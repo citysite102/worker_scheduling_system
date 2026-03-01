@@ -43,3 +43,11 @@
 - [x] 在頁面頂部加入測試環境提示 banner
 - [x] 指派員工時顯示「許可已過期」員工（加警標籤，管理員端與客戶端同步）
 - [x] 客戶 Portal 補上已指派員工資訊與簡易員工資料查看
+
+## 使用者需求（2026/03/01 - GitHub 同步 + Client Onboarding）
+
+- [x] 同步最新程式碼到 GitHub dev branch
+- [x] Client 端 Onboarding：server 端加入 onboardingCompleted 欄位與 API
+- [x] Client 端 Onboarding：歡迎頁面（首次登入偵測）
+- [x] Client 端 Onboarding：步驟式引導流程（功能介紹、操作指引、完成）
+- [x] Client 端 Onboarding：完成後標記，不再顯示引導

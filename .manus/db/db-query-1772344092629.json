@@ -1,0 +1,9 @@
+{
+  "query": "ALTER TABLE users ADD COLUMN onboardingCompleted INT NOT NULL DEFAULT 0 COMMENT '0=未完成 Onboarding, 1=已完成';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2iEKifVQ9gKtEas.df925e926073 --database LzctYumsgUPHufBWpYPJuY --execute ALTER TABLE users ADD COLUMN onboardingCompleted INT NOT NULL DEFAULT 0 COMMENT '0=未完成 Onboarding, 1=已完成';",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 2023
+}

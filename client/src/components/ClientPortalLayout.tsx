@@ -5,16 +5,16 @@ import { Button } from "@/components/ui/button";
 import { 
   LayoutDashboard, 
   FileText, 
-  Calendar, 
-  Building2, 
   LogOut 
 } from "lucide-react";
 import { trpc } from "@/lib/trpc";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { ClientOnboarding } from "@/components/ClientOnboarding";
 
 export function ClientPortalLayout({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
   const [location, setLocation] = useLocation();
+  const [showOnboarding, setShowOnboarding] = useState(false);
   const logoutMutation = trpc.auth.logout.useMutation();
 
   // 查詢客戶資料
@@ -22,6 +22,19 @@ export function ClientPortalLayout({ children }: { children: React.ReactNode }) 
     { id: user?.clientId || 0 },
     { enabled: !!user?.clientId }
   );
+
+  // 查詢 Onboarding 狀態
+  const { data: onboardingData } = trpc.auth.onboardingStatus.useQuery(
+    undefined,
+    { enabled: !!user && user.role === "client" }
+  );
+
+  // 當 onboarding 狀態載入後，判斷是否顯示引導
+  useEffect(() => {
+    if (onboardingData && !onboardingData.onboardingCompleted) {
+      setShowOnboarding(true);
+    }
+  }, [onboardingData]);
 
   // 如果未登入，重新導向到登入頁面
   useEffect(() => {
@@ -74,6 +87,14 @@ export function ClientPortalLayout({ children }: { children: React.ReactNode }) 
 
   return (
     <div className="flex min-h-screen bg-background">
+      {/* Onboarding Modal */}
+      {showOnboarding && (
+        <ClientOnboarding
+          clientName={clientData?.name || ""}
+          userName={user.name || ""}
+          onComplete={() => setShowOnboarding(false)}
+        />
+      )}
       {/* Sidebar */}
       <aside className="w-64 border-r bg-card">
         <div className="flex h-16 items-center border-b px-6">
