@@ -282,6 +282,27 @@ export const appRouter = router({
           .limit(1);
         return { onboardingCompleted: userRow?.onboardingCompleted === 1 };
       }),
+
+    /**
+     * 管理員專用：重置指定用戶的 Onboarding 狀態
+     */
+    resetOnboarding: protectedProcedure
+      .input(z.object({ userId: z.number().int().positive() }))
+      .mutation(async ({ ctx, input }) => {
+        if (!ctx.user) {
+          throw new TRPCError({ code: "UNAUTHORIZED", message: "請先登入" });
+        }
+        if (ctx.user.role !== "admin") {
+          throw new TRPCError({ code: "FORBIDDEN", message: "僅管理員可執行此操作" });
+        }
+        const dbInstance = await getDb();
+        if (!dbInstance) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "資料庫連線失敗" });
+        await dbInstance
+          .update(users)
+          .set({ onboardingCompleted: 0 })
+          .where(eq(users.id, input.userId));
+        return { success: true };
+      }),
   }),
 
   // ============ Workers ============

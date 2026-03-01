@@ -52,3 +52,4 @@
 - [x] Client 端 Onboarding：步驟式引導流程（功能介紹、操作指引、完成）
 - [x] Client 端 Onboarding：完成後標記，不再顯示引導
 - [x] Onboarding 完成頁加入「立即建立第一張需求單」 CTA 按鈕，點擊後關閉 Onboarding 並跳轉至需求單建立頁面
+- [x] 管理員端客戶帳號管理頁面加入「重置引導」按鈕，重置指定客戶用戶的 Onboarding 狀態
