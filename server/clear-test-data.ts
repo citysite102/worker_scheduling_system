@@ -15,6 +15,30 @@ import { getDb } from "./db";
 import { sql } from "drizzle-orm";
 
 async function clearTestData() {
+  // ============================================================
+  // 環境守衛（Environment Guard）
+  // 此腳本會執行全表清空，必須确認在測試環境中執行
+  // ============================================================
+  if (process.env.NODE_ENV === 'production') {
+    throw new Error(
+      '[CLEAR GUARD] ❌ 禁止在 production 環境執行清除測試資料。\n' +
+      '此腳本會清空資料表，在正式環境執行將造成所有資料永久消失。'
+    );
+  }
+
+  if (!process.env.TEST_DATABASE_URL) {
+    throw new Error(
+      '[CLEAR GUARD] ❌ 未設定 TEST_DATABASE_URL 環境變數。\n' +
+      '清除腳本必須使用 TEST_DATABASE_URL 連線到測試專用資料庫，\n' +
+      '請複製 .env.test.example 為 .env.test 並設定 TEST_DATABASE_URL。'
+    );
+  }
+
+  // 強制使用 TEST_DATABASE_URL，覆寫現有的 DATABASE_URL
+  process.env.DATABASE_URL = process.env.TEST_DATABASE_URL;
+  console.log('[CLEAR GUARD] ✅ 環境檢查通過，使用測試資料庫連線');
+  console.log(`[CLEAR GUARD] 目標資料庫：${process.env.TEST_DATABASE_URL.replace(/:[^:@]+@/, ':****@')}`);
+
   console.log("開始清除測試資料...");
   
   const db = await getDb();
