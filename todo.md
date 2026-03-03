@@ -74,3 +74,8 @@
 - [x] 確認 demands API 是否回傳 createdBy 與對應的管理員姓名
 - [x] 擴充 API query：JOIN users 取得 createdByName
 - [x] 需求列表 UI：代建需求單顯示「由 [管理員姓名] 代建」標注
+
+## Bug Fix: /demands 頁面「需求單不存在」錯誤（2026/03/03）
+
+- [x] 找出 /demands 列表頁觸發「需求單不存在」的 API call
+- [x] 修正錯誤

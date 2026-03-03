@@ -107,7 +107,10 @@ export default function DemandDetail() {
       toast.error(`刪除失敗：${error.message}`);
     },
   });
-  const { data: demand, isLoading } = trpc.demands.getById.useQuery({ id: demandId });
+  const { data: demand, isLoading } = trpc.demands.getById.useQuery(
+    { id: demandId },
+    { enabled: !!demandId && demandId > 0 }
+  );
 
   // 將 UTC 日期轉換為台灣時區的日期（用於顯示和 API 呼叫）
   const localDate = useMemo(() => {
