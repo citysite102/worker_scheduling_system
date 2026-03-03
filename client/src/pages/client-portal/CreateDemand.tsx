@@ -61,10 +61,13 @@ export function CreateDemand() {
     { enabled: isStaffRole }
   );
 
+  // 建立後的跳轉目標：Admin/User 跳到後台列表，Client 跳到客戶入口
+  const successRedirect = isStaffRole ? "/demands" : "/client-portal/demands";
+
   const createMutation = trpc.demands.create.useMutation({
     onSuccess: () => {
-      toast.success("需求單已成功提交，等待內部審核。");
-      setLocation("/client-portal/demands");
+      toast.success("需求單已成功建立！");
+      setLocation(successRedirect);
     },
     onError: (error) => {
       toast.error(error.message || "提交需求單時發生錯誤，請稍後再試。");
@@ -79,7 +82,7 @@ export function CreateDemand() {
       } else {
         toast.success(`已成功建立 ${result.succeeded} 筆需求單！`);
       }
-      setLocation("/client-portal/demands");
+      setLocation(successRedirect);
     },
     onError: (error) => {
       toast.error(error.message || "批次建立需求單時發生錯誤，請稍後再試。");

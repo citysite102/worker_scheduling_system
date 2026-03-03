@@ -86,3 +86,8 @@
 - [x] 後端修正：user 角色可建立需求單（需有 clientId）
 - [x] 前端修正：CreateDemand 頁面讓 user 角色正常顯示客戶選擇器
 - [x] 修正儀表板 404 問題
+
+## Fix: 建立需求單後跳轉邏輯優化（2026/03/03）
+
+- [x] Admin/User 建立需求單後跳轉到 /demands（後台列表）
+- [x] Client 角色維持跳轉到 /client-portal/demands
