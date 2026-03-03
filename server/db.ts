@@ -89,7 +89,8 @@ export async function getUserByOpenId(openId: string) {
   return result.length > 0 ? result[0] : undefined;
 }
 
-import { workers, clients, availability, demands, assignments, adminInvites } from "../drizzle/schema";
+import { workers, clients, availability, demands, assignments, adminInvites, users as usersTable } from "../drizzle/schema";
+import { alias } from "drizzle-orm/mysql-core";
 
 // ============ Workers ============
 export async function getAllWorkers(filters?: {
@@ -356,6 +357,9 @@ export async function getAllDemands(statusFilter?: string, dateFilter?: Date, cl
   const db = await getDb();
   if (!db) return [];
 
+  // 建立 createdByUser alias，用於 JOIN 建立者資訊
+  const createdByUser = alias(usersTable, "createdByUser");
+
   // 使用 JOIN 查詢一次取得所有需要的資料，避免 N+1 問題
   let query = db
     .select({
@@ -374,6 +378,7 @@ export async function getAllDemands(statusFilter?: string, dateFilter?: Date, cl
       selectedOptions: demands.selectedOptions,
       createdAt: demands.createdAt,
       updatedAt: demands.updatedAt,
+      createdBy: demands.createdBy,
       
       // client 欄位（直接 JOIN）
       clientName: clients.name,
@@ -385,6 +390,10 @@ export async function getAllDemands(statusFilter?: string, dateFilter?: Date, cl
       clientAddress: clients.address,
       clientBillingType: clients.billingType,
       clientClientCode: clients.clientCode,
+
+      // 建立者資訊（LEFT JOIN users）
+      createdByName: createdByUser.name,
+      createdByRole: createdByUser.role,
       
       // 已指派人數（使用子查詢）
       assignedCount: sql<number>`(
@@ -396,6 +405,7 @@ export async function getAllDemands(statusFilter?: string, dateFilter?: Date, cl
     })
     .from(demands)
     .leftJoin(clients, eq(demands.clientId, clients.id))
+    .leftJoin(createdByUser, eq(demands.createdBy, createdByUser.id))
     .orderBy(desc(demands.createdAt));
   
   const conditions = [];
@@ -438,6 +448,9 @@ export async function getAllDemands(statusFilter?: string, dateFilter?: Date, cl
     selectedOptions: row.selectedOptions,
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
+    createdBy: row.createdBy,
+    createdByName: row.createdByName,
+    createdByRole: row.createdByRole,
     client: {
       id: row.clientId,
       name: row.clientName,

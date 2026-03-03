@@ -68,3 +68,9 @@
 - [x] 修正 demands.createBatch API：Admin 可傳入 clientId 代替客戶批次建立
 - [x] 更新前端建立需求單頁面：Admin 看到客戶選擇器
 - [x] 更新相關測試
+
+## Feature: Admin 需求列表「代建者」標注（2026/03/03）
+
+- [x] 確認 demands API 是否回傳 createdBy 與對應的管理員姓名
+- [x] 擴充 API query：JOIN users 取得 createdByName
+- [x] 需求列表 UI：代建需求單顯示「由 [管理員姓名] 代建」標注

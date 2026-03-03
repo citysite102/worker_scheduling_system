@@ -11,7 +11,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Check, ChevronsUpDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, Calendar, Clock, MapPin, AlertTriangle, Loader2, ArrowRight, Copy, Edit, Trash2 } from "lucide-react";
+import { Plus, Calendar, Clock, MapPin, AlertTriangle, Loader2, ArrowRight, Copy, Edit, Trash2, UserCog } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { DateMultiPicker } from "@/components/DateMultiPicker";
@@ -693,6 +693,12 @@ export default function Demands() {
                         {demand.createdAt && (
                           <span className="flex items-center gap-1 text-[10px] text-muted-foreground/70">
                             建立於 {new Date(demand.createdAt).toLocaleString("zh-TW", { month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit" })}
+                          </span>
+                        )}
+                        {demand.createdByRole === "admin" && demand.createdByName && (
+                          <span className="flex items-center gap-1 text-[10px] font-medium text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 rounded px-1.5 py-0.5">
+                            <UserCog className="h-3 w-3" />
+                            由 {demand.createdByName} 代建
                           </span>
                         )}
                       </div>
