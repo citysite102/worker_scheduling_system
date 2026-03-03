@@ -97,3 +97,8 @@
 - [x] 掃描 routers.ts 所有 admin-only 限制
 - [x] 批次修正：clients、workers、demandTypes、schedules 等 API 允許 user 角色操作
 - [x] 修正 db.ts createClient 型別缺少 logoUrl 導致建立客戶失敗的 bug
+
+## Bug Fix: 建立客戶 SQL 插入失敗（2026/03/03）
+
+- [x] 分析 createClient SQL 錯誤：contactEmail 被傳入 default 而非 null
+- [x] 修正 Clients.tsx billingType 改為受控 state，解決 shadcn Select 不支援 name 屬性的問題

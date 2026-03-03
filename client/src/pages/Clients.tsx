@@ -20,6 +20,7 @@ export default function Clients() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingClient, setEditingClient] = useState<any>(null);
   const [logoUrl, setLogoUrl] = useState<string>("");
+  const [billingType, setBillingType] = useState<"hourly" | "fixed" | "custom">("hourly");
 
   const { data: clients, isLoading, refetch } = trpc.clients.list.useQuery({
     search: searchTerm,
@@ -59,7 +60,7 @@ export default function Clients() {
       contactEmail: (formData.get("contactEmail") as string) || undefined,
       address: (formData.get("address") as string) || undefined,
       logoUrl: logoUrl || undefined,
-      billingType: (formData.get("billingType") as "hourly" | "fixed" | "custom") || undefined,
+      billingType: billingType,
       note: (formData.get("note") as string) || undefined,
     };
 
@@ -98,7 +99,7 @@ export default function Clients() {
         </div>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
-            <Button onClick={() => setEditingClient(null)} size="sm">
+            <Button onClick={() => { setEditingClient(null); setBillingType("hourly"); }} size="sm">
               <Plus className="mr-2 h-4 w-4" />
               新增客戶
             </Button>
@@ -182,7 +183,10 @@ export default function Clients() {
                 </div>
                 <div className="space-y-2">
               <Label htmlFor="billingType">計費方式</Label>
-                  <Select name="billingType" defaultValue={editingClient?.billingType || "hourly"}>
+                  <Select
+                    value={billingType}
+                    onValueChange={(v) => setBillingType(v as "hourly" | "fixed" | "custom")}
+                  >
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
@@ -314,6 +318,7 @@ export default function Clients() {
                       onClick={(e) => {
                         e.stopPropagation();
                         setEditingClient(client);
+                        setBillingType(client.billingType || "hourly");
                         setIsDialogOpen(true);
                       }}
                     >

@@ -1,0 +1,9 @@
+{
+  "query": "INSERT INTO users (openId, name, email, loginMethod, role, clientId, position, phone, password, mustChangePassword, onboardingCompleted, createdAt, updatedAt, lastSignedIn)\nVALUES (\n  'local_samuel_hahow_in',\n  'Samuel',\n  'samuel@hahow.in',\n  'password',\n  'user',\n  NULL,\n  NULL,\n  NULL,\n  '$2b$10$NdicCO6PpYJi9/sqRo1Cn.KJ0AYSSqr6wlYdSwHydWA81g2uSPP0C',\n  1,\n  0,\n  NOW(),\n  NOW(),\n  NOW()\n);",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2iEKifVQ9gKtEas.df925e926073 --database LzctYumsgUPHufBWpYPJuY --execute INSERT INTO users (openId, name, email, loginMethod, role, clientId, position, phone, password, mustChangePassword, onboardingCompleted, createdAt, updatedAt, lastSignedIn)\nVALUES (\n  'local_samuel_hahow_in',\n  'Samuel',\n  'samuel@hahow.in',\n  'password',\n  'user',\n  NULL,\n  NULL,\n  NULL,\n  '$2b$10$NdicCO6PpYJi9/sqRo1Cn.KJ0AYSSqr6wlYdSwHydWA81g2uSPP0C',\n  1,\n  0,\n  NOW(),\n  NOW(),\n  NOW()\n);",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 1623
+}

@@ -1,0 +1,19 @@
+{
+  "query": "SELECT id, name, email, role, loginMethod, mustChangePassword, createdAt FROM users WHERE email = 'samuel@hahow.in';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2iEKifVQ9gKtEas.df925e926073 --database LzctYumsgUPHufBWpYPJuY --execute SELECT id, name, email, role, loginMethod, mustChangePassword, createdAt FROM users WHERE email = 'samuel@hahow.in';",
+  "rows": [
+    {
+      "id": "720008",
+      "name": "Samuel",
+      "email": "samuel@hahow.in",
+      "role": "user",
+      "loginMethod": "password",
+      "mustChangePassword": "1",
+      "createdAt": "2026-03-03 14:20:56"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\temail\trole\tloginMethod\tmustChangePassword\tcreatedAt\n720008\tSamuel\tsamuel@hahow.in\tuser\tpassword\t1\t2026-03-03 14:20:56\n",
+  "stderr": "",
+  "execution_time_ms": 1537
+}
