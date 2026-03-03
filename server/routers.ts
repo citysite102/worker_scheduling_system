@@ -559,6 +559,27 @@ export const appRouter = router({
         return { success: true };
       }),
 
+    delete: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ ctx, input }) => {
+        if (ctx.user.role !== "admin" && ctx.user.role !== "user") {
+          throw new TRPCError({ code: "FORBIDDEN", message: "權限不足" });
+        }
+        // 檢查是否有進行中或未完成的指派記錄
+        const activeAssignments = await db.getAssignmentsByWorker(input.id);
+        const blockedCount = activeAssignments.filter(
+          (a) => a.status === "assigned"
+        ).length;
+        if (blockedCount > 0) {
+          throw new TRPCError({
+            code: "CONFLICT",
+            message: `此員工有 ${blockedCount} 筆進行中的指派，無法直接刪除。請先處理完成所有指派。`,
+          });
+        }
+        await db.deleteWorker(input.id);
+        return { success: true };
+      }),
+
     // 員工詳情：包含基本資料、歷史指派、累計工時、排班紀錄
     detail: publicProcedure
       .input(z.object({ id: z.number() }))

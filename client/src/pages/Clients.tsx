@@ -373,36 +373,35 @@ export default function Clients() {
         </CardContent>
       </Card>
     </div>
-
-      {/* 刪除確認對話框 */}
-      <AlertDialog open={!!deletingClient} onOpenChange={(open) => { if (!open) setDeletingClient(null); }}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>確認刪除客戶</AlertDialogTitle>
-            <AlertDialogDescription>
-              您確定要刪除客戶「<strong>{deletingClient?.name}</strong>」嗎？
-              <br />
-              此操作無法復原。若該客戶有關聯的需求單，系統將阻止刪除。
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={deleteMutation.isPending}>取消</AlertDialogCancel>
-            <AlertDialogAction
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              disabled={deleteMutation.isPending}
-              onClick={() => {
-                if (deletingClient) {
-                  deleteMutation.mutate({ id: deletingClient.id });
-                }
-              }}
-            >
-              {deleteMutation.isPending ? (
-                <><Loader2 className="mr-2 h-4 w-4 animate-spin" />刪除中...</>
-              ) : "確認刪除"}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+    {/* 刪除確認對話框 */}
+    <AlertDialog open={!!deletingClient} onOpenChange={(open) => { if (!open) setDeletingClient(null); }}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>確認刪除客戶</AlertDialogTitle>
+          <AlertDialogDescription>
+            您確定要刪除客戶「<strong>{deletingClient?.name}</strong>」嗎？
+            <br />
+            此操作無法復原。若該客戶有關聯的需求單，系統將阻止刪除。
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel disabled={deleteMutation.isPending}>取消</AlertDialogCancel>
+          <AlertDialogAction
+            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            disabled={deleteMutation.isPending}
+            onClick={() => {
+              if (deletingClient) {
+                deleteMutation.mutate({ id: deletingClient.id });
+              }
+            }}
+          >
+            {deleteMutation.isPending ? (
+              <><Loader2 className="mr-2 h-4 w-4 animate-spin" />刪除中...</>
+            ) : "確認刪除"}
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
     </>
   );
 }
