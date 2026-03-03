@@ -261,7 +261,19 @@ export async function createClient(data: { name: string; contactName?: string; c
   const clientCode = `CLI-${year}${month}${day}-${sequence}`;
   
   // 插入資料（包含 clientCode）
-  await db.insert(clients).values({ ...data, clientCode });
+  // 注意：Drizzle ORM 對 undefined 欄位會產生 SQL `default` 關鍵字，
+  // 但 optional 欄位在 schema 中沒有 default 值，必須明確傳入 null
+  await db.insert(clients).values({
+    clientCode,
+    name: data.name,
+    contactName: data.contactName ?? null,
+    contactEmail: data.contactEmail ?? null,
+    contactPhone: data.contactPhone ?? null,
+    address: data.address ?? null,
+    logoUrl: data.logoUrl ?? null,
+    billingType: data.billingType ?? "hourly",
+    note: data.note ?? null,
+  });
   
   // 返回新建立的記錄
   const [newClient] = await db.select().from(clients).orderBy(desc(clients.id)).limit(1);
