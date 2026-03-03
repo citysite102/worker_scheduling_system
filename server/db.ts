@@ -238,7 +238,7 @@ export async function getClientByName(name: string) {
   return result[0];
 }
 
-export async function createClient(data: { name: string; contactName?: string; contactEmail?: string; contactPhone?: string; address?: string; billingType?: "hourly" | "fixed" | "custom"; note?: string }) {
+export async function createClient(data: { name: string; contactName?: string; contactEmail?: string; contactPhone?: string; address?: string; logoUrl?: string; billingType?: "hourly" | "fixed" | "custom"; note?: string }) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   

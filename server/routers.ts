@@ -292,8 +292,8 @@ export const appRouter = router({
         if (!ctx.user) {
           throw new TRPCError({ code: "UNAUTHORIZED", message: "請先登入" });
         }
-        if (ctx.user.role !== "admin") {
-          throw new TRPCError({ code: "FORBIDDEN", message: "僅管理員可執行此操作" });
+        if (ctx.user.role !== "admin" && ctx.user.role !== "user") {
+          throw new TRPCError({ code: "FORBIDDEN", message: "僅內部人員可執行此操作" });
         }
         const dbInstance = await getDb();
         if (!dbInstance) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "資料庫連線失敗" });
@@ -1309,8 +1309,8 @@ export const appRouter = router({
       .input(z.object({ id: z.number() }))
       .mutation(async ({ input, ctx }) => {
         // 檢查是否為管理員
-        if (ctx.user.role !== 'admin') {
-          throw new TRPCError({ code: "FORBIDDEN", message: "只有管理員可以審核需求單" });
+             if (ctx.user.role !== 'admin' && ctx.user.role !== 'user') {
+          throw new TRPCError({ code: "FORBIDDEN", message: "只有內部人員可以審核需求單" });
         }
         
         const demand = await db.getDemandById(input.id);
@@ -1321,7 +1321,6 @@ export const appRouter = router({
           throw new TRPCError({ code: "BAD_REQUEST", message: "只有待審核的需求單才可以審核" });
         }
         
-        // 將需求單狀態設為 confirmed
         await db.updateDemand(input.id, { status: "confirmed" });
         return { success: true };
       }),
@@ -1334,8 +1333,8 @@ export const appRouter = router({
       }))
       .mutation(async ({ input, ctx }) => {
         // 檢查是否為管理員
-        if (ctx.user.role !== 'admin') {
-          throw new TRPCError({ code: "FORBIDDEN", message: "只有管理員可以審核需求單" });
+        if (ctx.user.role !== 'admin' && ctx.user.role !== 'user') {
+          throw new TRPCError({ code: "FORBIDDEN", message: "只有內部人員可以審核需求單" });
         }
         
         const demand = await db.getDemandById(input.id);
@@ -1362,8 +1361,8 @@ export const appRouter = router({
       }))
       .mutation(async ({ input, ctx }) => {
         // 檢查是否為管理員
-        if (ctx.user.role !== 'admin') {
-          throw new TRPCError({ code: "FORBIDDEN", message: "只有管理員可以審核需求單" });
+        if (ctx.user.role !== 'admin' && ctx.user.role !== 'user') {
+          throw new TRPCError({ code: "FORBIDDEN", message: "只有內部人員可以審核需求單" });
         }
         
         const results = {
@@ -1403,8 +1402,8 @@ export const appRouter = router({
       }))
       .mutation(async ({ input, ctx }) => {
         // 檢查是否為管理員
-        if (ctx.user.role !== 'admin') {
-          throw new TRPCError({ code: "FORBIDDEN", message: "只有管理員可以審核需求單" });
+        if (ctx.user.role !== 'admin' && ctx.user.role !== 'user') {
+          throw new TRPCError({ code: "FORBIDDEN", message: "只有內部人員可以審核需求單" });
         }
         
         const results = {

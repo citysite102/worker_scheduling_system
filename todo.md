@@ -91,3 +91,9 @@
 
 - [x] Admin/User 建立需求單後跳轉到 /demands（後台列表）
 - [x] Client 角色維持跳轉到 /client-portal/demands
+
+## Fix: User 角色與 Admin 相同權限（2026/03/03）
+
+- [x] 掃描 routers.ts 所有 admin-only 限制
+- [x] 批次修正：clients、workers、demandTypes、schedules 等 API 允許 user 角色操作
+- [x] 修正 db.ts createClient 型別缺少 logoUrl 導致建立客戶失敗的 bug
