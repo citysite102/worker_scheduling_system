@@ -1,0 +1,55 @@
+{
+  "query": "SELECT clientCode, name, createdAt FROM clients WHERE clientCode LIKE 'CLI-20260303-%' ORDER BY clientCode;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2iEKifVQ9gKtEas.df925e926073 --database LzctYumsgUPHufBWpYPJuY --execute SELECT clientCode, name, createdAt FROM clients WHERE clientCode LIKE 'CLI-20260303-%' ORDER BY clientCode;",
+  "rows": [
+    {
+      "clientCode": "CLI-20260303-001",
+      "name": "長誠2",
+      "createdAt": "2026-03-03 08:14:42"
+    },
+    {
+      "clientCode": "CLI-20260303-002",
+      "name": "長誠3",
+      "createdAt": "2026-03-03 08:14:51"
+    },
+    {
+      "clientCode": "CLI-20260303-003",
+      "name": "測試客戶公司-派工同步",
+      "createdAt": "2026-03-03 09:56:19"
+    },
+    {
+      "clientCode": "CLI-20260303-005",
+      "name": "測試客戶ID作為Value",
+      "createdAt": "2026-03-03 09:56:27"
+    },
+    {
+      "clientCode": "CLI-20260303-006",
+      "name": "測試客戶公司-派工同步",
+      "createdAt": "2026-03-03 09:58:38"
+    },
+    {
+      "clientCode": "CLI-20260303-007",
+      "name": "測試客戶-休息時間",
+      "createdAt": "2026-03-03 09:56:29"
+    },
+    {
+      "clientCode": "CLI-20260303-008",
+      "name": "測試批次建立需求單公司",
+      "createdAt": "2026-03-03 09:58:46"
+    },
+    {
+      "clientCode": "CLI-20260303-009",
+      "name": "測試批次建立需求單公司",
+      "createdAt": "2026-03-03 09:59:19"
+    },
+    {
+      "clientCode": "CLI-20260303-010",
+      "name": "自動結案測試客戶",
+      "createdAt": "2026-03-03 09:59:24"
+    }
+  ],
+  "messages": [],
+  "stdout": "clientCode\tname\tcreatedAt\nCLI-20260303-001\t長誠2\t2026-03-03 08:14:42\nCLI-20260303-002\t長誠3\t2026-03-03 08:14:51\nCLI-20260303-003\t測試客戶公司-派工同步\t2026-03-03 09:56:19\nCLI-20260303-005\t測試客戶ID作為Value\t2026-03-03 09:56:27\nCLI-20260303-006\t測試客戶公司-派工同步\t2026-03-03 09:58:38\nCLI-20260303-007\t測試客戶-休息時間\t2026-03-03 09:56:29\nCLI-20260303-008\t測試批次建立需求單公司\t2026-03-03 09:58:46\nCLI-20260303-009\t測試批次建立需求單公司\t2026-03-03 09:59:19\nCLI-20260303-010\t自動結案測試客戶\t2026-03-03 09:59:24\n",
+  "stderr": "",
+  "execution_time_ms": 1496
+}

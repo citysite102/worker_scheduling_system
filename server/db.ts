@@ -248,17 +248,21 @@ export async function createClient(data: { name: string; contactName?: string; c
   const month = String(now.getMonth() + 1).padStart(2, '0');
   const day = String(now.getDate()).padStart(2, '0');
   
-  // 查詢今天已建立的客戶數量，作為序號
-  const todayStart = new Date(year, now.getMonth(), now.getDate());
-  const todayEnd = new Date(year, now.getMonth(), now.getDate() + 1);
-  const todayClients = await db.select().from(clients)
-    .where(and(
-      sql`${clients.createdAt} >= ${todayStart}`,
-      sql`${clients.createdAt} < ${todayEnd}`
-    ));
+  // 查詢今天最大的 clientCode 序號，避免删除後重複
+  const prefix = `CLI-${year}${month}${day}-`;
+  const [lastClient] = await db
+    .select({ clientCode: clients.clientCode })
+    .from(clients)
+    .where(sql`${clients.clientCode} LIKE ${prefix + '%'}`)
+    .orderBy(desc(clients.clientCode))
+    .limit(1);
   
-  const sequence = String(todayClients.length + 1).padStart(3, '0');
-  const clientCode = `CLI-${year}${month}${day}-${sequence}`;
+  let nextSeq = 1;
+  if (lastClient) {
+    const lastSeq = parseInt(lastClient.clientCode.slice(prefix.length), 10);
+    if (!isNaN(lastSeq)) nextSeq = lastSeq + 1;
+  }
+  const clientCode = `${prefix}${String(nextSeq).padStart(3, '0')}`;
   
   // 插入資料（包含 clientCode）
   // 注意：Drizzle ORM 對 undefined 欄位會產生 SQL `default` 關鍵字，
