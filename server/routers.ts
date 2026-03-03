@@ -722,6 +722,29 @@ export const appRouter = router({
         return { success: true };
       }),
 
+    delete: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ ctx, input }) => {
+        if (ctx.user.role !== 'admin' && ctx.user.role !== 'user') {
+          throw new TRPCError({ code: 'FORBIDDEN', message: '權限不足' });
+        }
+        // 檢查客戶是否存在
+        const client = await db.getClientById(input.id);
+        if (!client) {
+          throw new TRPCError({ code: 'NOT_FOUND', message: '客戶不存在' });
+        }
+        // 檢查是否有關聯的需求單（避免誤刪有業務資料的客戶）
+        const demands = await db.getDemandsByClientId(input.id);
+        if (demands.length > 0) {
+          throw new TRPCError({
+            code: 'BAD_REQUEST',
+            message: `此客戶有 ${demands.length} 筆需求單，無法直接刪除。請先關閉或移除所有需求單後再刪除客戶。`,
+          });
+        }
+        await db.deleteClient(input.id);
+        return { success: true };
+      }),
+
     // 客戶使用者管理 API
     listUsers: publicProcedure
       .input(z.object({ clientId: z.number() }))

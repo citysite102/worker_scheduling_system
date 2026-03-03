@@ -102,3 +102,9 @@
 
 - [x] 分析 createClient SQL 錯誤：contactEmail 被傳入 default 而非 null
 - [x] 修正 Clients.tsx billingType 改為受控 state，解決 shadcn Select 不支援 name 屬性的問題
+
+## Feature: 移除客戶功能（2026/03/03）
+
+- [x] 後端加入 clients.delete API（含關聯資料檢查）
+- [x] 前端客戶列表加入刪除按鈕
+- [x] 前端加入確認對話框（防止誤刪）
