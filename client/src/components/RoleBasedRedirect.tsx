@@ -18,7 +18,7 @@ export function RoleBasedRedirect() {
     }
 
     // 根據使用者角色跳轉到對應的 Dashboard
-    if (user.role === "admin") {
+    if (user.role === "admin" || user.role === "user") {
       setLocation("/dashboard");
     } else if (user.role === "client") {
       setLocation("/client-portal/dashboard");

@@ -79,3 +79,10 @@
 
 - [x] 找出 /demands 列表頁觸發「需求單不存在」的 API call
 - [x] 修正錯誤
+
+## Feature/Bug: User 角色後台建需求單 + 儀表板 404（2026/03/03）
+
+- [x] 分析 demands.create / createBatch API 對 user 角色的限制
+- [x] 後端修正：user 角色可建立需求單（需有 clientId）
+- [x] 前端修正：CreateDemand 頁面讓 user 角色正常顯示客戶選擇器
+- [x] 修正儀表板 404 問題

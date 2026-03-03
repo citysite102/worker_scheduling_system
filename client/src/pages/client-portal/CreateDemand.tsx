@@ -36,6 +36,8 @@ export function CreateDemand() {
   const [, setLocation] = useLocation();
   const { user } = useAuth();
   const isAdmin = user?.role === "admin";
+  // user 角色同樣需要選擇客戶來建立需求單
+  const isStaffRole = user?.role === "admin" || user?.role === "user";
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedDemandTypeId, setSelectedDemandTypeId] = useState<number | null>(null);
@@ -53,10 +55,10 @@ export function CreateDemand() {
   // 取得需求類型列表
   const { data: demandTypes } = trpc.demandTypes.list.useQuery();
 
-  // Admin 才需要取得客戶列表
+  // Admin / User 都需要取得客戶列表
   const { data: clients } = trpc.clients.list.useQuery(
     { status: "active" },
-    { enabled: isAdmin }
+    { enabled: isStaffRole }
   );
 
   const createMutation = trpc.demands.create.useMutation({
@@ -89,8 +91,8 @@ export function CreateDemand() {
     e.preventDefault();
     setIsSubmitting(true);
 
-    // Admin 代建時必須先選擇客戶
-    if (isAdmin && !selectedClientId) {
+    // Admin / User 代建時必須先選擇客戶
+    if (isStaffRole && !selectedClientId) {
       toast.error("請先選擇要代替建立需求單的客戶。");
       setIsSubmitting(false);
       return;
@@ -140,7 +142,7 @@ export function CreateDemand() {
         demandTypeId: demandTypeId ? parseInt(demandTypeId) : undefined,
         selectedOptions: selectedOptionsJson,
         note: note || undefined,
-        ...(isAdmin && selectedClientId ? { clientId: selectedClientId } : {}),
+        ...(isStaffRole && selectedClientId ? { clientId: selectedClientId } : {}),
       });
       setShowConfirmDialog(true);
       setIsSubmitting(false);
@@ -164,7 +166,7 @@ export function CreateDemand() {
         demandTypeId: demandTypeId ? parseInt(demandTypeId) : undefined,
         selectedOptions: selectedOptionsJson,
         note: note || undefined,
-        ...(isAdmin && selectedClientId ? { clientId: selectedClientId } : {}),
+        ...(isStaffRole && selectedClientId ? { clientId: selectedClientId } : {}),
       });
     } catch (error) {
       // Error handling is done in onError callback
@@ -205,24 +207,24 @@ export function CreateDemand() {
           <CardHeader className="pb-4">
             <div className="flex items-center gap-2">
               <CardTitle>建立新需求單</CardTitle>
-              {isAdmin && (
+              {isStaffRole && (
                 <Badge variant="outline" className="text-amber-600 border-amber-400 bg-amber-50 dark:bg-amber-950/30 gap-1">
                   <ShieldCheck className="h-3 w-3" />
-                  管理員代建
+                  {isAdmin ? "管理員代建" : "內部人員代建"}
                 </Badge>
               )}
             </div>
             <p className="text-sm text-muted-foreground">
-              {isAdmin
-                ? "以管理員身份代替客戶建立需求單，請先選擇目標客戶。"
+              {isStaffRole
+                ? "以內部人員身份代替客戶建立需求單，請先選擇目標客戶。"
                 : "填寫以下資訊建立用工需求單，提交後將由內部人員審核並指派員工。"}
             </p>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-6">
 
-              {/* Admin 代建：客戶選擇器 */}
-              {isAdmin && (
+              {/* Admin / User 代建：客戶選擇器 */}
+              {isStaffRole && (
                 <div className="space-y-2 p-4 rounded-lg border border-amber-200 bg-amber-50/50 dark:border-amber-800 dark:bg-amber-950/20">
                   <Label htmlFor="admin-client-select" className="text-amber-700 dark:text-amber-400 font-medium">
                     代替客戶建立 <span className="text-destructive">*</span>

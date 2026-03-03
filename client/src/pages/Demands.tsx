@@ -695,7 +695,7 @@ export default function Demands() {
                             建立於 {new Date(demand.createdAt).toLocaleString("zh-TW", { month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit" })}
                           </span>
                         )}
-                        {demand.createdByRole === "admin" && demand.createdByName && (
+                        {(demand.createdByRole === "admin" || demand.createdByRole === "user") && demand.createdByName && (
                           <span className="flex items-center gap-1 text-[10px] font-medium text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 rounded px-1.5 py-0.5">
                             <UserCog className="h-3 w-3" />
                             由 {demand.createdByName} 代建

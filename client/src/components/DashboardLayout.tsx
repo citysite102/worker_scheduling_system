@@ -29,7 +29,7 @@ import { LoadingScreen } from './LoadingScreen';
 import { Button } from "./ui/button";
 
 const menuItems = [
-  { icon: LayoutDashboard, label: "儀表板", path: "/" },
+  { icon: LayoutDashboard, label: "儀表板", path: "/dashboard" },
   { icon: Users, label: "員工管理", path: "/workers" },
   { icon: Building2, label: "客戶管理", path: "/clients" },
   { icon: Calendar, label: "排班時間設置", path: "/availability" },

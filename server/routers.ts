@@ -1164,10 +1164,10 @@ export const appRouter = router({
             throw new TRPCError({ code: "BAD_REQUEST", message: "客戶帳號未關聯到客戶公司" });
           }
           clientId = ctx.user.clientId;
-        } else if (ctx.user.role === 'admin') {
-          // Admin 代替客戶建立時，必須指定 clientId
+        } else if (ctx.user.role === 'admin' || ctx.user.role === 'user') {
+          // Admin / User 代替客戶建立時，必須指定 clientId
           if (!input.clientId) {
-            throw new TRPCError({ code: "BAD_REQUEST", message: "Admin 代替客戶建立需求單時，必須指定客戶 ID" });
+            throw new TRPCError({ code: "BAD_REQUEST", message: "請指定要建立需求單的客戶 ID" });
           }
           clientId = input.clientId;
         } else {
@@ -1208,10 +1208,10 @@ export const appRouter = router({
             throw new TRPCError({ code: "BAD_REQUEST", message: "客戶帳號未關聯到客戶公司" });
           }
           clientId = ctx.user.clientId;
-        } else if (ctx.user.role === 'admin') {
-          // Admin 代替客戶建立時，必須指定 clientId
+        } else if (ctx.user.role === 'admin' || ctx.user.role === 'user') {
+          // Admin / User 代替客戶建立時，必須指定 clientId
           if (!input.clientId) {
-            throw new TRPCError({ code: "BAD_REQUEST", message: "Admin 代替客戶建立需求單時，必須指定客戶 ID" });
+            throw new TRPCError({ code: "BAD_REQUEST", message: "請指定要建立需求單的客戶 ID" });
           }
           clientId = input.clientId;
         } else {
