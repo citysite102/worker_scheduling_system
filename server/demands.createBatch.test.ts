@@ -95,7 +95,7 @@ describe("demands.createBatch", () => {
     expect(result.succeeded).toBe(1);
   });
 
-  it("should reject batch creation for admin users", async () => {
+  it("should reject batch creation for admin users without clientId", async () => {
     const adminUser = {
       id: 1,
       openId: "test-admin",
@@ -115,6 +115,7 @@ describe("demands.createBatch", () => {
     const tomorrow = new Date();
     tomorrow.setDate(tomorrow.getDate() + 1);
 
+    // Admin 未指定 clientId 時應回傳錯誤
     await expect(
       caller.demands.createBatch({
         dates: [tomorrow],
@@ -122,7 +123,41 @@ describe("demands.createBatch", () => {
         endTime: "17:00",
         requiredWorkers: 3,
       })
-    ).rejects.toThrow("Admin 角色不能使用此 API 建立需求單");
+    ).rejects.toThrow("Admin 代替客戶建立需求單時，必須指定客戶 ID");
+  });
+
+  it("should allow admin to create batch demands on behalf of a client", async () => {
+    const adminUser = {
+      id: 1,
+      openId: "test-admin",
+      name: "測試管理員",
+      role: "admin" as const,
+      email: "admin@example.com",
+      loginMethod: "manus" as const,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      lastSignedIn: new Date(),
+    };
+
+    const caller = appRouter.createCaller({
+      user: adminUser,
+    });
+
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+
+    // Admin 指定 clientId 应能成功建立
+    const result = await caller.demands.createBatch({
+      dates: [tomorrow],
+      startTime: "09:00",
+      endTime: "17:00",
+      requiredWorkers: 2,
+      clientId,
+    });
+
+    expect(result.success).toBe(true);
+    expect(result.succeeded).toBe(1);
+    expect(result.failed).toBe(0);
   });
 
   it("should create demands with demand type and options", async () => {

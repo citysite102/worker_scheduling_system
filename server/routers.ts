@@ -1154,21 +1154,27 @@ export const appRouter = router({
         location: z.string().optional(),
         note: z.string().optional(),
         status: z.enum(["draft", "confirmed", "cancelled", "closed"]).optional(),
+        clientId: z.number().optional(), // Admin 代替客戶建立時使用
       }))
       .mutation(async ({ input, ctx }) => {
-        // 如果是客戶角色，從 ctx.user 中取得 clientId
+        // 決定 clientId：客戶角色從 ctx.user 取得，Admin 角色從 input 取得
         let clientId: number;
         if (ctx.user.role === 'client') {
           if (!ctx.user.clientId) {
             throw new TRPCError({ code: "BAD_REQUEST", message: "客戶帳號未關聯到客戶公司" });
           }
           clientId = ctx.user.clientId;
+        } else if (ctx.user.role === 'admin') {
+          // Admin 代替客戶建立時，必須指定 clientId
+          if (!input.clientId) {
+            throw new TRPCError({ code: "BAD_REQUEST", message: "Admin 代替客戶建立需求單時，必須指定客戶 ID" });
+          }
+          clientId = input.clientId;
         } else {
-          // 如果是 admin 角色，從 input 中取得 clientId
-          throw new TRPCError({ code: "FORBIDDEN", message: "Admin 角色不能使用此 API 建立需求單" });
+          throw new TRPCError({ code: "FORBIDDEN", message: "無權限建立需求單" });
         }
         
-        const { breakHours, ...rest } = input;
+        const { breakHours, clientId: _inputClientId, ...rest } = input;
         await db.createDemand({
           ...rest,
           clientId,
@@ -1192,20 +1198,27 @@ export const appRouter = router({
         location: z.string().optional(),
         note: z.string().optional(),
         status: z.enum(["draft", "confirmed", "cancelled", "closed"]).optional(),
+        clientId: z.number().optional(), // Admin 代替客戶建立時使用
       }))
       .mutation(async ({ input, ctx }) => {
-        // 如果是客戶角色，從 ctx.user 中取得 clientId
+        // 決定 clientId：客戶角色從 ctx.user 取得，Admin 角色從 input 取得
         let clientId: number;
         if (ctx.user.role === 'client') {
           if (!ctx.user.clientId) {
             throw new TRPCError({ code: "BAD_REQUEST", message: "客戶帳號未關聯到客戶公司" });
           }
           clientId = ctx.user.clientId;
+        } else if (ctx.user.role === 'admin') {
+          // Admin 代替客戶建立時，必須指定 clientId
+          if (!input.clientId) {
+            throw new TRPCError({ code: "BAD_REQUEST", message: "Admin 代替客戶建立需求單時，必須指定客戶 ID" });
+          }
+          clientId = input.clientId;
         } else {
-          throw new TRPCError({ code: "FORBIDDEN", message: "Admin 角色不能使用此 API 建立需求單" });
+          throw new TRPCError({ code: "FORBIDDEN", message: "無權限建立需求單" });
         }
         
-        const { dates, breakHours, ...rest } = input;
+        const { dates, breakHours, clientId: _inputClientId, ...rest } = input;
         
         // 批次建立需求單
         const results = await Promise.allSettled(

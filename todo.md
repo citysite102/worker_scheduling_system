@@ -61,3 +61,10 @@
 - [ ] 更新 vitest config 加入環境隔離設定
 - [ ] 更新 package.json scripts 區分測試與正式環境指令
 - [ ] 建立 CI 防護文件說明測試資料隔離策略
+
+## Bug Fix: Admin 代替客戶建立需求單（2026/03/03）
+
+- [x] 修正 demands.create API：Admin 可傳入 clientId 代替客戶建立
+- [x] 修正 demands.createBatch API：Admin 可傳入 clientId 代替客戶批次建立
+- [x] 更新前端建立需求單頁面：Admin 看到客戶選擇器
+- [x] 更新相關測試
