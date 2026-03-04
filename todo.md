@@ -124,3 +124,8 @@
 - [x] 測試 client 角色：查看自己的需求單
 - [x] 測試 client 角色：取消需求單
 - [x] 修正測試中發現的所有問題
+
+## Bug Fix: 新增員工 Select 欄位第一次無法儲存（2026/03/03）
+
+- [x] 分析 Workers.tsx 新增員工表單的 idType 等 Select 欄位傳遞問題
+- [x] 修正 idNumber → uiNumber 欄位名稱不一致，並將 city Select 改為受控 state
