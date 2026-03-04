@@ -44,9 +44,9 @@ describe("需求單審核功能", () => {
     nonAdminContext = {
       user: {
         id: 2,
-        openId: "test-user",
-        name: "測試使用者",
-        role: "user",
+        openId: "test-client",
+        name: "測試客戶使用者",
+        role: "client",
         createdAt: new Date(),
         updatedAt: new Date(),
         lastSignedIn: new Date(),
@@ -88,15 +88,20 @@ describe("需求單審核功能", () => {
     `);
   });
 
-  it("非管理員無法審核需求單", async () => {
+  it("客戶角色無法審核需求單", async () => {
     const caller = appRouter.createCaller(nonAdminContext);
 
     await expect(
       caller.demands.approve({ id: testDemandId })
-    ).rejects.toThrow("只有管理員可以審核需求單");
+    ).rejects.toThrow("只有內部人員可以審核需求單");
   });
 
   it("管理員可以拒絕需求單", async () => {
+    // 確保需求單是 pending 狀態
+    const dbConn = await getDb();
+    if (!dbConn) throw new Error("無法連接資料庫");
+    await dbConn.execute(sql`UPDATE demands SET status = 'pending' WHERE id = ${sql.raw(String(testDemandId))}`);
+
     const caller = appRouter.createCaller(adminContext);
     const result = await caller.demands.reject({
       id: testDemandId,

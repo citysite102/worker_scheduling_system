@@ -41,6 +41,7 @@ export default function DemandDetail() {
   const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
   const [assignmentToCancel, setAssignmentToCancel] = useState<number | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [editClientId, setEditClientId] = useState<string>("");
   const [selectedDemandTypeId, setSelectedDemandTypeId] = useState<number | undefined>(undefined);
   const [selectedOptions, setSelectedOptions] = useState<number[]>([]);
 
@@ -107,7 +108,10 @@ export default function DemandDetail() {
       toast.error(`刪除失敗：${error.message}`);
     },
   });
-  const { data: demand, isLoading } = trpc.demands.getById.useQuery({ id: demandId });
+  const { data: demand, isLoading } = trpc.demands.getById.useQuery(
+    { id: demandId },
+    { enabled: !!demandId && demandId > 0 }
+  );
 
   // 將 UTC 日期轉換為台灣時區的日期（用於顯示和 API 呼叫）
   const localDate = useMemo(() => {
@@ -1105,6 +1109,7 @@ export default function DemandDetail() {
         setIsEditDialogOpen(open);
         if (open && demand) {
           // 當對話框開啟時，初始化需求類型與選項
+          setEditClientId(demand.clientId?.toString() || "");
           setSelectedDemandTypeId(demand.demandTypeId || undefined);
           setSelectedOptions(demand.selectedOptions || []);
         } else {
@@ -1124,7 +1129,7 @@ export default function DemandDetail() {
 
             const data = {
               id: demandId,
-              clientId: parseInt(formData.get("clientId") as string),
+              clientId: parseInt(editClientId),
               date,
               startTime: formData.get("startTime") as string,
               endTime: formData.get("endTime") as string,
@@ -1145,7 +1150,7 @@ export default function DemandDetail() {
             <div className="grid grid-cols-2 gap-x-6 gap-y-4 py-4">
               <div className="col-span-2 space-y-2">
               <Label htmlFor="clientId">客戶 *</Label>
-                <Select name="clientId" defaultValue={demand?.clientId?.toString()} required>
+                <Select value={editClientId} onValueChange={setEditClientId} required>
                   <SelectTrigger>
                     <SelectValue placeholder="請選擇客戶" />
                   </SelectTrigger>

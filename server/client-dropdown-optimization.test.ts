@@ -12,15 +12,16 @@ describe("客戶下拉選單優化：名稱唯一性驗證", () => {
   };
 
   it("應該能夠根據客戶名稱查詢客戶", async () => {
-    // 建立測試客戶
-    const client = await createClient(testClientData);
+    // 使用唯一的時間戳名稱避免與其他測試衝突
+    const uniqueName = `測試客戶公司名稱唯一性-${Date.now()}`;
+    const client = await createClient({ ...testClientData, name: uniqueName });
     expect(client).toBeDefined();
-    expect(client.name).toBe(testClientData.name);
+    expect(client.name).toBe(uniqueName);
 
     // 根據名稱查詢客戶
-    const foundClient = await getClientByName(testClientData.name);
+    const foundClient = await getClientByName(uniqueName);
     expect(foundClient).toBeDefined();
-    expect(foundClient?.name).toBe(testClientData.name);
+    expect(foundClient?.name).toBe(uniqueName);
     // contactName 可能為 null，所以只驗證存在欄位
     expect(foundClient).toHaveProperty("contactName");
   });

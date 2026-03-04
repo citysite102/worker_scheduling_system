@@ -7,7 +7,8 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Search, Edit, Building2, Loader2, MapPin, Phone, User, ChevronRight } from "lucide-react";
+import { Plus, Search, Edit, Building2, Loader2, MapPin, Phone, User, ChevronRight, Trash2 } from "lucide-react";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { useLocation } from "wouter";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -20,6 +21,20 @@ export default function Clients() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingClient, setEditingClient] = useState<any>(null);
   const [logoUrl, setLogoUrl] = useState<string>("");
+  const [billingType, setBillingType] = useState<"hourly" | "fixed" | "custom">("hourly");
+  const [deletingClient, setDeletingClient] = useState<any>(null);
+
+  const deleteMutation = trpc.clients.delete.useMutation({
+    onSuccess: () => {
+      toast.success("客戶已成功刪除");
+      setDeletingClient(null);
+      refetch();
+    },
+    onError: (error) => {
+      toast.error(`刪除失敗：${error.message}`);
+      setDeletingClient(null);
+    },
+  });
 
   const { data: clients, isLoading, refetch } = trpc.clients.list.useQuery({
     search: searchTerm,
@@ -59,7 +74,7 @@ export default function Clients() {
       contactEmail: (formData.get("contactEmail") as string) || undefined,
       address: (formData.get("address") as string) || undefined,
       logoUrl: logoUrl || undefined,
-      billingType: (formData.get("billingType") as "hourly" | "fixed" | "custom") || undefined,
+      billingType: billingType,
       note: (formData.get("note") as string) || undefined,
     };
 
@@ -90,6 +105,7 @@ export default function Clients() {
   }
 
   return (
+    <>
     <div className="p-6 lg:p-8 max-w-6xl mx-auto">
       <div className="flex items-center justify-between mb-8">
         <div>
@@ -98,7 +114,7 @@ export default function Clients() {
         </div>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
-            <Button onClick={() => setEditingClient(null)} size="sm">
+            <Button onClick={() => { setEditingClient(null); setBillingType("hourly"); }} size="sm">
               <Plus className="mr-2 h-4 w-4" />
               新增客戶
             </Button>
@@ -182,7 +198,10 @@ export default function Clients() {
                 </div>
                 <div className="space-y-2">
               <Label htmlFor="billingType">計費方式</Label>
-                  <Select name="billingType" defaultValue={editingClient?.billingType || "hourly"}>
+                  <Select
+                    value={billingType}
+                    onValueChange={(v) => setBillingType(v as "hourly" | "fixed" | "custom")}
+                  >
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
@@ -314,6 +333,7 @@ export default function Clients() {
                       onClick={(e) => {
                         e.stopPropagation();
                         setEditingClient(client);
+                        setBillingType(client.billingType || "hourly");
                         setIsDialogOpen(true);
                       }}
                     >
@@ -334,6 +354,17 @@ export default function Clients() {
                     >
                       {client.status === "active" ? "停用" : "啟用"}
                     </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setDeletingClient(client);
+                      }}
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </Button>
                   </div>
                 </div>
               ))}
@@ -342,5 +373,35 @@ export default function Clients() {
         </CardContent>
       </Card>
     </div>
+    {/* 刪除確認對話框 */}
+    <AlertDialog open={!!deletingClient} onOpenChange={(open) => { if (!open) setDeletingClient(null); }}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>確認刪除客戶</AlertDialogTitle>
+          <AlertDialogDescription>
+            您確定要刪除客戶「<strong>{deletingClient?.name}</strong>」嗎？
+            <br />
+            此操作無法復原。若該客戶有關聯的需求單，系統將阻止刪除。
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel disabled={deleteMutation.isPending}>取消</AlertDialogCancel>
+          <AlertDialogAction
+            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            disabled={deleteMutation.isPending}
+            onClick={() => {
+              if (deletingClient) {
+                deleteMutation.mutate({ id: deletingClient.id });
+              }
+            }}
+          >
+            {deleteMutation.isPending ? (
+              <><Loader2 className="mr-2 h-4 w-4 animate-spin" />刪除中...</>
+            ) : "確認刪除"}
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+    </>
   );
 }

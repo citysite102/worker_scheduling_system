@@ -1,0 +1,31 @@
+{
+  "query": "\n-- 找出重複的 email\nSELECT email, COUNT(*) as cnt FROM users WHERE email IS NOT NULL GROUP BY email HAVING cnt > 1;\n\n-- 查看所有使用者的 email 狀況\nSELECT id, name, email, role, createdAt FROM users ORDER BY email, createdAt;\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2iEKifVQ9gKtEas.9cbf5414b428 --database CMgr35KntT8tLtgpfJPejw --execute \n-- 找出重複的 email\nSELECT email, COUNT(*) as cnt FROM users WHERE email IS NOT NULL GROUP BY email HAVING cnt > 1;\n\n-- 查看所有使用者的 email 狀況\nSELECT id, name, email, role, createdAt FROM users ORDER BY email, createdAt;\n",
+  "rows": [
+    {
+      "email": "garden.vc.tw@gmail.com",
+      "cnt": "2"
+    }
+  ],
+  "messages": [
+    "id\tname\temail\trole\tcreatedAt",
+    "6210143\tJacob\t3224wrestle@gmail.com\tuser\t2026-02-24 14:15:01",
+    "2670001\tAbers Wang\taberswang@gmail.com\tuser\t2026-02-14 02:23:44",
+    "1\tSamuel\tcitysite1025@gmail.com\tadmin\t2026-02-09 15:48:56",
+    "810028\ttw ethernet\tethernettw@gmail.com\tuser\t2026-02-11 05:54:45",
+    "7500007\tsmail\tgarden.vc.hr@gmail.com\tclient\t2026-02-26 10:38:21",
+    "1141000\tGarden Venture Capital Co.,Ltd\tgarden.vc.tw@gmail.com\tuser\t2026-02-11 16:26:20",
+    "7350058\tGarden Venture Capital Co.,Ltd\tgarden.vc.tw@gmail.com\tclient\t2026-02-26 07:31:46",
+    "270061\tjacob 王\tjacob.wang0419@gmail.com\tadmin\t2026-02-10 06:49:40",
+    "360107\tLulu Yeh\tlulu0127.yeh@gmail.com\tadmin\t2026-02-10 10:53:56",
+    "7980011\t測試客戶使用者\ttest-client-1772345431489@example.com\tclient\t2026-03-01 06:10:31",
+    "7980012\t測試客戶使用者\ttest-client-1772345631492@example.com\tclient\t2026-03-01 06:13:51",
+    "7980013\t測試客戶使用者\ttest-client-1772345676393@example.com\tclient\t2026-03-01 06:14:36",
+    "7980014\t測試客戶使用者\ttest-client-1772345752816@example.com\tclient\t2026-03-01 06:15:52",
+    "7980015\t測試客戶使用者\ttest-client-1772345794553@example.com\tclient\t2026-03-01 06:16:34",
+    "210033\t嶼\tyu.hr523@gmail.com\tuser\t2026-02-10 05:04:33"
+  ],
+  "stdout": "email\tcnt\ngarden.vc.tw@gmail.com\t2\nid\tname\temail\trole\tcreatedAt\n6210143\tJacob\t3224wrestle@gmail.com\tuser\t2026-02-24 14:15:01\n2670001\tAbers Wang\taberswang@gmail.com\tuser\t2026-02-14 02:23:44\n1\tSamuel\tcitysite1025@gmail.com\tadmin\t2026-02-09 15:48:56\n810028\ttw ethernet\tethernettw@gmail.com\tuser\t2026-02-11 05:54:45\n7500007\tsmail\tgarden.vc.hr@gmail.com\tclient\t2026-02-26 10:38:21\n1141000\tGarden Venture Capital Co.,Ltd\tgarden.vc.tw@gmail.com\tuser\t2026-02-11 16:26:20\n7350058\tGarden Venture Capital Co.,Ltd\tgarden.vc.tw@gmail.com\tclient\t2026-02-26 07:31:46\n270061\tjacob 王\tjacob.wang0419@gmail.com\tadmin\t2026-02-10 06:49:40\n360107\tLulu Yeh\tlulu0127.yeh@gmail.com\tadmin\t2026-02-10 10:53:56\n7980011\t測試客戶使用者\ttest-client-1772345431489@example.com\tclient\t2026-03-01 06:10:31\n7980012\t測試客戶使用者\ttest-client-1772345631492@example.com\tclient\t2026-03-01 06:13:51\n7980013\t測試客戶使用者\ttest-client-1772345676393@example.com\tclient\t2026-03-01 06:14:36\n7980014\t測試客戶使用者\ttest-client-1772345752816@example.com\tclient\t2026-03-01 06:15:52\n7980015\t測試客戶使用者\ttest-client-1772345794553@example.com\tclient\t2026-03-01 06:16:34\n210033\t嶼\tyu.hr523@gmail.com\tuser\t2026-02-10 05:04:33\n",
+  "stderr": "",
+  "execution_time_ms": 1808
+}

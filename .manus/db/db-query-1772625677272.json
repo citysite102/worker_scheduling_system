@@ -1,0 +1,80 @@
+{
+  "query": "\n-- 1. 將重複 email 的較新帳號（client 角色）設為 NULL（保留較早的 user 帳號）\nUPDATE users SET email = NULL WHERE id = 7350058 AND email = 'garden.vc.tw@gmail.com';\n\n-- 2. 刪除測試使用者帳號（test-client-* 的 email）\nDELETE FROM users WHERE email LIKE 'test-client-%@example.com';\n\n-- 3. 現在套用 unique constraint\nALTER TABLE users ADD CONSTRAINT users_email_unique UNIQUE (email);\n\n-- 4. 驗證結果\nSELECT id, name, email, role, createdAt FROM users ORDER BY email, createdAt;\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2iEKifVQ9gKtEas.9cbf5414b428 --database CMgr35KntT8tLtgpfJPejw --execute \n-- 1. 將重複 email 的較新帳號（client 角色）設為 NULL（保留較早的 user 帳號）\nUPDATE users SET email = NULL WHERE id = 7350058 AND email = 'garden.vc.tw@gmail.com';\n\n-- 2. 刪除測試使用者帳號（test-client-* 的 email）\nDELETE FROM users WHERE email LIKE 'test-client-%@example.com';\n\n-- 3. 現在套用 unique constraint\nALTER TABLE users ADD CONSTRAINT users_email_unique UNIQUE (email);\n\n-- 4. 驗證結果\nSELECT id, name, email, role, createdAt FROM users ORDER BY email, createdAt;\n",
+  "rows": [
+    {
+      "id": "7350058",
+      "name": "Garden Venture Capital Co.,Ltd",
+      "email": "NULL",
+      "role": "client",
+      "createdAt": "2026-02-26 07:31:46"
+    },
+    {
+      "id": "6210143",
+      "name": "Jacob",
+      "email": "3224wrestle@gmail.com",
+      "role": "user",
+      "createdAt": "2026-02-24 14:15:01"
+    },
+    {
+      "id": "2670001",
+      "name": "Abers Wang",
+      "email": "aberswang@gmail.com",
+      "role": "user",
+      "createdAt": "2026-02-14 02:23:44"
+    },
+    {
+      "id": "1",
+      "name": "Samuel",
+      "email": "citysite1025@gmail.com",
+      "role": "admin",
+      "createdAt": "2026-02-09 15:48:56"
+    },
+    {
+      "id": "810028",
+      "name": "tw ethernet",
+      "email": "ethernettw@gmail.com",
+      "role": "user",
+      "createdAt": "2026-02-11 05:54:45"
+    },
+    {
+      "id": "7500007",
+      "name": "smail",
+      "email": "garden.vc.hr@gmail.com",
+      "role": "client",
+      "createdAt": "2026-02-26 10:38:21"
+    },
+    {
+      "id": "1141000",
+      "name": "Garden Venture Capital Co.,Ltd",
+      "email": "garden.vc.tw@gmail.com",
+      "role": "user",
+      "createdAt": "2026-02-11 16:26:20"
+    },
+    {
+      "id": "270061",
+      "name": "jacob 王",
+      "email": "jacob.wang0419@gmail.com",
+      "role": "admin",
+      "createdAt": "2026-02-10 06:49:40"
+    },
+    {
+      "id": "360107",
+      "name": "Lulu Yeh",
+      "email": "lulu0127.yeh@gmail.com",
+      "role": "admin",
+      "createdAt": "2026-02-10 10:53:56"
+    },
+    {
+      "id": "210033",
+      "name": "嶼",
+      "email": "yu.hr523@gmail.com",
+      "role": "user",
+      "createdAt": "2026-02-10 05:04:33"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\temail\trole\tcreatedAt\n7350058\tGarden Venture Capital Co.,Ltd\tNULL\tclient\t2026-02-26 07:31:46\n6210143\tJacob\t3224wrestle@gmail.com\tuser\t2026-02-24 14:15:01\n2670001\tAbers Wang\taberswang@gmail.com\tuser\t2026-02-14 02:23:44\n1\tSamuel\tcitysite1025@gmail.com\tadmin\t2026-02-09 15:48:56\n810028\ttw ethernet\tethernettw@gmail.com\tuser\t2026-02-11 05:54:45\n7500007\tsmail\tgarden.vc.hr@gmail.com\tclient\t2026-02-26 10:38:21\n1141000\tGarden Venture Capital Co.,Ltd\tgarden.vc.tw@gmail.com\tuser\t2026-02-11 16:26:20\n270061\tjacob 王\tjacob.wang0419@gmail.com\tadmin\t2026-02-10 06:49:40\n360107\tLulu Yeh\tlulu0127.yeh@gmail.com\tadmin\t2026-02-10 10:53:56\n210033\t嶼\tyu.hr523@gmail.com\tuser\t2026-02-10 05:04:33\n",
+  "stderr": "",
+  "execution_time_ms": 2511
+}

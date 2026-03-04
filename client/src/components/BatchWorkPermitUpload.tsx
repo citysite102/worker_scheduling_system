@@ -24,7 +24,7 @@ interface WorkerData {
   email?: string;
   school?: string;
   nationality?: string;
-  uiNumber?: string;
+  idNumber?: string;
   hasWorkPermit: boolean;
   hasHealthCheck: boolean;
   workPermitExpiryDate?: Date;
@@ -94,7 +94,7 @@ export function BatchWorkPermitUpload({ open, onClose, onSuccess }: BatchWorkPer
         .map((r: any) => ({
           name: r.ocrResult.name || "",
           nationality: r.ocrResult.nationality || "",
-          uiNumber: r.ocrResult.uiNumber || "",
+          idNumber: r.ocrResult.uiNumber || "",
           school: r.ocrResult.school || "",
           workPermitExpiryDate: convertROCToAD(r.ocrResult.validityPeriodEnd || ""),
           hasWorkPermit: true,
@@ -242,8 +242,8 @@ export function BatchWorkPermitUpload({ open, onClose, onSuccess }: BatchWorkPer
                           <div>
                             <Label className="text-xs">統一證號</Label>
                             <Input
-                              value={worker.uiNumber || ""}
-                              onChange={(e) => handleUpdateWorker(index, { uiNumber: e.target.value })}
+                              value={worker.idNumber || ""}
+                              onChange={(e) => handleUpdateWorker(index, { idNumber: e.target.value })}
                               className="h-8 text-sm"
                             />
                           </div>
@@ -305,7 +305,7 @@ export function BatchWorkPermitUpload({ open, onClose, onSuccess }: BatchWorkPer
                           <div className="font-medium text-sm">{worker.name}</div>
                           <div className="text-xs text-muted-foreground space-y-0.5">
                             {worker.nationality && <div>國籍：{worker.nationality}</div>}
-                            {worker.uiNumber && <div>統一證號：{worker.uiNumber}</div>}
+                            {worker.idNumber && <div>統一證號：{worker.idNumber}</div>}
                             {worker.school && <div>學校：{worker.school}</div>}
                             {worker.workPermitExpiryDate && (
                               <div>工作許可到期：{new Date(worker.workPermitExpiryDate).toLocaleDateString('zh-TW')}</div>

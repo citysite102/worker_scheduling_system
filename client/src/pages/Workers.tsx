@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Plus, Search, Edit, UserX, UserCheck, Loader2, Phone, Mail, GraduationCap, ShieldCheck, HeartPulse, Filter, ChevronDown, Upload, UserPlus, Download, MapPin } from "lucide-react";
+import { Plus, Search, Edit, UserX, UserCheck, Loader2, Phone, Mail, GraduationCap, ShieldCheck, HeartPulse, Filter, ChevronDown, Upload, UserPlus, Download, MapPin, Trash2 } from "lucide-react";
 import { Link } from "wouter";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -40,6 +40,20 @@ export default function Workers() {
   const [workPermitExpiryDate, setWorkPermitExpiryDate] = useState<string>("");
   const [avatarUrl, setAvatarUrl] = useState<string>("");
   const [showAvatarPicker, setShowAvatarPicker] = useState(false);
+  const [deletingWorker, setDeletingWorker] = useState<any>(null);
+  const [cityValue, setCityValue] = useState<string>("");
+
+  const deleteWorkerMutation = trpc.workers.delete.useMutation({
+    onSuccess: () => {
+      toast.success("員工已成功刪除");
+      setDeletingWorker(null);
+      refetch();
+    },
+    onError: (error: any) => {
+      toast.error(`刪除失敗：${error.message}`);
+      setDeletingWorker(null);
+    },
+  });
 
   const { data: workers, isLoading, refetch } = trpc.workers.list.useQuery({
     search: searchTerm,
@@ -107,7 +121,7 @@ export default function Workers() {
       workPermitExpiryDate: hasWorkPermitChecked && workPermitExpiryDate ? new Date(workPermitExpiryDate) : undefined,
       attendanceNotes: (formData.get("attendanceNotes") as string) || undefined,
       avatarUrl: avatarUrl || undefined,
-      city: (formData.get("city") as string) || undefined,
+      city: cityValue || undefined,
       note: (formData.get("note") as string) || undefined,
     };
 
@@ -153,14 +167,14 @@ export default function Workers() {
               <Upload className="mr-2 h-4 w-4" />
               單張圖片新增
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => { setEditingWorker(null); setOcrData(null); setHasWorkPermitChecked(false); setWorkPermitExpiryDate(""); setIsDialogOpen(true); }}>
+            <DropdownMenuItem onClick={() => { setEditingWorker(null); setOcrData(null); setHasWorkPermitChecked(false); setWorkPermitExpiryDate(""); setCityValue(""); setIsDialogOpen(true); }}>
               <UserPlus className="mr-2 h-4 w-4" />
               一般新增
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
 
-        <Dialog open={isDialogOpen} onOpenChange={(open) => { setIsDialogOpen(open); if (!open) { setEditingWorker(null); setHasWorkPermitChecked(false); setWorkPermitExpiryDate(""); } }}>
+        <Dialog open={isDialogOpen} onOpenChange={(open) => { setIsDialogOpen(open); if (!open) { setEditingWorker(null); setHasWorkPermitChecked(false); setWorkPermitExpiryDate(""); setCityValue(""); } }}>
           <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
             <form onSubmit={handleSubmit}>
               <DialogHeader>
@@ -299,7 +313,7 @@ export default function Workers() {
                 <div className="grid grid-cols-2 gap-6">
                   <div className="space-y-2">
               <Label htmlFor="city">所在縣市</Label>
-                    <Select name="city" defaultValue={editingWorker?.city || ""}>
+                    <Select value={cityValue} onValueChange={setCityValue}>
                       <SelectTrigger>
                         <SelectValue placeholder="選擇縣市" />
                       </SelectTrigger>
@@ -685,6 +699,7 @@ export default function Workers() {
                             ? new Date(worker.workPermitExpiryDate).toISOString().split('T')[0]
                             : ""
                         );
+                        setCityValue(worker.city || "");
                         setIsDialogOpen(true);
                       }}
                     >
@@ -707,9 +722,17 @@ export default function Workers() {
                         <UserCheck className="h-3.5 w-3.5" />
                       )}
                     </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                      onClick={() => setDeletingWorker(worker)}
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </Button>
                   </div>
                 </div>
-              ))}
+              ))}  
             </div>
           )}
         </CardContent>
@@ -747,12 +770,43 @@ export default function Workers() {
         </AlertDialogContent>
       </AlertDialog>
 
+      {/* 刪除員工確認對話框 */}
+      <AlertDialog open={!!deletingWorker} onOpenChange={(open) => { if (!open) setDeletingWorker(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>確認刪除員工</AlertDialogTitle>
+            <AlertDialogDescription>
+              您確定要刪除員工「<strong>{deletingWorker?.name}</strong>」嗎？
+              <br />
+              此操作無法復原。若該員工有進行中的指派，系統將阻止刪除。
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleteWorkerMutation.isPending}>取消</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              disabled={deleteWorkerMutation.isPending}
+              onClick={() => {
+                if (deletingWorker) {
+                  deleteWorkerMutation.mutate({ id: deletingWorker.id });
+                }
+              }}
+            >
+              {deleteWorkerMutation.isPending ? (
+                <><Loader2 className="mr-2 h-4 w-4 animate-spin" />刪除中...</>
+              ) : "確認刪除"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       <WorkPermitOCRDialog
         open={showOCRDialog}
         onOpenChange={setShowOCRDialog}
         onOCRSuccess={(data) => {
           setOcrData(data);
           setEditingWorker(null);
+          setCityValue("");
           setHasWorkPermitChecked(true); // OCR 識別到簽證，預設勾選
           // 設定到期日（如果有）
           if (data.validityPeriodEnd) {

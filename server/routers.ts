@@ -292,8 +292,8 @@ export const appRouter = router({
         if (!ctx.user) {
           throw new TRPCError({ code: "UNAUTHORIZED", message: "請先登入" });
         }
-        if (ctx.user.role !== "admin") {
-          throw new TRPCError({ code: "FORBIDDEN", message: "僅管理員可執行此操作" });
+        if (ctx.user.role !== "admin" && ctx.user.role !== "user") {
+          throw new TRPCError({ code: "FORBIDDEN", message: "僅內部人員可執行此操作" });
         }
         const dbInstance = await getDb();
         if (!dbInstance) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "資料庫連線失敗" });
@@ -430,7 +430,7 @@ export const appRouter = router({
         email: z.string().email("Email 格式不正確").optional(),
         school: z.string().optional(),
         nationality: z.string().optional(),
-        uiNumber: z.string().optional(),
+        idNumber: z.string().optional(),
         hasWorkPermit: z.boolean().optional(),
         hasHealthCheck: z.boolean().optional(),
         workPermitExpiryDate: z.date().optional(),
@@ -468,7 +468,7 @@ export const appRouter = router({
           email: z.string().email("Email 格式不正確").optional(),
           school: z.string().optional(),
           nationality: z.string().optional(),
-          uiNumber: z.string().optional(),
+          idNumber: z.string().optional(),
           hasWorkPermit: z.boolean().optional(),
           hasHealthCheck: z.boolean().optional(),
           workPermitExpiryDate: z.date().optional(),
@@ -556,6 +556,27 @@ export const appRouter = router({
         if (hasWorkPermit !== undefined) updateData.hasWorkPermit = hasWorkPermit ? 1 : 0;
         if (hasHealthCheck !== undefined) updateData.hasHealthCheck = hasHealthCheck ? 1 : 0;
         await db.updateWorker(id, updateData);
+        return { success: true };
+      }),
+
+    delete: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ ctx, input }) => {
+        if (ctx.user.role !== "admin" && ctx.user.role !== "user") {
+          throw new TRPCError({ code: "FORBIDDEN", message: "權限不足" });
+        }
+        // 檢查是否有進行中或未完成的指派記錄
+        const activeAssignments = await db.getAssignmentsByWorker(input.id);
+        const blockedCount = activeAssignments.filter(
+          (a) => a.status === "assigned"
+        ).length;
+        if (blockedCount > 0) {
+          throw new TRPCError({
+            code: "CONFLICT",
+            message: `此員工有 ${blockedCount} 筆進行中的指派，無法直接刪除。請先處理完成所有指派。`,
+          });
+        }
+        await db.deleteWorker(input.id);
         return { success: true };
       }),
 
@@ -722,6 +743,29 @@ export const appRouter = router({
         return { success: true };
       }),
 
+    delete: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ ctx, input }) => {
+        if (ctx.user.role !== 'admin' && ctx.user.role !== 'user') {
+          throw new TRPCError({ code: 'FORBIDDEN', message: '權限不足' });
+        }
+        // 檢查客戶是否存在
+        const client = await db.getClientById(input.id);
+        if (!client) {
+          throw new TRPCError({ code: 'NOT_FOUND', message: '客戶不存在' });
+        }
+        // 檢查是否有關聯的需求單（避免誤刪有業務資料的客戶）
+        const demands = await db.getDemandsByClientId(input.id);
+        if (demands.length > 0) {
+          throw new TRPCError({
+            code: 'BAD_REQUEST',
+            message: `此客戶有 ${demands.length} 筆需求單，無法直接刪除。請先關閉或移除所有需求單後再刪除客戶。`,
+          });
+        }
+        await db.deleteClient(input.id);
+        return { success: true };
+      }),
+
     // 客戶使用者管理 API
     listUsers: publicProcedure
       .input(z.object({ clientId: z.number() }))
@@ -740,6 +784,15 @@ export const appRouter = router({
         origin: z.string().optional(), // 前端 origin，用於建立登入連結
       }))
       .mutation(async ({ input }) => {
+        // 檢查 Email 是否已被使用
+        const existingUser = await db.getUserByEmail(input.email);
+        if (existingUser) {
+          throw new TRPCError({
+            code: "CONFLICT",
+            message: `此 Email（${input.email}）已被其他帳號使用，請改用其他 Email`,
+          });
+        }
+
         // 生成一個臨時的 openId（實際上應該由 OAuth 系統生成）
         const openId = `temp_${Date.now()}_${Math.random().toString(36).substring(7)}`;
         
@@ -796,6 +849,16 @@ export const appRouter = router({
       }))
       .mutation(async ({ input }) => {
         const { userId, ...data } = input;
+        // 檢查新 Email 是否已被其他帳號使用
+        if (data.email) {
+          const existingUser = await db.getUserByEmail(data.email);
+          if (existingUser && existingUser.id !== userId) {
+            throw new TRPCError({
+              code: "CONFLICT",
+              message: `此 Email（${data.email}）已被其他帳號使用，請改用其他 Email`,
+            });
+          }
+        }
         await db.updateClientUser(userId, data);
         return { success: true };
       }),
@@ -1154,21 +1217,27 @@ export const appRouter = router({
         location: z.string().optional(),
         note: z.string().optional(),
         status: z.enum(["draft", "confirmed", "cancelled", "closed"]).optional(),
+        clientId: z.number().optional(), // Admin 代替客戶建立時使用
       }))
       .mutation(async ({ input, ctx }) => {
-        // 如果是客戶角色，從 ctx.user 中取得 clientId
+        // 決定 clientId：客戶角色從 ctx.user 取得，Admin 角色從 input 取得
         let clientId: number;
         if (ctx.user.role === 'client') {
           if (!ctx.user.clientId) {
             throw new TRPCError({ code: "BAD_REQUEST", message: "客戶帳號未關聯到客戶公司" });
           }
           clientId = ctx.user.clientId;
+        } else if (ctx.user.role === 'admin' || ctx.user.role === 'user') {
+          // Admin / User 代替客戶建立時，必須指定 clientId
+          if (!input.clientId) {
+            throw new TRPCError({ code: "BAD_REQUEST", message: "請指定要建立需求單的客戶 ID" });
+          }
+          clientId = input.clientId;
         } else {
-          // 如果是 admin 角色，從 input 中取得 clientId
-          throw new TRPCError({ code: "FORBIDDEN", message: "Admin 角色不能使用此 API 建立需求單" });
+          throw new TRPCError({ code: "FORBIDDEN", message: "無權限建立需求單" });
         }
         
-        const { breakHours, ...rest } = input;
+        const { breakHours, clientId: _inputClientId, ...rest } = input;
         await db.createDemand({
           ...rest,
           clientId,
@@ -1192,20 +1261,27 @@ export const appRouter = router({
         location: z.string().optional(),
         note: z.string().optional(),
         status: z.enum(["draft", "confirmed", "cancelled", "closed"]).optional(),
+        clientId: z.number().optional(), // Admin 代替客戶建立時使用
       }))
       .mutation(async ({ input, ctx }) => {
-        // 如果是客戶角色，從 ctx.user 中取得 clientId
+        // 決定 clientId：客戶角色從 ctx.user 取得，Admin 角色從 input 取得
         let clientId: number;
         if (ctx.user.role === 'client') {
           if (!ctx.user.clientId) {
             throw new TRPCError({ code: "BAD_REQUEST", message: "客戶帳號未關聯到客戶公司" });
           }
           clientId = ctx.user.clientId;
+        } else if (ctx.user.role === 'admin' || ctx.user.role === 'user') {
+          // Admin / User 代替客戶建立時，必須指定 clientId
+          if (!input.clientId) {
+            throw new TRPCError({ code: "BAD_REQUEST", message: "請指定要建立需求單的客戶 ID" });
+          }
+          clientId = input.clientId;
         } else {
-          throw new TRPCError({ code: "FORBIDDEN", message: "Admin 角色不能使用此 API 建立需求單" });
+          throw new TRPCError({ code: "FORBIDDEN", message: "無權限建立需求單" });
         }
         
-        const { dates, breakHours, ...rest } = input;
+        const { dates, breakHours, clientId: _inputClientId, ...rest } = input;
         
         // 批次建立需求單
         const results = await Promise.allSettled(
@@ -1296,8 +1372,8 @@ export const appRouter = router({
       .input(z.object({ id: z.number() }))
       .mutation(async ({ input, ctx }) => {
         // 檢查是否為管理員
-        if (ctx.user.role !== 'admin') {
-          throw new TRPCError({ code: "FORBIDDEN", message: "只有管理員可以審核需求單" });
+             if (ctx.user.role !== 'admin' && ctx.user.role !== 'user') {
+          throw new TRPCError({ code: "FORBIDDEN", message: "只有內部人員可以審核需求單" });
         }
         
         const demand = await db.getDemandById(input.id);
@@ -1308,7 +1384,6 @@ export const appRouter = router({
           throw new TRPCError({ code: "BAD_REQUEST", message: "只有待審核的需求單才可以審核" });
         }
         
-        // 將需求單狀態設為 confirmed
         await db.updateDemand(input.id, { status: "confirmed" });
         return { success: true };
       }),
@@ -1321,8 +1396,8 @@ export const appRouter = router({
       }))
       .mutation(async ({ input, ctx }) => {
         // 檢查是否為管理員
-        if (ctx.user.role !== 'admin') {
-          throw new TRPCError({ code: "FORBIDDEN", message: "只有管理員可以審核需求單" });
+        if (ctx.user.role !== 'admin' && ctx.user.role !== 'user') {
+          throw new TRPCError({ code: "FORBIDDEN", message: "只有內部人員可以審核需求單" });
         }
         
         const demand = await db.getDemandById(input.id);
@@ -1349,8 +1424,8 @@ export const appRouter = router({
       }))
       .mutation(async ({ input, ctx }) => {
         // 檢查是否為管理員
-        if (ctx.user.role !== 'admin') {
-          throw new TRPCError({ code: "FORBIDDEN", message: "只有管理員可以審核需求單" });
+        if (ctx.user.role !== 'admin' && ctx.user.role !== 'user') {
+          throw new TRPCError({ code: "FORBIDDEN", message: "只有內部人員可以審核需求單" });
         }
         
         const results = {
@@ -1390,8 +1465,8 @@ export const appRouter = router({
       }))
       .mutation(async ({ input, ctx }) => {
         // 檢查是否為管理員
-        if (ctx.user.role !== 'admin') {
-          throw new TRPCError({ code: "FORBIDDEN", message: "只有管理員可以審核需求單" });
+        if (ctx.user.role !== 'admin' && ctx.user.role !== 'user') {
+          throw new TRPCError({ code: "FORBIDDEN", message: "只有內部人員可以審核需求單" });
         }
         
         const results = {

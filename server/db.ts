@@ -89,7 +89,8 @@ export async function getUserByOpenId(openId: string) {
   return result.length > 0 ? result[0] : undefined;
 }
 
-import { workers, clients, availability, demands, assignments, adminInvites } from "../drizzle/schema";
+import { workers, clients, availability, demands, assignments, adminInvites, users as usersTable } from "../drizzle/schema";
+import { alias } from "drizzle-orm/mysql-core";
 
 // ============ Workers ============
 export async function getAllWorkers(filters?: {
@@ -170,7 +171,7 @@ export async function getWorkerById(id: number) {
   return result[0];
 }
 
-export async function createWorker(data: { name: string; phone?: string; email?: string; school?: string; nationality?: string; uiNumber?: string; hasWorkPermit?: number; hasHealthCheck?: number; workPermitExpiryDate?: Date; attendanceNotes?: string; status?: "active" | "inactive"; note?: string; lineId?: string; whatsappId?: string }) {
+export async function createWorker(data: { name: string; phone?: string; email?: string; school?: string; nationality?: string; idNumber?: string | null; hasWorkPermit?: number; hasHealthCheck?: number; workPermitExpiryDate?: Date; attendanceNotes?: string; status?: "active" | "inactive"; note?: string; lineId?: string; whatsappId?: string }) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   await db.insert(workers).values(data);
@@ -179,7 +180,7 @@ export async function createWorker(data: { name: string; phone?: string; email?:
   return newWorker;
 }
 
-export async function updateWorker(id: number, data: Partial<{ name: string; phone?: string; email?: string; school?: string; nationality?: string; uiNumber?: string; hasWorkPermit?: number; hasHealthCheck?: number; workPermitExpiryDate?: Date; attendanceNotes?: string; status: "active" | "inactive"; note?: string; lineId?: string; whatsappId?: string }>) {
+export async function updateWorker(id: number, data: Partial<{ name: string; phone?: string; email?: string; school?: string; nationality?: string; idNumber?: string | null; hasWorkPermit?: number; hasHealthCheck?: number; workPermitExpiryDate?: Date; attendanceNotes?: string; status: "active" | "inactive"; note?: string; lineId?: string; whatsappId?: string }>) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   await db.update(workers).set(data).where(eq(workers.id, id));
@@ -237,7 +238,7 @@ export async function getClientByName(name: string) {
   return result[0];
 }
 
-export async function createClient(data: { name: string; contactName?: string; contactEmail?: string; contactPhone?: string; address?: string; billingType?: "hourly" | "fixed" | "custom"; note?: string }) {
+export async function createClient(data: { name: string; contactName?: string; contactEmail?: string; contactPhone?: string; address?: string; logoUrl?: string; billingType?: "hourly" | "fixed" | "custom"; note?: string }) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   
@@ -247,13 +248,36 @@ export async function createClient(data: { name: string; contactName?: string; c
   const month = String(now.getMonth() + 1).padStart(2, '0');
   const day = String(now.getDate()).padStart(2, '0');
   
-  // 使用毫秒時間戳 + 隨機碼確保唯一性，避免並發建立時的重複衝突
-  const ms = String(now.getMilliseconds()).padStart(3, '0');
-  const rand = String(Math.floor(Math.random() * 100)).padStart(2, '0');
-  const clientCode = `CLI-${year}${month}${day}-${ms}${rand}`;
+  // 查詢今天最大的 clientCode 序號，避免删除後重複
+  const prefix = `CLI-${year}${month}${day}-`;
+  const [lastClient] = await db
+    .select({ clientCode: clients.clientCode })
+    .from(clients)
+    .where(sql`${clients.clientCode} LIKE ${prefix + '%'}`)
+    .orderBy(desc(clients.clientCode))
+    .limit(1);
+  
+  let nextSeq = 1;
+  if (lastClient) {
+    const lastSeq = parseInt(lastClient.clientCode.slice(prefix.length), 10);
+    if (!isNaN(lastSeq)) nextSeq = lastSeq + 1;
+  }
+  const clientCode = `${prefix}${String(nextSeq).padStart(3, '0')}`;
   
   // 插入資料（包含 clientCode）
-  await db.insert(clients).values({ ...data, clientCode });
+  // 注意：Drizzle ORM 對 undefined 欄位會產生 SQL `default` 關鍵字，
+  // 但 optional 欄位在 schema 中沒有 default 值，必須明確傳入 null
+  await db.insert(clients).values({
+    clientCode,
+    name: data.name,
+    contactName: data.contactName ?? null,
+    contactEmail: data.contactEmail ?? null,
+    contactPhone: data.contactPhone ?? null,
+    address: data.address ?? null,
+    logoUrl: data.logoUrl ?? null,
+    billingType: data.billingType ?? "hourly",
+    note: data.note ?? null,
+  });
   
   // 返回新建立的記錄
   const [newClient] = await db.select().from(clients).orderBy(desc(clients.id)).limit(1);
@@ -349,6 +373,9 @@ export async function getAllDemands(statusFilter?: string, dateFilter?: Date, cl
   const db = await getDb();
   if (!db) return [];
 
+  // 建立 createdByUser alias，用於 JOIN 建立者資訊
+  const createdByUser = alias(usersTable, "createdByUser");
+
   // 使用 JOIN 查詢一次取得所有需要的資料，避免 N+1 問題
   let query = db
     .select({
@@ -367,6 +394,7 @@ export async function getAllDemands(statusFilter?: string, dateFilter?: Date, cl
       selectedOptions: demands.selectedOptions,
       createdAt: demands.createdAt,
       updatedAt: demands.updatedAt,
+      createdBy: demands.createdBy,
       
       // client 欄位（直接 JOIN）
       clientName: clients.name,
@@ -378,6 +406,10 @@ export async function getAllDemands(statusFilter?: string, dateFilter?: Date, cl
       clientAddress: clients.address,
       clientBillingType: clients.billingType,
       clientClientCode: clients.clientCode,
+
+      // 建立者資訊（LEFT JOIN users）
+      createdByName: createdByUser.name,
+      createdByRole: createdByUser.role,
       
       // 已指派人數（使用子查詢）
       assignedCount: sql<number>`(
@@ -389,6 +421,7 @@ export async function getAllDemands(statusFilter?: string, dateFilter?: Date, cl
     })
     .from(demands)
     .leftJoin(clients, eq(demands.clientId, clients.id))
+    .leftJoin(createdByUser, eq(demands.createdBy, createdByUser.id))
     .orderBy(desc(demands.createdAt));
   
   const conditions = [];
@@ -431,6 +464,9 @@ export async function getAllDemands(statusFilter?: string, dateFilter?: Date, cl
     selectedOptions: row.selectedOptions,
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
+    createdBy: row.createdBy,
+    createdByName: row.createdByName,
+    createdByRole: row.createdByRole,
     client: {
       id: row.clientId,
       name: row.clientName,
@@ -735,6 +771,16 @@ export async function updateDemandTypeOptionsOrder(updates: { id: number; sortOr
 }
 
 // ============ Client Users Management ============
+
+/**
+ * 依據 Email 查詢使用者（用於重複檢查）
+ */
+export async function getUserByEmail(email: string) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db.select().from(users).where(eq(users.email, email)).limit(1);
+  return result.length > 0 ? result[0] : undefined;
+}
 
 /**
  * 為客戶建立使用者帳號
