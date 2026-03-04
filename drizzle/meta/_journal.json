@@ -99,6 +99,13 @@
       "when": 1772001302549,
       "tag": "0013_heavy_bromley",
       "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "5",
+      "when": 1772593229090,
+      "tag": "0014_open_boom_boom",
+      "breakpoints": true
     }
   ]
 }

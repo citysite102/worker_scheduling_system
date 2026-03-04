@@ -1,0 +1,9 @@
+{
+  "query": "\n-- 清除 garden.vc.tw@gmail.com 的重複：保留 id=150012（最早），清除 420021、690064、750080\nUPDATE users SET email = NULL WHERE id IN (420021, 690064, 750080);\n\n-- 清除 samuel@hahow.in 的重複：保留 id=720008（最早），清除 720013\nUPDATE users SET email = NULL WHERE id = 720013;\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2iEKifVQ9gKtEas.df925e926073 --database LzctYumsgUPHufBWpYPJuY --execute \n-- 清除 garden.vc.tw@gmail.com 的重複：保留 id=150012（最早），清除 420021、690064、750080\nUPDATE users SET email = NULL WHERE id IN (420021, 690064, 750080);\n\n-- 清除 samuel@hahow.in 的重複：保留 id=720008（最早），清除 720013\nUPDATE users SET email = NULL WHERE id = 720013;\n",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 1756
+}

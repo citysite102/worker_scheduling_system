@@ -1,0 +1,18 @@
+{
+  "query": "SELECT email, COUNT(*) as cnt FROM users WHERE email IS NOT NULL GROUP BY email HAVING cnt > 1;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2iEKifVQ9gKtEas.df925e926073 --database LzctYumsgUPHufBWpYPJuY --execute SELECT email, COUNT(*) as cnt FROM users WHERE email IS NOT NULL GROUP BY email HAVING cnt > 1;",
+  "rows": [
+    {
+      "email": "garden.vc.tw@gmail.com",
+      "cnt": "4"
+    },
+    {
+      "email": "samuel@hahow.in",
+      "cnt": "2"
+    }
+  ],
+  "messages": [],
+  "stdout": "email\tcnt\ngarden.vc.tw@gmail.com\t4\nsamuel@hahow.in\t2\n",
+  "stderr": "",
+  "execution_time_ms": 1558
+}

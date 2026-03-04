@@ -140,3 +140,9 @@
   - [x] client-portal/CreateDemand.tsx: demandTypeId 改用 selectedDemandTypeId state
   - [x] client-portal/DemandDetail.tsx: demandTypeId 改用 selectedDemandTypeId state
   - [x] 統一 idNumber 欄位名稱：routers.ts create/batchCreate、db.ts、Workers.tsx、BatchWorkPermitUpload.tsx、exportWorkers.ts
+## Feature: Users Email 唯一性驗證（2026/03/04）
+
+- [x] 確認 drizzle/schema.ts users 表是否有 email unique constraint
+- [x] 後端 API 層加入 Email 重複檢查（新增使用者前查詢是否已存在）
+- [x] 前端顯示明確的「 Email 已被使用」錯誤訊息（透過現有 onError toast 機制）
+- [x] 建立 email-uniqueness.test.ts，5/5 測試通過

@@ -773,6 +773,16 @@ export async function updateDemandTypeOptionsOrder(updates: { id: number; sortOr
 // ============ Client Users Management ============
 
 /**
+ * 依據 Email 查詢使用者（用於重複檢查）
+ */
+export async function getUserByEmail(email: string) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db.select().from(users).where(eq(users.email, email)).limit(1);
+  return result.length > 0 ? result[0] : undefined;
+}
+
+/**
  * 為客戶建立使用者帳號
  */
 export async function createClientUser(data: {

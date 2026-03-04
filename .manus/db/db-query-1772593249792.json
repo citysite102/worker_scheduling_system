@@ -1,0 +1,58 @@
+{
+  "query": "SELECT id, name, email, role, clientId, createdAt FROM users WHERE email IN (SELECT email FROM users WHERE email IS NOT NULL GROUP BY email HAVING COUNT(*) > 1) ORDER BY email, createdAt;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2iEKifVQ9gKtEas.df925e926073 --database LzctYumsgUPHufBWpYPJuY --execute SELECT id, name, email, role, clientId, createdAt FROM users WHERE email IN (SELECT email FROM users WHERE email IS NOT NULL GROUP BY email HAVING COUNT(*) > 1) ORDER BY email, createdAt;",
+  "rows": [
+    {
+      "id": "150012",
+      "name": "Garden Venture Capital Co.,Ltd",
+      "email": "garden.vc.tw@gmail.com",
+      "role": "user",
+      "clientId": "NULL",
+      "createdAt": "2026-02-26 07:14:24"
+    },
+    {
+      "id": "420021",
+      "name": "阿白用",
+      "email": "garden.vc.tw@gmail.com",
+      "role": "client",
+      "clientId": "90002",
+      "createdAt": "2026-02-28 13:16:46"
+    },
+    {
+      "id": "690064",
+      "name": "張雨柔",
+      "email": "garden.vc.tw@gmail.com",
+      "role": "client",
+      "clientId": "150001",
+      "createdAt": "2026-03-03 08:19:05"
+    },
+    {
+      "id": "750080",
+      "name": "賴小弟",
+      "email": "garden.vc.tw@gmail.com",
+      "role": "client",
+      "clientId": "180008",
+      "createdAt": "2026-03-04 02:51:45"
+    },
+    {
+      "id": "720008",
+      "name": "Samuel",
+      "email": "samuel@hahow.in",
+      "role": "user",
+      "clientId": "NULL",
+      "createdAt": "2026-03-03 14:20:56"
+    },
+    {
+      "id": "720013",
+      "name": "Samuel Kao",
+      "email": "samuel@hahow.in",
+      "role": "user",
+      "clientId": "NULL",
+      "createdAt": "2026-03-03 14:22:01"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\temail\trole\tclientId\tcreatedAt\n150012\tGarden Venture Capital Co.,Ltd\tgarden.vc.tw@gmail.com\tuser\tNULL\t2026-02-26 07:14:24\n420021\t阿白用\tgarden.vc.tw@gmail.com\tclient\t90002\t2026-02-28 13:16:46\n690064\t張雨柔\tgarden.vc.tw@gmail.com\tclient\t150001\t2026-03-03 08:19:05\n750080\t賴小弟\tgarden.vc.tw@gmail.com\tclient\t180008\t2026-03-04 02:51:45\n720008\tSamuel\tsamuel@hahow.in\tuser\tNULL\t2026-03-03 14:20:56\n720013\tSamuel Kao\tsamuel@hahow.in\tuser\tNULL\t2026-03-03 14:22:01\n",
+  "stderr": "",
+  "execution_time_ms": 1519
+}

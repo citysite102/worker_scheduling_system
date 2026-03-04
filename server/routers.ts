@@ -784,6 +784,15 @@ export const appRouter = router({
         origin: z.string().optional(), // 前端 origin，用於建立登入連結
       }))
       .mutation(async ({ input }) => {
+        // 檢查 Email 是否已被使用
+        const existingUser = await db.getUserByEmail(input.email);
+        if (existingUser) {
+          throw new TRPCError({
+            code: "CONFLICT",
+            message: `此 Email（${input.email}）已被其他帳號使用，請改用其他 Email`,
+          });
+        }
+
         // 生成一個臨時的 openId（實際上應該由 OAuth 系統生成）
         const openId = `temp_${Date.now()}_${Math.random().toString(36).substring(7)}`;
         
@@ -840,6 +849,16 @@ export const appRouter = router({
       }))
       .mutation(async ({ input }) => {
         const { userId, ...data } = input;
+        // 檢查新 Email 是否已被其他帳號使用
+        if (data.email) {
+          const existingUser = await db.getUserByEmail(data.email);
+          if (existingUser && existingUser.id !== userId) {
+            throw new TRPCError({
+              code: "CONFLICT",
+              message: `此 Email（${data.email}）已被其他帳號使用，請改用其他 Email`,
+            });
+          }
+        }
         await db.updateClientUser(userId, data);
         return { success: true };
       }),
