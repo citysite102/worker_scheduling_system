@@ -112,7 +112,7 @@ export default function Workers() {
       email: (formData.get("email") as string) || undefined,
       school: (formData.get("school") as string) || undefined,
       nationality: (formData.get("nationality") as string) || undefined,
-      uiNumber: (formData.get("idNumber") as string) || undefined,
+      idNumber: (formData.get("idNumber") as string) || undefined,
       lineId: (formData.get("lineId") as string) || undefined,
       whatsappId: (formData.get("whatsappId") as string) || undefined,
       hasWorkPermit: hasWorkPermitChecked,

@@ -129,3 +129,14 @@
 
 - [x] 分析 Workers.tsx 新增員工表單的 idType 等 Select 欄位傳遞問題
 - [x] 修正 idNumber → uiNumber 欄位名稱不一致，並將 city Select 改為受控 state
+
+## Audit: 前後端欄位名稱一致性全面審查（2026/03/04）
+
+- [x] 掃描所有使用 formData.get() 的前端頁面
+- [x] 對照後端 router schema，找出所有不一致欄位
+- [x] 修正所有發現的問題
+  - [x] ClientDetail.tsx: billingType/status/breakHours Select 改為受控 state
+  - [x] DemandDetail.tsx: clientId Select 改為受控 state
+  - [x] client-portal/CreateDemand.tsx: demandTypeId 改用 selectedDemandTypeId state
+  - [x] client-portal/DemandDetail.tsx: demandTypeId 改用 selectedDemandTypeId state
+  - [x] 統一 idNumber 欄位名稱：routers.ts create/batchCreate、db.ts、Workers.tsx、BatchWorkPermitUpload.tsx、exportWorkers.ts

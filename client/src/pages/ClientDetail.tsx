@@ -31,6 +31,9 @@ export default function ClientDetail() {
   const [selectedDemandTypeId, setSelectedDemandTypeId] = useState<number | undefined>(undefined);
   const [selectedOptions, setSelectedOptions] = useState<number[]>([]);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [editBillingType, setEditBillingType] = useState<string>("hourly");
+  const [editStatus, setEditStatus] = useState<string>("active");
+  const [breakHoursValue, setBreakHoursValue] = useState<string>("0");
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
   const [isAddUserDialogOpen, setIsAddUserDialogOpen] = useState(false);
@@ -228,7 +231,7 @@ export default function ClientDetail() {
     const startTime = formData.get("startTime") as string;
     const endTime = formData.get("endTime") as string;
     const requiredWorkers = parseInt(formData.get("requiredWorkers") as string);
-    const breakHours = parseFloat(formData.get("breakHours") as string) || 0;
+    const breakHours = parseFloat(breakHoursValue) || 0;
     const location = formData.get("location") as string;
     const note = formData.get("note") as string;
 
@@ -382,7 +385,7 @@ export default function ClientDetail() {
               </div>
             </div>
             <div className="flex gap-2">
-              <Button variant="outline" size="sm" className="gap-2" onClick={() => setIsEditDialogOpen(true)}>
+              <Button variant="outline" size="sm" className="gap-2" onClick={() => { setEditBillingType(clientDetail?.billingType || "hourly"); setEditStatus(clientDetail?.status || "active"); setIsEditDialogOpen(true); }}>
                 <Edit className="w-4 h-4" />
                 編輯資料
               </Button>
@@ -698,7 +701,7 @@ export default function ClientDetail() {
               </div>
               <div className="space-y-2">
               <Label htmlFor="breakHours">休息時間（小時）</Label>
-                <Select name="breakHours" defaultValue="0">
+                <Select value={breakHoursValue} onValueChange={setBreakHoursValue}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
@@ -895,8 +898,8 @@ export default function ClientDetail() {
               contactPhone: (formData.get("contactPhone") as string) || undefined,
               address: (formData.get("address") as string) || undefined,
               logoUrl: logoUrl || undefined,
-              billingType: formData.get("billingType") as "hourly" | "fixed" | "custom",
-              status: formData.get("status") as "active" | "inactive",
+              billingType: editBillingType as "hourly" | "fixed" | "custom",
+              status: editStatus as "active" | "inactive",
               note: (formData.get("note") as string) || undefined,
             });
           }} className="space-y-4">
@@ -949,7 +952,7 @@ export default function ClientDetail() {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="billingType">計費方式</Label>
-                <Select name="billingType" defaultValue={clientDetail?.billingType}>
+                <Select value={editBillingType} onValueChange={setEditBillingType}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
@@ -962,7 +965,7 @@ export default function ClientDetail() {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="status">狀態</Label>
-                <Select name="status" defaultValue={clientDetail?.status}>
+                <Select value={editStatus} onValueChange={setEditStatus}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>

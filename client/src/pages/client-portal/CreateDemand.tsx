@@ -107,7 +107,6 @@ export function CreateDemand() {
     const endTime = formData.get("endTime") as string;
     const requiredWorkers = parseInt(formData.get("requiredWorkers") as string);
     const location = formData.get("location") as string;
-    const demandTypeId = formData.get("demandTypeId") as string;
     const note = formData.get("note") as string;
 
     // 將選取的選項 ID 轉為 JSON 字串
@@ -142,7 +141,7 @@ export function CreateDemand() {
         endTime,
         requiredWorkers,
         location: location || undefined,
-        demandTypeId: demandTypeId ? parseInt(demandTypeId) : undefined,
+        demandTypeId: selectedDemandTypeId || undefined,
         selectedOptions: selectedOptionsJson,
         note: note || undefined,
         ...(isStaffRole && selectedClientId ? { clientId: selectedClientId } : {}),
@@ -166,7 +165,7 @@ export function CreateDemand() {
         endTime,
         requiredWorkers,
         location: location || undefined,
-        demandTypeId: demandTypeId ? parseInt(demandTypeId) : undefined,
+        demandTypeId: selectedDemandTypeId || undefined,
         selectedOptions: selectedOptionsJson,
         note: note || undefined,
         ...(isStaffRole && selectedClientId ? { clientId: selectedClientId } : {}),

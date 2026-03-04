@@ -9,7 +9,7 @@ export interface WorkerExportData {
   email?: string | null;
   school?: string | null;
   nationality?: string | null;
-  uiNumber?: string | null;
+  idNumber?: string | null;
   hasWorkPermit: number;
   hasHealthCheck: number;
   workPermitExpiryDate?: Date | null;
@@ -53,7 +53,7 @@ export function exportWorkersToCSV(workers: WorkerExportData[], filename = "員�
     worker.email || "",
     worker.school || "",
     worker.nationality || "",
-    worker.uiNumber || "",
+    worker.idNumber || "",
     worker.hasWorkPermit === 1 ? "有" : "無",
     worker.hasHealthCheck === 1 ? "有" : "無",
     worker.workPermitExpiryDate 
