@@ -1973,3 +1973,7 @@
 - [x] 將 lulu0127.yeh@gmail.com 設置為管理者
 - [x] 驗證管理員權限
 >>>>>>> Stashed changes
+
+## 正式環境清理（2026/03/04）
+- [x] 移除測試環境橫幅（DashboardLayout.tsx）
+- [x] 清理 User 角色帳號，只保留指定的 5 個

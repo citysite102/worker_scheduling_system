@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/sidebar";
 import { getLoginUrl } from "@/const";
 import { useIsMobile } from "@/hooks/useMobile";
-import { LayoutDashboard, LogOut, PanelLeft, Users, Building2, Calendar, ClipboardList, Clock, FileText, ShieldCheck, Tags, FlaskConical } from "lucide-react";
+import { LayoutDashboard, LogOut, PanelLeft, Users, Building2, Calendar, ClipboardList, Clock, FileText, ShieldCheck, Tags } from "lucide-react";
 import { CSSProperties, useEffect, useRef, useState } from "react";
 import { useLocation } from "wouter";
 import { DashboardLayoutSkeleton } from './DashboardLayoutSkeleton';
@@ -286,13 +286,6 @@ function DashboardLayoutContent({
       </div>
 
       <SidebarInset>
-        {/* 測試環境提示 banner */}
-        <div className="flex items-center justify-center gap-2 px-4 py-2 bg-amber-50 border-b border-amber-200 dark:bg-amber-950/30 dark:border-amber-800/50">
-          <FlaskConical className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400 shrink-0" />
-          <span className="text-xs font-medium text-amber-700 dark:text-amber-400">
-            此為測試環境，資料不代表正式環境
-          </span>
-        </div>
         {isMobile && (
           <div className="flex border-b h-14 items-center justify-between bg-background/95 px-2 backdrop-blur supports-[backdrop-filter]:backdrop-blur sticky top-0 z-40">
             <div className="flex items-center gap-2">
