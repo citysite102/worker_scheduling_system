@@ -75,7 +75,6 @@ export function DemandDetail() {
     const endTime = formData.get("endTime") as string;
     const requiredWorkers = parseInt(formData.get("requiredWorkers") as string);
     const location = formData.get("location") as string;
-    const demandTypeId = formData.get("demandTypeId") as string;
     const note = formData.get("note") as string;
 
     // 驗證必填欄位
@@ -101,7 +100,7 @@ export function DemandDetail() {
         endTime,
         requiredWorkers,
         location: location || undefined,
-        demandTypeId: demandTypeId ? parseInt(demandTypeId) : undefined,
+        demandTypeId: selectedDemandTypeId || undefined,
         selectedOptions: selectedOptionsJson,
         note: note || undefined,
       });

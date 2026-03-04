@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Switch } from "@/components/ui/switch";
+import { Badge } from "@/components/ui/badge";
 import {
   Select,
   SelectContent,
@@ -27,16 +28,24 @@ import { DateMultiPicker } from "@/components/DateMultiPicker";
 import { trpc } from "@/lib/trpc";
 import { useState } from "react";
 import { useLocation } from "wouter";
-import { ArrowLeft, Loader2, Calendar } from "lucide-react";
+import { ArrowLeft, Loader2, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
+import { useAuth } from "@/_core/hooks/useAuth";
 
 export function CreateDemand() {
   const [, setLocation] = useLocation();
+  const { user } = useAuth();
+  const isAdmin = user?.role === "admin";
+  // user 角色同樣需要選擇客戶來建立需求單
+  const isStaffRole = user?.role === "admin" || user?.role === "user";
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedDemandTypeId, setSelectedDemandTypeId] = useState<number | null>(null);
   const [selectedOptionIds, setSelectedOptionIds] = useState<number[]>([]);
   
+  // Admin 代建：選擇的客戶 ID
+  const [selectedClientId, setSelectedClientId] = useState<number | null>(null);
+
   // 批次模式狀態
   const [isBatchMode, setIsBatchMode] = useState(false);
   const [selectedDates, setSelectedDates] = useState<Date[]>([]);
@@ -46,10 +55,19 @@ export function CreateDemand() {
   // 取得需求類型列表
   const { data: demandTypes } = trpc.demandTypes.list.useQuery();
 
+  // Admin / User 都需要取得客戶列表
+  const { data: clients } = trpc.clients.list.useQuery(
+    { status: "active" },
+    { enabled: isStaffRole }
+  );
+
+  // 建立後的跳轉目標：Admin/User 跳到後台列表，Client 跳到客戶入口
+  const successRedirect = isStaffRole ? "/demands" : "/client-portal/demands";
+
   const createMutation = trpc.demands.create.useMutation({
     onSuccess: () => {
-      toast.success("需求單已成功提交，等待內部審核。");
-      setLocation("/client-portal/demands");
+      toast.success("需求單已成功建立！");
+      setLocation(successRedirect);
     },
     onError: (error) => {
       toast.error(error.message || "提交需求單時發生錯誤，請稍後再試。");
@@ -64,7 +82,7 @@ export function CreateDemand() {
       } else {
         toast.success(`已成功建立 ${result.succeeded} 筆需求單！`);
       }
-      setLocation("/client-portal/demands");
+      setLocation(successRedirect);
     },
     onError: (error) => {
       toast.error(error.message || "批次建立需求單時發生錯誤，請稍後再試。");
@@ -76,13 +94,19 @@ export function CreateDemand() {
     e.preventDefault();
     setIsSubmitting(true);
 
+    // Admin / User 代建時必須先選擇客戶
+    if (isStaffRole && !selectedClientId) {
+      toast.error("請先選擇要代替建立需求單的客戶。");
+      setIsSubmitting(false);
+      return;
+    }
+
     const formData = new FormData(e.currentTarget);
     const date = formData.get("date") as string;
     const startTime = formData.get("startTime") as string;
     const endTime = formData.get("endTime") as string;
     const requiredWorkers = parseInt(formData.get("requiredWorkers") as string);
     const location = formData.get("location") as string;
-    const demandTypeId = formData.get("demandTypeId") as string;
     const note = formData.get("note") as string;
 
     // 將選取的選項 ID 轉為 JSON 字串
@@ -117,9 +141,10 @@ export function CreateDemand() {
         endTime,
         requiredWorkers,
         location: location || undefined,
-        demandTypeId: demandTypeId ? parseInt(demandTypeId) : undefined,
+        demandTypeId: selectedDemandTypeId || undefined,
         selectedOptions: selectedOptionsJson,
         note: note || undefined,
+        ...(isStaffRole && selectedClientId ? { clientId: selectedClientId } : {}),
       });
       setShowConfirmDialog(true);
       setIsSubmitting(false);
@@ -140,9 +165,10 @@ export function CreateDemand() {
         endTime,
         requiredWorkers,
         location: location || undefined,
-        demandTypeId: demandTypeId ? parseInt(demandTypeId) : undefined,
+        demandTypeId: selectedDemandTypeId || undefined,
         selectedOptions: selectedOptionsJson,
         note: note || undefined,
+        ...(isStaffRole && selectedClientId ? { clientId: selectedClientId } : {}),
       });
     } catch (error) {
       // Error handling is done in onError callback
@@ -163,6 +189,8 @@ export function CreateDemand() {
   const minDate = new Date();
   minDate.setHours(0, 0, 0, 0);
 
+  const selectedClient = clients?.find((c) => c.id === selectedClientId);
+
   return (
     <ClientPortalLayout>
       <div className="space-y-6">
@@ -179,13 +207,52 @@ export function CreateDemand() {
 
         <Card className="max-w-2xl shadow-md border-border/40">
           <CardHeader className="pb-4">
-            <CardTitle>建立新需求單</CardTitle>
+            <div className="flex items-center gap-2">
+              <CardTitle>建立新需求單</CardTitle>
+              {isStaffRole && (
+                <Badge variant="outline" className="text-amber-600 border-amber-400 bg-amber-50 dark:bg-amber-950/30 gap-1">
+                  <ShieldCheck className="h-3 w-3" />
+                  {isAdmin ? "管理員代建" : "內部人員代建"}
+                </Badge>
+              )}
+            </div>
             <p className="text-sm text-muted-foreground">
-              填寫以下資訊建立用工需求單，提交後將由內部人員審核並指派員工。
+              {isStaffRole
+                ? "以內部人員身份代替客戶建立需求單，請先選擇目標客戶。"
+                : "填寫以下資訊建立用工需求單，提交後將由內部人員審核並指派員工。"}
             </p>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-6">
+
+              {/* Admin / User 代建：客戶選擇器 */}
+              {isStaffRole && (
+                <div className="space-y-2 p-4 rounded-lg border border-amber-200 bg-amber-50/50 dark:border-amber-800 dark:bg-amber-950/20">
+                  <Label htmlFor="admin-client-select" className="text-amber-700 dark:text-amber-400 font-medium">
+                    代替客戶建立 <span className="text-destructive">*</span>
+                  </Label>
+                  <Select
+                    onValueChange={(value) => setSelectedClientId(parseInt(value))}
+                  >
+                    <SelectTrigger className="w-full border-amber-300 dark:border-amber-700">
+                      <SelectValue placeholder="請選擇客戶公司..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {clients?.map((client) => (
+                        <SelectItem key={client.id} value={client.id.toString()}>
+                          {client.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {selectedClient && (
+                    <p className="text-xs text-amber-600 dark:text-amber-400">
+                      此需求單將建立於「{selectedClient.name}」帳下
+                    </p>
+                  )}
+                </div>
+              )}
+
               {/* 批次模式切換 */}
               <div className="flex items-center justify-between p-4 bg-accent/10 rounded-lg border border-accent/20">
                 <div className="space-y-0.5">
@@ -350,7 +417,7 @@ export function CreateDemand() {
 
               {/* 提交按鈕 */}
               <div className="flex items-center gap-4">
-                <Button type="submit" disabled={isSubmitting}>
+                <Button type="submit" disabled={isSubmitting || (isAdmin && !selectedClientId)}>
                   {isSubmitting && (
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   )}
@@ -376,6 +443,9 @@ export function CreateDemand() {
             <AlertDialogTitle>確認批次建立需求單</AlertDialogTitle>
             <AlertDialogDescription className="space-y-2">
               <p>您即將建立 <span className="font-semibold text-foreground">{selectedDates.length}</span> 筆需求單，所有需求單將使用相同的設定（時間、地點、人數等），僅日期不同。</p>
+              {isAdmin && selectedClient && (
+                <p className="text-sm font-medium text-amber-600">客戶：{selectedClient.name}</p>
+              )}
               <p className="text-sm text-muted-foreground">提交後將由內部人員審核並指派員工。</p>
             </AlertDialogDescription>
           </AlertDialogHeader>

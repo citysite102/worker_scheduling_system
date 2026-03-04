@@ -204,9 +204,7 @@ function DashboardLayoutContent({
                   <span className="font-semibold tracking-tight truncate">
                     排班系統
                   </span>
-                  <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-md bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-400 leading-none shrink-0 border border-amber-200 dark:border-amber-800">
-                    Beta
-                  </span>
+
                 </div>
               ) : null}
             </div>
@@ -286,6 +284,7 @@ function DashboardLayoutContent({
       </div>
 
       <SidebarInset>
+
         {isMobile && (
           <div className="flex border-b h-14 items-center justify-between bg-background/95 px-2 backdrop-blur supports-[backdrop-filter]:backdrop-blur sticky top-0 z-40">
             <div className="flex items-center gap-2">
