@@ -249,9 +249,12 @@ export default function Demands() {
 
   const statusConfig: Record<string, { label: string; className: string }> = {
     draft: { label: "草稿", className: "bg-gray-50 text-gray-600 border-gray-200" },
+    pending: { label: "待審核", className: "bg-yellow-50 text-yellow-700 border-yellow-200" },
     confirmed: { label: "已確認", className: "bg-blue-50 text-blue-700 border-blue-200" },
+    assigned: { label: "已指派", className: "bg-purple-50 text-purple-700 border-purple-200" },
+    completed: { label: "已完成", className: "bg-emerald-50 text-emerald-700 border-emerald-200" },
     cancelled: { label: "已取消", className: "bg-red-50 text-red-600 border-red-200" },
-    closed: { label: "已結案", className: "bg-emerald-50 text-emerald-700 border-emerald-200" },
+    closed: { label: "已結案", className: "bg-slate-50 text-slate-600 border-slate-200" },
   };
 
   if (isLoading) {

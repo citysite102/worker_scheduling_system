@@ -1940,3 +1940,6 @@
 ## Bug 修正（2026/03/07）
 - [x] 修正人力可行性：已指派員工應計入可用人數，不再顯示缺口（effectiveShortage = shortage - activeAssignments.length）
 - [x] 修正需求單狀態顯示：副標題根據 demand.status 動態顯示（草稿/已確認/已指派/已完成/已結案）
+
+## Bug 修正（2026/03/07 - 列表狀態）
+- [x] 修正需求列表頁面狀態 Badge：completed 顯示「已完成」而非「草稿」（補上 pending/assigned/completed 三個缺少的狀態）
