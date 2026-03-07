@@ -1651,11 +1651,7 @@ export const appRouter = router({
         const assignment = await db.getAssignmentById(input.assignmentId);
         if (!assignment) throw new Error("排班記錄不存在");
         
-        // 防止重複回填：如果已經有實際工時，不允許再次回填
-        if (assignment.actualStart && assignment.actualEnd) {
-          throw new Error("該排班記錄已經回填過實際工時，不可重複回填。如需修改，請先刪除原有記錄。");
-        }
-        
+        // 允許覆蓋更新：已有實際工時的記錄可以直接修改
         const demand = await db.getDemandById(assignment.demandId);
         if (!demand) throw new Error("需求單不存在");
         

@@ -31,13 +31,14 @@ export default function ActualTime() {
 
   const fillActualTimeMutation = trpc.assignments.fillActualTime.useMutation({
     onSuccess: () => {
-      toast.success("實際工時已回填");
+      const isEdit = editingAssignment?.actualStartTime;
+      toast.success(isEdit ? "工時已更新" : "實際工時已回填");
       setIsDialogOpen(false);
       setEditingAssignment(null);
       refetch();
     },
     onError: (error) => {
-      toast.error(`回填失敗：${error.message}`);
+      toast.error(`工時回填失敗：${error.message}`);
     },
   });
 
@@ -313,7 +314,7 @@ export default function ActualTime() {
         <DialogContent className="max-w-md">
           <form onSubmit={handleTimeSubmit}>
             <DialogHeader>
-              <DialogTitle>回填實際工時</DialogTitle>
+              <DialogTitle>{editingAssignment?.actualStartTime ? "修改實際工時" : "回填實際工時"}</DialogTitle>
               <DialogDescription>
                 {editingAssignment && (
                   <>
