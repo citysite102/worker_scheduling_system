@@ -10,6 +10,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { Download, FileText, Loader2, ChevronDown, ChevronRight } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
+import { getTaiwanMonthStartStr, getTaiwanMonthEndStr, formatTaiwanDate } from "@/lib/dateUtils";
 
 type ReportType = "worker" | "client";
 type ViewMode = "detail" | "monthly";
@@ -17,8 +18,8 @@ type ViewMode = "detail" | "monthly";
 export default function Reports() {
   const [reportType, setReportType] = useState<ReportType>("worker");
   const [viewMode, setViewMode] = useState<ViewMode>("detail");
-  const [startDate, setStartDate] = useState<string>("");
-  const [endDate, setEndDate] = useState<string>("");
+  const [startDate, setStartDate] = useState<string>(() => getTaiwanMonthStartStr());
+  const [endDate, setEndDate] = useState<string>(() => getTaiwanMonthEndStr());
   const [selectedWorker, setSelectedWorker] = useState<string>("all");
   const [selectedClient, setSelectedClient] = useState<string>("all");
   const [hasGenerated, setHasGenerated] = useState(false);
@@ -31,7 +32,7 @@ export default function Reports() {
   const reportStartStr = startDate || "";
   const reportEndStr = endDate || "";
 
-  const { data: workerReport, isLoading: workerLoading, refetch: refetchWorker } = trpc.reports.workerPayroll.useQuery(
+  const { data: workerReport, isLoading: workerLoading, refetch: refetchWorker } = (trpc.reports as any).workerPayroll.useQuery(
     { 
       startDate: reportStartStr || "2000-01-01", 
       endDate: reportEndStr || "2099-12-31",
@@ -40,7 +41,7 @@ export default function Reports() {
     { enabled: false }
   );
 
-  const { data: clientReport, isLoading: clientLoading, refetch: refetchClient } = trpc.reports.clientHours.useQuery(
+  const { data: clientReport, isLoading: clientLoading, refetch: refetchClient } = (trpc.reports as any).clientHours.useQuery(
     { 
       startDate: reportStartStr || "2000-01-01", 
       endDate: reportEndStr || "2099-12-31",

@@ -2030,9 +2030,9 @@
 
 ## 使用者回報問題（2026/03/08 - 工時回填日期偏移根本原因未解決）
 
-- [ ] 查詢米窩指派的 scheduledStart 原始 UTC 値，確認偏移方向
-- [ ] 修正後端 listByDate：改為台灣時區（UTC+8）日期範圍查詢
-- [ ] 修正前端 ActualTime.tsx：日期傳遞與顯示一致
+- [x] 查詢米窩指派的 scheduledStart 原始 UTC 値，確認偵移方向
+- [x] 修正後端 listByDate：改為台灣時區（UTC+8）日期範圍查詢
+- [x] 修正前端 ActualTime.tsx：日期傳遞與顯示一致
 
 ## 使用者回報問題（2026/03/08 - 工時回填日期偏移根本原因修正）
 
@@ -2043,3 +2043,12 @@
 - [x] 修正 routers.ts：dailyAssignmentTrend 改用台灣時區日期計算
 - [x] 修正 ActualTime.tsx：改為傳遞 dateStr 字串
 - [x] 修正 Reports.tsx：改為傳遞日期字串
+
+## 新功能開發（2026/03/08 - dateUtils 工具函式庫）
+
+- [x] 建立 client/src/lib/dateUtils.ts：前端台灣時區工具函式庫
+- [x] 建立 server/dateUtils.ts：後端台灣時區工具函式庫
+- [x] 替換 ActualTime.tsx 的時區邏輯為 dateUtils 呼叫
+- [x] 替換 Reports.tsx 的時區邏輯為 dateUtils 呼叫
+- [x] 替換 Dashboard.tsx 的時區邏輯為 dateUtils 呼叫
+- [x] 替換 routers.ts 中 dailyAssignmentTrend 的時區邏輯為 dateUtils 呼叫

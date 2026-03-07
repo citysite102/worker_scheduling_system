@@ -6,6 +6,7 @@ import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { useState, useMemo } from "react";
 import { toast } from "sonner";
+import { getTaiwanTodayStr, getTaiwanDateStrDaysAgo, formatTaiwanDate } from "@/lib/dateUtils";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   LineChart, Line, PieChart, Pie, Cell, Legend,
@@ -76,7 +77,7 @@ function PendingDemandCard({
       <Link href={`/demands/${demand.id}`} className="min-w-0 flex-1">
         <div className="font-medium text-sm">{demand.client?.name || "未指定客戶"}</div>
         <div className="text-xs text-muted-foreground mt-0.5">
-          {new Date(demand.date).toLocaleDateString("zh-TW", { month: "short", day: "numeric" })}
+          {formatTaiwanDate(typeof demand.date === "string" ? demand.date.split("T")[0] : new Date(demand.date).toISOString().split("T")[0], "short")}
           {" "}·{" "}
           {demand.startTime} - {demand.endTime}
           {demand.location && ` · ${demand.location}`}
@@ -110,24 +111,17 @@ function PendingDemandCard({
 }
 
 export default function Dashboard() {
-  // 修正時區問題：系統日期以 UTC 零時儲存，前端傳入日期時必須用 UTC 零時
-  // demands.list 後端會自行重設 UTC，但 assignments.getByDateRange 直接使用傳入的時間戳
-  const [today] = useState(() => {
-    const now = new Date();
-    // 取台灣時間的年月日，再用 UTC 零時建構 Date，避免本地時區偵移
-    const taiwanOffset = 8 * 60; // UTC+8 in minutes
-    const localOffset = now.getTimezoneOffset(); // negative for UTC+8
-    const taiwanNow = new Date(now.getTime() + (taiwanOffset + localOffset) * 60 * 1000);
-    const y = taiwanNow.getFullYear();
-    const m = taiwanNow.getMonth();
-    const d = taiwanNow.getDate();
-    return new Date(Date.UTC(y, m, d, 0, 0, 0, 0));
-  });
+  // 取台灣時區今日日期字串，用於 demands.list 查詢
+  const [todayStr] = useState(() => getTaiwanTodayStr());
   
   // 批次選取狀態
   const [selectedDemandIds, setSelectedDemandIds] = useState<Set<number>>(new Set());
   const utils = trpc.useUtils();
 
+  const [today] = useState(() => {
+    const [y, m, d] = todayStr.split("-").map(Number);
+    return new Date(Date.UTC(y, m - 1, d, 0, 0, 0, 0));
+  });
   const tomorrow = useMemo(() => new Date(today.getTime() + 24 * 60 * 60 * 1000), [today]);
 
   const { data: todayDemandsData, isLoading: demandsLoading } = trpc.demands.list.useQuery({
@@ -300,7 +294,7 @@ export default function Dashboard() {
       <div>
         <h1 className="text-2xl font-semibold text-foreground">儀表板</h1>
         <p className="text-sm text-muted-foreground mt-1">
-          {new Date().toLocaleDateString("zh-TW", { year: "numeric", month: "long", day: "numeric", weekday: "long" })}
+          {formatTaiwanDate(todayStr, "full")}
         </p>
       </div>
 

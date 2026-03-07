@@ -14,6 +14,7 @@ import { recognizeWorkPermit } from "./gemini-ocr";
 import { storagePut } from "./storage";
 import { hashPassword, generateRandomPassword, verifyPassword, generateResetToken } from "./password";
 import { sendEmail, createNewAccountEmail, createResetPasswordEmail } from "./email";
+import { getTaiwanTodayStr, getTaiwanDateStrDaysAgo, utcToTaiwanDateStr, generateDateRange } from "./dateUtils";
 
 export const appRouter = router({
   system: systemRouter,
@@ -2183,28 +2184,22 @@ export const appRouter = router({
         const days = input?.days || 14;
         
         // 用台灣時區計算日期範圍
-        const nowTW = new Date(Date.now() + 8 * 60 * 60 * 1000);
-        const endStr = `${nowTW.getUTCFullYear()}-${String(nowTW.getUTCMonth() + 1).padStart(2, "0")}-${String(nowTW.getUTCDate()).padStart(2, "0")}`;
-        const startTW = new Date(nowTW);
-        startTW.setUTCDate(startTW.getUTCDate() - days + 1);
-        const startStr = `${startTW.getUTCFullYear()}-${String(startTW.getUTCMonth() + 1).padStart(2, "0")}-${String(startTW.getUTCDate()).padStart(2, "0")}`;
+        const endStr = getTaiwanTodayStr();
+        const startStr = getTaiwanDateStrDaysAgo(days - 1);
 
         const assignments = await db.getAssignmentsByTaiwanDateRange(startStr, endStr);
         const activeAssignments = assignments.filter(a => a.status !== "cancelled");
 
         // 按台灣時區日期分組
         const dailyMap: Record<string, number> = {};
-        for (let i = 0; i < days; i++) {
-          const d = new Date(startTW);
-          d.setUTCDate(d.getUTCDate() + i);
-          const key = `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}-${String(d.getUTCDate()).padStart(2, "0")}`;
+        const dateRange = generateDateRange(startStr, endStr);
+        for (const key of dateRange) {
           dailyMap[key] = 0;
         }
 
         for (const a of activeAssignments) {
           // 用 CONVERT_TZ 的等效 JS 計算：加 8 小時後取 UTC 日期
-          const twTime = new Date(new Date(a.scheduledStart).getTime() + 8 * 60 * 60 * 1000);
-          const key = `${twTime.getUTCFullYear()}-${String(twTime.getUTCMonth() + 1).padStart(2, "0")}-${String(twTime.getUTCDate()).padStart(2, "0")}`;
+          const key = utcToTaiwanDateStr(a.scheduledStart);
           if (dailyMap[key] !== undefined) {
             dailyMap[key]++;
           }
@@ -2218,30 +2213,24 @@ export const appRouter = router({
       .input(z.object({ days: z.number().default(14) }).optional())
       .query(async ({ input }) => {
         const days = input?.days || 14;
-        const endDate = new Date();
-        endDate.setUTCHours(23, 59, 59, 999); // 使用 UTC
-        const startDate = new Date();
-        startDate.setDate(startDate.getDate() - days + 1);
-        startDate.setUTCHours(0, 0, 0, 0); // 使用 UTC
+        const endStr = getTaiwanTodayStr();
+        const startStr = getTaiwanDateStrDaysAgo(days - 1);
 
         const allDemands = await db.getAllDemands();
         const filteredDemands = allDemands.filter(d => {
-          const demandDate = new Date(d.date);
-          return demandDate >= startDate && demandDate <= endDate;
+          const demandDateStr = utcToTaiwanDateStr(d.date);
+          return demandDateStr >= startStr && demandDateStr <= endStr;
         });
 
-        // 按日期分組（使用 UTC 日期方法）
+        // 按台灣時區日期分組
         const dailyMap: Record<string, number> = {};
-        for (let i = 0; i < days; i++) {
-          const d = new Date(startDate);
-          d.setUTCDate(d.getUTCDate() + i);
-          const key = `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}-${String(d.getUTCDate()).padStart(2, "0")}`;
+        const dateRange = generateDateRange(startStr, endStr);
+        for (const key of dateRange) {
           dailyMap[key] = 0;
         }
 
         for (const demand of filteredDemands) {
-          const d = new Date(demand.date);
-          const key = `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}-${String(d.getUTCDate()).padStart(2, "0")}`;
+          const key = utcToTaiwanDateStr(demand.date);
           if (dailyMap[key] !== undefined) {
             dailyMap[key] += demand.requiredWorkers;
           }
@@ -2255,16 +2244,13 @@ export const appRouter = router({
       .input(z.object({ days: z.number().default(30) }).optional())
       .query(async ({ input }) => {
         const days = input?.days || 30;
-        const endDate = new Date();
-        endDate.setUTCHours(23, 59, 59, 999); // 使用 UTC
-        const startDate = new Date();
-        startDate.setDate(startDate.getDate() - days + 1);
-        startDate.setUTCHours(0, 0, 0, 0); // 使用 UTC
+        const endStr = getTaiwanTodayStr();
+        const startStr = getTaiwanDateStrDaysAgo(days - 1);
 
         const allDemands = await db.getAllDemands();
         const filteredDemands = allDemands.filter(d => {
-          const demandDate = new Date(d.date);
-          return demandDate >= startDate && demandDate <= endDate;
+          const demandDateStr = utcToTaiwanDateStr(d.date);
+          return demandDateStr >= startStr && demandDateStr <= endStr;
         });
 
         // 按客戶分組
