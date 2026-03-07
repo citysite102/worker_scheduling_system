@@ -254,6 +254,9 @@ export default function Reports() {
                             <TableHead className="text-xs font-medium">結束時間</TableHead>
                             <TableHead className="text-xs font-medium">角色</TableHead>
                             <TableHead className="text-xs font-medium text-right">實際工時(小時)</TableHead>
+                            <TableHead className="text-xs font-medium">計薪方式</TableHead>
+                            <TableHead className="text-xs font-medium text-right">完成件數</TableHead>
+                            <TableHead className="text-xs font-medium text-right">薪資金額(元)</TableHead>
                           </>
                         ) : (
                           <>
@@ -282,6 +285,15 @@ export default function Reports() {
                                 )}
                               </TableCell>
                               <TableCell className="text-right text-sm tabular-nums">{row.actualHours}</TableCell>
+                              <TableCell className="text-sm">
+                                {row.payType === 'hourly' ? '時薪' : row.payType === 'unit' ? '件薪' : row.payType === 'fixed' ? '固定' : <span className="text-muted-foreground text-xs">未設定</span>}
+                              </TableCell>
+                              <TableCell className="text-right text-sm tabular-nums">
+                                {row.unitCount != null ? `${row.unitCount} ${row.unitType || '件'}` : <span className="text-muted-foreground text-xs">—</span>}
+                              </TableCell>
+                              <TableCell className="text-right text-sm tabular-nums font-medium">
+                                {row.payAmount != null ? `$${row.payAmount.toLocaleString()}` : <span className="text-muted-foreground text-xs">未設定</span>}
+                              </TableCell>
                             </>
                           ) : (
                             <>

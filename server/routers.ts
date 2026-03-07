@@ -1904,6 +1904,41 @@ export const appRouter = router({
         
         return { success: true };
       }),
+
+    // 薪資回填（與客戶計費完全分離）
+    fillPayroll: publicProcedure
+      .input(z.object({
+        assignmentId: z.number(),
+        payType: z.enum(["hourly", "unit", "fixed"]),
+        unitCount: z.number().int().min(0).optional(), // 完成件數（件薪時必填）
+        unitType: z.string().max(50).optional(),       // 件數單位（如「間」「件」）
+        payRate: z.number().int().min(0).optional(),   // 計薪單價（元/小時 或 元/件）
+        payAmount: z.number().int().min(0),            // 最終薪資金額（元）
+      }))
+      .mutation(async ({ input }) => {
+        const assignment = await db.getAssignmentById(input.assignmentId);
+        if (!assignment) throw new TRPCError({ code: "NOT_FOUND", message: "排班記錄不存在" });
+        
+        // 實習生無薪資，不允許填入薪資
+        if (assignment.role === "intern") {
+          throw new TRPCError({ code: "BAD_REQUEST", message: "實習生為無薪實習，無法填入薪資資料。" });
+        }
+        
+        // 件薪時必須填入件數
+        if (input.payType === "unit" && (input.unitCount === undefined || input.unitCount === null)) {
+          throw new TRPCError({ code: "BAD_REQUEST", message: "件薪計算方式必須填入完成件數。" });
+        }
+        
+        await db.updateAssignment(input.assignmentId, {
+          payType: input.payType,
+          unitCount: input.unitCount,
+          unitType: input.unitType,
+          payRate: input.payRate,
+          payAmount: input.payAmount,
+        });
+        
+        return { success: true };
+      }),
   }),
 
   // ============ Reports ============
@@ -1937,8 +1972,18 @@ export const appRouter = router({
             const actualMinutes = assignment.actualHours || 0;
             // 休息時間（分鐘）
             const breakMinutes = demand?.breakHours || 0;
-            // 計薪工時 = 實際工時 - 休息時間
+            // 參考工時（實際工時 - 休息）
             const billableMinutes = Math.max(0, actualMinutes - breakMinutes);
+            
+            // 薪資資訊（從新字段取得）
+            const payType = assignment.payType || "hourly";
+            const payAmount = assignment.payAmount ?? null;
+            const unitCount = assignment.unitCount ?? null;
+            const unitType = assignment.unitType ?? null;
+            const payRate = assignment.payRate ?? null;
+            
+            // 薪資狀態判斷
+            const payrollFilled = payAmount !== null;
             
             return {
               workerName: worker?.name || "",
@@ -1950,6 +1995,13 @@ export const appRouter = router({
               breakHours: (breakMinutes / 60).toFixed(2),
               billableHours: (billableMinutes / 60).toFixed(2),
               role: assignment.role || "regular",
+              // 薪資資訊（計費與薪資分離架構）
+              payType,
+              payAmount,
+              unitCount,
+              unitType,
+              payRate,
+              payrollFilled,
             };
           })
         );

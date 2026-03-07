@@ -1983,3 +1983,11 @@
 ### 客戶報表實習生工時排除（2026/03/08）
 - [x] 後端 reports.clientHours：過濾 role=intern，帳單只計正職工時
 - [x] 後端 reports.workerPayroll：確認員工薪資報表正確顯示 role 欄位（實習生也計薪，管理端可見）
+
+### 薪資計費分離架構實作（2026/03/08）
+- [x] Schema：assignments 表新增 unitCount、unitType、payType、payRate、payAmount 欄位
+- [x] 執行 migration SQL
+- [x] 後端：新增 assignments.fillPayroll mutation（薪資回填）
+- [x] 後端：reports.workerPayroll 改用 payAmount 欄位，加入 unitCount/payType 輸出
+- [x] 前端：ActualTime 頁面加入薪資回填區塊（件數、計薪方式、單價、金額）
+- [x] 前端：Reports 員工薪資報表顯示 payType/unitCount/payAmount

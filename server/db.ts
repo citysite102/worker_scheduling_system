@@ -1,5 +1,6 @@
 import { eq, and, gte, lte, lt, or, sql, desc } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
+import mysql from "mysql2";
 import { InsertUser, users } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
@@ -10,7 +11,8 @@ export async function getDb() {
   if (!_db && process.env.DATABASE_URL) {
     try {
       // 強制使用 UTC 時區，避免 mysql2 預設 'local' 造成時間偏移
-      _db = drizzle(process.env.DATABASE_URL, { connection: { timezone: '+00:00' } });
+      const pool = mysql.createPool({ uri: process.env.DATABASE_URL, timezone: '+00:00' });
+      _db = drizzle(pool as any);
     } catch (error) {
       console.warn("[Database] Failed to connect:", error);
       _db = null;
@@ -520,7 +522,7 @@ export async function createDemand(data: { clientId: number; date: Date; startTi
   return newDemand;
 }
 
-export async function updateDemand(id: number, data: Partial<{ clientId: number; date: Date; startTime: string; endTime: string; requiredWorkers: number; breakHours?: number; location?: string; note?: string; status: "draft" | "confirmed" | "cancelled" | "closed" }>) {
+export async function updateDemand(id: number, data: Partial<{ clientId: number; date: Date; startTime: string; endTime: string; requiredWorkers: number; breakHours?: number; location?: string; note?: string; status: "draft" | "pending" | "confirmed" | "assigned" | "completed" | "cancelled" | "closed" }>) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   await db.update(demands).set(data).where(eq(demands.id, id));
@@ -584,7 +586,7 @@ export async function getAssignmentById(id: number) {
   return result[0];
 }
 
-export async function updateAssignment(id: number, data: Partial<{ actualStart?: Date; actualEnd?: Date; actualStartTime?: string; actualEndTime?: string; actualHours?: number; varianceHours?: number; status: "assigned" | "completed" | "cancelled" | "disputed"; note?: string }>) {
+export async function updateAssignment(id: number, data: Partial<{ actualStart?: Date; actualEnd?: Date; actualStartTime?: string; actualEndTime?: string; actualHours?: number; varianceHours?: number; status: "assigned" | "completed" | "cancelled" | "disputed"; note?: string; payType?: "hourly" | "unit" | "fixed"; unitCount?: number; unitType?: string; payRate?: number; payAmount?: number }>) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   await db.update(assignments).set(data).where(eq(assignments.id, id));

@@ -142,6 +142,12 @@ export const assignments = mysqlTable("assignments", {
   varianceHours: int("varianceHours"), // 以分鐘為單位
   status: mysqlEnum("status", ["assigned", "completed", "cancelled", "disputed"]).default("assigned").notNull(),
   role: mysqlEnum("role", ["regular", "intern"]).default("regular").notNull(), // 正職 or 實習生
+  // 薪資計算欄位（與客戶計費完全分離）
+  payType: mysqlEnum("payType", ["hourly", "unit", "fixed"]).default("hourly"), // 計薪方式：時薪/件薪/固定
+  unitCount: int("unitCount"), // 完成件數（如：整理 10 間房）
+  unitType: varchar("unitType", { length: 50 }), // 件數單位（如：「間」、「件」、「箱」）
+  payRate: int("payRate"), // 計薪單價（元/小時 或 元/件），以整數儲存（元）
+  payAmount: int("payAmount"), // 最終薪資金額（元），計算後存入方便報表
   note: text("note"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
