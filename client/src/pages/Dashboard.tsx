@@ -110,10 +110,18 @@ function PendingDemandCard({
 }
 
 export default function Dashboard() {
+  // 修正時區問題：系統日期以 UTC 零時儲存，前端傳入日期時必須用 UTC 零時
+  // demands.list 後端會自行重設 UTC，但 assignments.getByDateRange 直接使用傳入的時間戳
   const [today] = useState(() => {
-    const d = new Date();
-    d.setHours(0, 0, 0, 0);
-    return d;
+    const now = new Date();
+    // 取台灣時間的年月日，再用 UTC 零時建構 Date，避免本地時區偵移
+    const taiwanOffset = 8 * 60; // UTC+8 in minutes
+    const localOffset = now.getTimezoneOffset(); // negative for UTC+8
+    const taiwanNow = new Date(now.getTime() + (taiwanOffset + localOffset) * 60 * 1000);
+    const y = taiwanNow.getFullYear();
+    const m = taiwanNow.getMonth();
+    const d = taiwanNow.getDate();
+    return new Date(Date.UTC(y, m, d, 0, 0, 0, 0));
   });
   
   // 批次選取狀態

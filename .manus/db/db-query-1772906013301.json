@@ -1,0 +1,70 @@
+{
+  "query": "SELECT id, date, startTime, endTime FROM demands ORDER BY date DESC LIMIT 10;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2iEKifVQ9gKtEas.9cbf5414b428 --database CMgr35KntT8tLtgpfJPejw --execute SELECT id, date, startTime, endTime FROM demands ORDER BY date DESC LIMIT 10;",
+  "rows": [
+    {
+      "id": "930002",
+      "date": "2026-03-07 00:00:00",
+      "startTime": "10:00",
+      "endTime": "16:00"
+    },
+    {
+      "id": "930045",
+      "date": "2026-03-06 00:00:00",
+      "startTime": "12:00",
+      "endTime": "21:00"
+    },
+    {
+      "id": "930029",
+      "date": "2026-03-04 00:00:00",
+      "startTime": "10:00",
+      "endTime": "16:00"
+    },
+    {
+      "id": "930099",
+      "date": "2026-02-19 00:00:00",
+      "startTime": "09:30",
+      "endTime": "14:30"
+    },
+    {
+      "id": "930098",
+      "date": "2026-02-17 00:00:00",
+      "startTime": "09:30",
+      "endTime": "13:30"
+    },
+    {
+      "id": "930097",
+      "date": "2026-02-16 00:00:00",
+      "startTime": "16:00",
+      "endTime": "18:00"
+    },
+    {
+      "id": "930096",
+      "date": "2026-02-15 00:00:00",
+      "startTime": "09:30",
+      "endTime": "18:00"
+    },
+    {
+      "id": "930095",
+      "date": "2026-02-14 00:00:00",
+      "startTime": "11:00",
+      "endTime": "18:00"
+    },
+    {
+      "id": "930094",
+      "date": "2026-02-13 00:00:00",
+      "startTime": "10:00",
+      "endTime": "16:00"
+    },
+    {
+      "id": "930093",
+      "date": "2026-02-09 00:00:00",
+      "startTime": "09:30",
+      "endTime": "16:00"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tdate\tstartTime\tendTime\n930002\t2026-03-07 00:00:00\t10:00\t16:00\n930045\t2026-03-06 00:00:00\t12:00\t21:00\n930029\t2026-03-04 00:00:00\t10:00\t16:00\n930099\t2026-02-19 00:00:00\t09:30\t14:30\n930098\t2026-02-17 00:00:00\t09:30\t13:30\n930097\t2026-02-16 00:00:00\t16:00\t18:00\n930096\t2026-02-15 00:00:00\t09:30\t18:00\n930095\t2026-02-14 00:00:00\t11:00\t18:00\n930094\t2026-02-13 00:00:00\t10:00\t16:00\n930093\t2026-02-09 00:00:00\t09:30\t16:00\n",
+  "stderr": "",
+  "execution_time_ms": 1559
+}

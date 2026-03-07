@@ -562,10 +562,11 @@ export async function getAssignmentsByWorker(workerId: number, startDate?: Date,
 export async function getAssignmentsByDateRange(startDate: Date, endDate: Date) {
   const db = await getDb();
   if (!db) return [];
+  // 使用 scheduledStart 的日期範圍查詢，支援跨日班次（scheduledEnd 可能跨到隔天）
   return await db.select().from(assignments).where(
     and(
       gte(assignments.scheduledStart, startDate),
-      lte(assignments.scheduledEnd, endDate)
+      lte(assignments.scheduledStart, endDate)
     )
   );
 }

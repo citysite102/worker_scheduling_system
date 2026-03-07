@@ -1,0 +1,45 @@
+{
+  "query": "SELECT id, date, startTime, endTime, UNIX_TIMESTAMP(date) as unix_ts FROM demands ORDER BY date DESC LIMIT 5;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2iEKifVQ9gKtEas.9cbf5414b428 --database CMgr35KntT8tLtgpfJPejw --execute SELECT id, date, startTime, endTime, UNIX_TIMESTAMP(date) as unix_ts FROM demands ORDER BY date DESC LIMIT 5;",
+  "rows": [
+    {
+      "id": "930002",
+      "date": "2026-03-07 00:00:00",
+      "startTime": "10:00",
+      "endTime": "16:00",
+      "unix_ts": "1772841600"
+    },
+    {
+      "id": "930045",
+      "date": "2026-03-06 00:00:00",
+      "startTime": "12:00",
+      "endTime": "21:00",
+      "unix_ts": "1772755200"
+    },
+    {
+      "id": "930029",
+      "date": "2026-03-04 00:00:00",
+      "startTime": "10:00",
+      "endTime": "16:00",
+      "unix_ts": "1772582400"
+    },
+    {
+      "id": "930099",
+      "date": "2026-02-19 00:00:00",
+      "startTime": "09:30",
+      "endTime": "14:30",
+      "unix_ts": "1771459200"
+    },
+    {
+      "id": "930098",
+      "date": "2026-02-17 00:00:00",
+      "startTime": "09:30",
+      "endTime": "13:30",
+      "unix_ts": "1771286400"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tdate\tstartTime\tendTime\tunix_ts\n930002\t2026-03-07 00:00:00\t10:00\t16:00\t1772841600\n930045\t2026-03-06 00:00:00\t12:00\t21:00\t1772755200\n930029\t2026-03-04 00:00:00\t10:00\t16:00\t1772582400\n930099\t2026-02-19 00:00:00\t09:30\t14:30\t1771459200\n930098\t2026-02-17 00:00:00\t09:30\t13:30\t1771286400\n",
+  "stderr": "",
+  "execution_time_ms": 1599
+}
