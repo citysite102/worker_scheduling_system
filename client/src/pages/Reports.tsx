@@ -1,4 +1,5 @@
 import { trpc } from "@/lib/trpc";
+import React from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -373,9 +374,8 @@ export default function Reports() {
                         </TableHeader>
                         <TableBody>
                           {(currentData as any[]).map((row: any) => (
-                            <>
+                            <React.Fragment key={`worker-${row.workerId}`}>
                               <TableRow
-                                key={`summary-${row.workerId}`}
                                 className="hover:bg-muted/20 cursor-pointer"
                                 onClick={() => toggleWorkerExpand(row.workerId)}
                               >
@@ -429,7 +429,7 @@ export default function Reports() {
                                   </TableCell>
                                 </TableRow>
                               ))}
-                            </>
+                            </React.Fragment>
                           ))}
                         </TableBody>
                       </Table>

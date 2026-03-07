@@ -2052,3 +2052,7 @@
 - [x] 替換 Reports.tsx 的時區邏輯為 dateUtils 呼叫
 - [x] 替換 Dashboard.tsx 的時區邏輯為 dateUtils 呼叫
 - [x] 替換 routers.ts 中 dailyAssignmentTrend 的時區邏輯為 dateUtils 呼叫
+
+## 使用者回報問題（2026/03/08 - Reports.tsx TableBody key prop 警告）
+
+- [x] 修正 Reports.tsx TableBody 中缺少 key prop 的列表渲染
