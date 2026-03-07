@@ -2009,3 +2009,8 @@
 
 - [x] 修正 DemandDetail.tsx 編輯表單：clientId Select 的値轉換為 parseInt 時產生 NaN
 - [x] 確認編輯對話框預填 clientId 的邏輯正確
+
+## 使用者回報問題（2026/03/08 - 實際工時回填日期查詢為空）
+
+- [x] 調查 listByDate 後端查詢邏輯：確認日期範圍是否因時區偵移導致查不到記錄
+- [x] 修正前端 ActualTime.tsx 的日期傳遞：確保傳入的 Date 物件對應台灣時區的正確日期範圍
