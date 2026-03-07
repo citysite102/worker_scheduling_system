@@ -84,7 +84,8 @@ describe("businessLogic", () => {
 
   describe("formatTime", () => {
     it("應該格式化時間為 HH:mm", () => {
-      const date = new Date("2026-02-09T14:30:00");
+      // 使用 UTC 時間字串（帶 Z 後綴），符合資料庫回傳的實際格式
+      const date = new Date("2026-02-09T14:30:00Z");
 
       const result = formatTime(date);
 
@@ -92,7 +93,8 @@ describe("businessLogic", () => {
     });
 
     it("應該正確補零", () => {
-      const date = new Date("2026-02-09T09:05:00");
+      // 使用 UTC 時間字串（帶 Z 後綴），符合資料庫回傳的實際格式
+      const date = new Date("2026-02-09T09:05:00Z");
 
       const result = formatTime(date);
 

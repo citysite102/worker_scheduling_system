@@ -9,7 +9,8 @@ let _db: ReturnType<typeof drizzle> | null = null;
 export async function getDb() {
   if (!_db && process.env.DATABASE_URL) {
     try {
-      _db = drizzle(process.env.DATABASE_URL);
+      // 強制使用 UTC 時區，避免 mysql2 預設 'local' 造成時間偏移
+      _db = drizzle(process.env.DATABASE_URL, { connection: { timezone: '+00:00' } });
     } catch (error) {
       console.warn("[Database] Failed to connect:", error);
       _db = null;

@@ -1,0 +1,130 @@
+{
+  "query": "SELECT a.id, a.demandId, a.scheduledStart, a.scheduledEnd, a.actualStart, a.actualEnd, a.status, d.date, d.startTime, d.endTime FROM assignments a JOIN demands d ON a.demandId = d.id WHERE a.workerId = 780001 ORDER BY a.scheduledStart",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2iEKifVQ9gKtEas.9cbf5414b428 --database CMgr35KntT8tLtgpfJPejw --execute SELECT a.id, a.demandId, a.scheduledStart, a.scheduledEnd, a.actualStart, a.actualEnd, a.status, d.date, d.startTime, d.endTime FROM assignments a JOIN demands d ON a.demandId = d.id WHERE a.workerId = 780001 ORDER BY a.scheduledStart",
+  "rows": [
+    {
+      "id": "660037",
+      "demandId": "930093",
+      "scheduledStart": "2026-02-08 20:30:00",
+      "scheduledEnd": "2026-02-09 03:00:00",
+      "actualStart": "2026-02-08 20:30:00",
+      "actualEnd": "2026-02-09 03:00:00",
+      "status": "completed",
+      "date": "2026-02-09 00:00:00",
+      "startTime": "09:30",
+      "endTime": "16:00"
+    },
+    {
+      "id": "660038",
+      "demandId": "930094",
+      "scheduledStart": "2026-02-12 21:00:00",
+      "scheduledEnd": "2026-02-13 03:00:00",
+      "actualStart": "2026-02-12 21:00:00",
+      "actualEnd": "2026-02-13 03:00:00",
+      "status": "completed",
+      "date": "2026-02-13 00:00:00",
+      "startTime": "10:00",
+      "endTime": "16:00"
+    },
+    {
+      "id": "660039",
+      "demandId": "930095",
+      "scheduledStart": "2026-02-13 22:00:00",
+      "scheduledEnd": "2026-02-14 05:00:00",
+      "actualStart": "2026-02-13 22:00:00",
+      "actualEnd": "2026-02-14 05:00:00",
+      "status": "completed",
+      "date": "2026-02-14 00:00:00",
+      "startTime": "11:00",
+      "endTime": "18:00"
+    },
+    {
+      "id": "660040",
+      "demandId": "930096",
+      "scheduledStart": "2026-02-14 20:30:00",
+      "scheduledEnd": "2026-02-15 05:00:00",
+      "actualStart": "2026-02-14 20:30:00",
+      "actualEnd": "2026-02-15 05:00:00",
+      "status": "completed",
+      "date": "2026-02-15 00:00:00",
+      "startTime": "09:30",
+      "endTime": "18:00"
+    },
+    {
+      "id": "660041",
+      "demandId": "930097",
+      "scheduledStart": "2026-02-16 03:00:00",
+      "scheduledEnd": "2026-02-16 05:00:00",
+      "actualStart": "2026-02-16 03:00:00",
+      "actualEnd": "2026-02-16 05:00:00",
+      "status": "completed",
+      "date": "2026-02-16 00:00:00",
+      "startTime": "16:00",
+      "endTime": "18:00"
+    },
+    {
+      "id": "660042",
+      "demandId": "930098",
+      "scheduledStart": "2026-02-16 20:30:00",
+      "scheduledEnd": "2026-02-17 00:30:00",
+      "actualStart": "2026-02-16 20:30:00",
+      "actualEnd": "2026-02-17 00:30:00",
+      "status": "completed",
+      "date": "2026-02-17 00:00:00",
+      "startTime": "09:30",
+      "endTime": "13:30"
+    },
+    {
+      "id": "660043",
+      "demandId": "930099",
+      "scheduledStart": "2026-02-18 20:30:00",
+      "scheduledEnd": "2026-02-19 01:30:00",
+      "actualStart": "2026-02-18 20:30:00",
+      "actualEnd": "2026-02-19 01:30:00",
+      "status": "completed",
+      "date": "2026-02-19 00:00:00",
+      "startTime": "09:30",
+      "endTime": "14:30"
+    },
+    {
+      "id": "660016",
+      "demandId": "930029",
+      "scheduledStart": "2026-03-04 10:00:00",
+      "scheduledEnd": "2026-03-04 16:00:00",
+      "actualStart": "NULL",
+      "actualEnd": "NULL",
+      "status": "assigned",
+      "date": "2026-03-04 00:00:00",
+      "startTime": "10:00",
+      "endTime": "16:00"
+    },
+    {
+      "id": "660017",
+      "demandId": "930045",
+      "scheduledStart": "2026-03-06 12:00:00",
+      "scheduledEnd": "2026-03-06 21:00:00",
+      "actualStart": "NULL",
+      "actualEnd": "NULL",
+      "status": "assigned",
+      "date": "2026-03-06 00:00:00",
+      "startTime": "12:00",
+      "endTime": "21:00"
+    },
+    {
+      "id": "660001",
+      "demandId": "930002",
+      "scheduledStart": "2026-03-07 10:00:00",
+      "scheduledEnd": "2026-03-07 16:00:00",
+      "actualStart": "2026-03-06 15:00:00",
+      "actualEnd": "2026-03-06 21:00:00",
+      "status": "disputed",
+      "date": "2026-03-07 00:00:00",
+      "startTime": "10:00",
+      "endTime": "16:00"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tdemandId\tscheduledStart\tscheduledEnd\tactualStart\tactualEnd\tstatus\tdate\tstartTime\tendTime\n660037\t930093\t2026-02-08 20:30:00\t2026-02-09 03:00:00\t2026-02-08 20:30:00\t2026-02-09 03:00:00\tcompleted\t2026-02-09 00:00:00\t09:30\t16:00\n660038\t930094\t2026-02-12 21:00:00\t2026-02-13 03:00:00\t2026-02-12 21:00:00\t2026-02-13 03:00:00\tcompleted\t2026-02-13 00:00:00\t10:00\t16:00\n660039\t930095\t2026-02-13 22:00:00\t2026-02-14 05:00:00\t2026-02-13 22:00:00\t2026-02-14 05:00:00\tcompleted\t2026-02-14 00:00:00\t11:00\t18:00\n660040\t930096\t2026-02-14 20:30:00\t2026-02-15 05:00:00\t2026-02-14 20:30:00\t2026-02-15 05:00:00\tcompleted\t2026-02-15 00:00:00\t09:30\t18:00\n660041\t930097\t2026-02-16 03:00:00\t2026-02-16 05:00:00\t2026-02-16 03:00:00\t2026-02-16 05:00:00\tcompleted\t2026-02-16 00:00:00\t16:00\t18:00\n660042\t930098\t2026-02-16 20:30:00\t2026-02-17 00:30:00\t2026-02-16 20:30:00\t2026-02-17 00:30:00\tcompleted\t2026-02-17 00:00:00\t09:30\t13:30\n660043\t930099\t2026-02-18 20:30:00\t2026-02-19 01:30:00\t2026-02-18 20:30:00\t2026-02-19 01:30:00\tcompleted\t2026-02-19 00:00:00\t09:30\t14:30\n660016\t930029\t2026-03-04 10:00:00\t2026-03-04 16:00:00\tNULL\tNULL\tassigned\t2026-03-04 00:00:00\t10:00\t16:00\n660017\t930045\t2026-03-06 12:00:00\t2026-03-06 21:00:00\tNULL\tNULL\tassigned\t2026-03-06 00:00:00\t12:00\t21:00\n660001\t930002\t2026-03-07 10:00:00\t2026-03-07 16:00:00\t2026-03-06 15:00:00\t2026-03-06 21:00:00\tdisputed\t2026-03-07 00:00:00\t10:00\t16:00\n",
+  "stderr": "",
+  "execution_time_ms": 1587
+}

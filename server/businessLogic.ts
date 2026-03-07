@@ -393,8 +393,10 @@ export function formatDate(date: Date): string {
  * 格式化時間為 HH:mm
  */
 export function formatTime(date: Date): string {
-  const hours = String(date.getHours()).padStart(2, "0");
-  const minutes = String(date.getMinutes()).padStart(2, "0");
+  // 使用 getUTCHours/getUTCMinutes 避免伺服器本地時區影響
+  // 資料庫儲存 UTC 時間，顯示時應以 UTC 讀取（前端再轉換為台灣時區）
+  const hours = String(date.getUTCHours()).padStart(2, "0");
+  const minutes = String(date.getUTCMinutes()).padStart(2, "0");
   return `${hours}:${minutes}`;
 }
 

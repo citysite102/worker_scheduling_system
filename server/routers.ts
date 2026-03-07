@@ -595,6 +595,9 @@ export const appRouter = router({
             const client = demand ? await db.getClientById(demand.clientId) : null;
             return {
               ...a,
+              // 將 actualStart/actualEnd timestamp 轉換為 UTC HH:mm 字串，供前端直接顯示
+              actualStartTime: a.actualStart ? logic.formatTime(new Date(a.actualStart)) : null,
+              actualEndTime: a.actualEnd ? logic.formatTime(new Date(a.actualEnd)) : null,
               demand: demand ? {
                 id: demand.id,
                 date: demand.date,
@@ -1618,6 +1621,9 @@ export const appRouter = router({
             
             return {
               ...assignment,
+              // 將 actualStart/actualEnd timestamp 轉換為 UTC HH:mm 字串，供前端直接顯示
+              actualStartTime: assignment.actualStart ? logic.formatTime(new Date(assignment.actualStart)) : null,
+              actualEndTime: assignment.actualEnd ? logic.formatTime(new Date(assignment.actualEnd)) : null,
               worker,
               demand: {
                 ...demand,
@@ -1629,7 +1635,6 @@ export const appRouter = router({
         
         return result;
       }),
-
     fillActualTime: publicProcedure
       .input(z.object({
         assignmentId: z.number(),
@@ -1649,13 +1654,16 @@ export const appRouter = router({
         if (!demand) throw new Error("需求單不存在");
         
         // 計算實際工時
+        // 使用 setUTCHours 避免伺服器時區影響
+        // demand.date 是 UTC 時間，startTime/endTime 是台灣時間字串（HH:mm）
+        // 前端指派時也用 setUTCHours，此處保持一致
         const actualStart = new Date(demand.date);
         const [startHour, startMin] = input.actualStartTime.split(":").map(Number);
-        actualStart.setHours(startHour, startMin, 0, 0);
+        actualStart.setUTCHours(startHour, startMin, 0, 0);
         
         const actualEnd = new Date(demand.date);
         const [endHour, endMin] = input.actualEndTime.split(":").map(Number);
-        actualEnd.setHours(endHour, endMin, 0, 0);
+        actualEnd.setUTCHours(endHour, endMin, 0, 0);
         
         // 驗證：結束時間必須晚於開始時間
         if (actualEnd <= actualStart) {
