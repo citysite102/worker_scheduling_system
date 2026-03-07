@@ -24,9 +24,9 @@ export async function checkWorkerConflicts(
   excludeAssignmentId?: number
 ) {
   const startDate = new Date(scheduledStart);
-  startDate.setHours(0, 0, 0, 0);
+  startDate.setUTCHours(0, 0, 0, 0); // 使用 UTC 避免伺服器本地時區影響
   const endDate = new Date(scheduledEnd);
-  endDate.setHours(23, 59, 59, 999);
+  endDate.setUTCHours(23, 59, 59, 999); // 使用 UTC 避免伺服器本地時區影響
 
   const existingAssignments = await getAssignmentsByWorker(workerId, startDate, endDate);
 
@@ -154,9 +154,9 @@ export async function calculateDemandFeasibility(
 
   // 批次查詢：預先載入所有員工的當天 assignments
   const dayStart = new Date(demandDate);
-  dayStart.setHours(0, 0, 0, 0);
+  dayStart.setUTCHours(0, 0, 0, 0); // 使用 UTC 避免伺服器本地時區影響
   const dayEnd = new Date(demandDate);
-  dayEnd.setHours(23, 59, 59, 999);
+  dayEnd.setUTCHours(23, 59, 59, 999); // 使用 UTC 避免伺服器本地時區影響
 
   // 使用 Promise.all 並行查詢所有員工的 assignments
   const allDayAssignments = await Promise.all(
@@ -248,7 +248,7 @@ export async function calculateDemandFeasibility(
       if (worker.hasWorkPermit && worker.workPermitExpiryDate) {
         const expiryDate = new Date(worker.workPermitExpiryDate);
         const today = new Date();
-        today.setHours(0, 0, 0, 0);
+        today.setUTCHours(0, 0, 0, 0); // 使用 UTC 避免伺服器本地時區影響
         if (expiryDate < today) {
           const expiryStr = expiryDate.toLocaleDateString('zh-TW', { year: 'numeric', month: '2-digit', day: '2-digit' });
           reasons.push(`PERMIT_EXPIRED:工作許可已於 ${expiryStr} 過期`);
@@ -277,7 +277,7 @@ export async function calculateDemandFeasibility(
   const weekStart = getWeekStart(demandDate);
   const weekEnd = new Date(weekStart);
   weekEnd.setDate(weekEnd.getDate() + 6);
-  weekEnd.setHours(23, 59, 59, 999);
+  weekEnd.setUTCHours(23, 59, 59, 999); // 使用 UTC 避免伺服器本地時區影響
 
   const last7DaysStart = new Date(demandDate);
   last7DaysStart.setDate(last7DaysStart.getDate() - 7);
@@ -338,7 +338,10 @@ export function getWeekStart(date: Date): Date {
 export function combineDateAndTime(date: Date, time: string): Date {
   const [hours, minutes] = time.split(":").map(Number);
   const result = new Date(date);
-  result.setHours(hours, minutes, 0, 0);
+  // 使用 setUTCHours 避免伺服器本地時區影響
+  // 前端傳入的 time 字串（HH:mm）是台灣時間，但資料庫儲 UTC
+  // 前端已用 setUTCHours 建立時間，此處保持一致
+  result.setUTCHours(hours, minutes, 0, 0);
   return result;
 }
 

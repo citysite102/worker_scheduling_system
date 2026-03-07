@@ -437,9 +437,9 @@ export async function getAllDemands(statusFilter?: string, dateFilter?: Date, cl
 
   if (dateFilter) {
     const startOfDay = new Date(dateFilter);
-    startOfDay.setHours(0, 0, 0, 0);
+    startOfDay.setUTCHours(0, 0, 0, 0); // 使用 UTC 避免伺服器本地時區影響
     const endOfDay = new Date(dateFilter);
-    endOfDay.setHours(23, 59, 59, 999);
+    endOfDay.setUTCHours(23, 59, 59, 999); // 使用 UTC 避免伺服器本地時區影響
     conditions.push(and(gte(demands.date, startOfDay), lte(demands.date, endOfDay)));
   }
 

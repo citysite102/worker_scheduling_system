@@ -401,8 +401,9 @@ describe("時間邏輯全面測試", () => {
     it("combineDateAndTime 應正確組合日期與時間", () => {
       const date = new Date("2026-02-16T00:00:00.000Z");
       const result = logic.combineDateAndTime(date, "09:30");
-      expect(result.getHours()).toBe(9);
-      expect(result.getMinutes()).toBe(30);
+      // 使用 getUTCHours/getUTCMinutes 驗證，因為 combineDateAndTime 使用 setUTCHours
+      expect(result.getUTCHours()).toBe(9);
+      expect(result.getUTCMinutes()).toBe(30);
     });
   });
 

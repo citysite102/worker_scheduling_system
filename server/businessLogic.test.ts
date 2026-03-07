@@ -34,13 +34,15 @@ describe("businessLogic", () => {
 
   describe("combineDateAndTime", () => {
     it("應該正確組合日期與時間", () => {
-      const date = new Date("2026-02-09T00:00:00+08:00");
+      // 使用 UTC 日期字串，符合前端傳入的實際格式
+      const date = new Date("2026-02-09T00:00:00Z");
       const time = "14:30";
 
       const result = combineDateAndTime(date, time);
 
-      expect(result.getHours()).toBe(14);
-      expect(result.getMinutes()).toBe(30);
+      // 使用 getUTCHours/getUTCMinutes 驗證，因為 combineDateAndTime 使用 setUTCHours
+      expect(result.getUTCHours()).toBe(14);
+      expect(result.getUTCMinutes()).toBe(30);
     });
   });
 

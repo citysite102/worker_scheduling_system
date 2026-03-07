@@ -1031,7 +1031,7 @@ export const appRouter = router({
         const { and, eq, gte, lt } = await import("drizzle-orm");
         
         const dayStart = new Date(weekStart);
-        dayStart.setHours(0, 0, 0, 0);
+        dayStart.setUTCHours(0, 0, 0, 0); // 使用 UTC 避免伺服器本地時區影響
         const dayEnd = new Date(dayStart);
         dayEnd.setDate(dayEnd.getDate() + 7);
         
@@ -2029,26 +2029,26 @@ export const appRouter = router({
       .query(async ({ input }) => {
         const days = input?.days || 14;
         const endDate = new Date();
-        endDate.setHours(23, 59, 59, 999);
+        endDate.setUTCHours(23, 59, 59, 999); // 使用 UTC
         const startDate = new Date();
         startDate.setDate(startDate.getDate() - days + 1);
-        startDate.setHours(0, 0, 0, 0);
+        startDate.setUTCHours(0, 0, 0, 0); // 使用 UTC
 
         const assignments = await db.getAssignmentsByDateRange(startDate, endDate);
         const activeAssignments = assignments.filter(a => a.status !== "cancelled");
 
-        // 按日期分組
+        // 按日期分組（使用 UTC 日期方法）
         const dailyMap: Record<string, number> = {};
         for (let i = 0; i < days; i++) {
           const d = new Date(startDate);
-          d.setDate(d.getDate() + i);
-          const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+          d.setUTCDate(d.getUTCDate() + i);
+          const key = `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}-${String(d.getUTCDate()).padStart(2, "0")}`;
           dailyMap[key] = 0;
         }
 
         for (const a of activeAssignments) {
           const d = new Date(a.scheduledStart);
-          const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+          const key = `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}-${String(d.getUTCDate()).padStart(2, "0")}`;
           if (dailyMap[key] !== undefined) {
             dailyMap[key]++;
           }
@@ -2063,10 +2063,10 @@ export const appRouter = router({
       .query(async ({ input }) => {
         const days = input?.days || 14;
         const endDate = new Date();
-        endDate.setHours(23, 59, 59, 999);
+        endDate.setUTCHours(23, 59, 59, 999); // 使用 UTC
         const startDate = new Date();
         startDate.setDate(startDate.getDate() - days + 1);
-        startDate.setHours(0, 0, 0, 0);
+        startDate.setUTCHours(0, 0, 0, 0); // 使用 UTC
 
         const allDemands = await db.getAllDemands();
         const filteredDemands = allDemands.filter(d => {
@@ -2074,18 +2074,18 @@ export const appRouter = router({
           return demandDate >= startDate && demandDate <= endDate;
         });
 
-        // 按日期分組
+        // 按日期分組（使用 UTC 日期方法）
         const dailyMap: Record<string, number> = {};
         for (let i = 0; i < days; i++) {
           const d = new Date(startDate);
-          d.setDate(d.getDate() + i);
-          const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+          d.setUTCDate(d.getUTCDate() + i);
+          const key = `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}-${String(d.getUTCDate()).padStart(2, "0")}`;
           dailyMap[key] = 0;
         }
 
         for (const demand of filteredDemands) {
           const d = new Date(demand.date);
-          const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+          const key = `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}-${String(d.getUTCDate()).padStart(2, "0")}`;
           if (dailyMap[key] !== undefined) {
             dailyMap[key] += demand.requiredWorkers;
           }
@@ -2100,10 +2100,10 @@ export const appRouter = router({
       .query(async ({ input }) => {
         const days = input?.days || 30;
         const endDate = new Date();
-        endDate.setHours(23, 59, 59, 999);
+        endDate.setUTCHours(23, 59, 59, 999); // 使用 UTC
         const startDate = new Date();
         startDate.setDate(startDate.getDate() - days + 1);
-        startDate.setHours(0, 0, 0, 0);
+        startDate.setUTCHours(0, 0, 0, 0); // 使用 UTC
 
         const allDemands = await db.getAllDemands();
         const filteredDemands = allDemands.filter(d => {

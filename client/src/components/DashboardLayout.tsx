@@ -26,6 +26,7 @@ import { CSSProperties, useEffect, useRef, useState } from "react";
 import { useLocation } from "wouter";
 import { DashboardLayoutSkeleton } from './DashboardLayoutSkeleton';
 import { LoadingScreen } from './LoadingScreen';
+import { TimezoneStatusBar } from './TimezoneStatusBar';
 import { Button } from "./ui/button";
 
 const menuItems = [
@@ -284,6 +285,7 @@ function DashboardLayoutContent({
       </div>
 
       <SidebarInset>
+        <TimezoneStatusBar />
 
         {isMobile && (
           <div className="flex border-b h-14 items-center justify-between bg-background/95 px-2 backdrop-blur supports-[backdrop-filter]:backdrop-blur sticky top-0 z-40">

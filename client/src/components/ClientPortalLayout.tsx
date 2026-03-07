@@ -10,6 +10,7 @@ import {
 import { trpc } from "@/lib/trpc";
 import { useEffect, useState } from "react";
 import { ClientOnboarding } from "@/components/ClientOnboarding";
+import { TimezoneStatusBar } from "@/components/TimezoneStatusBar";
 
 export function ClientPortalLayout({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
@@ -129,6 +130,7 @@ export function ClientPortalLayout({ children }: { children: React.ReactNode }) 
 
       {/* Main Content */}
       <div className="flex flex-1 flex-col">
+        <TimezoneStatusBar />
         {/* Header */}
         <header className="flex h-16 items-center justify-between border-b bg-card px-6">
           <div>
