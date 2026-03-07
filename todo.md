@@ -1956,3 +1956,20 @@
 ## Bug 修正（2026/03/07 - 時間計算根本問題）
 - [ ] 清除 assignment 660001 的異常 actualStart/actualEnd，狀態改回 assigned（讓使用者重新回填）
 - [ ] 修正後端工時回填時間計算：確保與前端 setUTCHours 一致，避免未來回填出現同樣問題
+
+## 使用者新增需求（2026/03/07 - 指派角色選擇）
+
+### 端對端驗證
+- [ ] 端對端驗證：衝突偵測（重疊時段應報錯，邊界時段應成功）
+- [ ] 端對端驗證：工時回填後 WorkerDetail 顯示正確時間
+
+### 指派角色功能（正職 / 實習生）
+- [x] assignments 表新增 role 欄位（intern/regular，預設 regular）
+- [x] 後端 assignments.create 加入 role 參數
+- [x] 後端 assignments.batchCreate 加入 role 參數
+- [x] 實習生指派：跳過需求單人數限制，不觸發需求單狀態自動更新
+- [x] 實習生指派：仍做時段衝突檢查（不得與其他排班重疊）
+- [x] 前端 DemandDetail 指派 Modal 加入正職/實習生選擇 UI
+- [x] 前端 WorkerDetail 歷史指派顯示 role 標籤（實習生顯示 Badge）
+- [x] 前端 ActualTime 工時回填顯示 role 標籤
+- [x] 前端 Reports 報表顯示 role 欄位

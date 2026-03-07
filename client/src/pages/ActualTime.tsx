@@ -119,6 +119,9 @@ export default function ActualTime() {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1.5">
                         <span className="font-medium text-sm">{assignment.demand.client?.name || "未知客戶"}</span>
+                        {assignment.role === "intern" && (
+                          <Badge className="bg-amber-50 text-amber-700 border-amber-200 text-xs">實習生</Badge>
+                        )}
                         <Badge
                           variant="outline"
                           className={`text-xs ${

@@ -490,6 +490,7 @@ export default function WorkerDetail() {
                         <th className="text-left px-4 py-3 font-medium text-gray-500">實際時段</th>
                         <th className="text-right px-4 py-3 font-medium text-gray-500">預排工時</th>
                         <th className="text-right px-4 py-3 font-medium text-gray-500">實際工時</th>
+                        <th className="text-center px-4 py-3 font-medium text-gray-500">角色</th>
                         <th className="text-center px-4 py-3 font-medium text-gray-500">狀態</th>
                       </tr>
                     </thead>
@@ -518,6 +519,13 @@ export default function WorkerDetail() {
                           </td>
                           <td className="px-4 py-3 text-right text-gray-700">
                             {a.actualHours ? `${(a.actualHours / 60).toFixed(1)}h` : "—"}
+                          </td>
+                          <td className="px-4 py-3 text-center">
+                            {a.role === "intern" ? (
+                              <Badge className="bg-amber-50 text-amber-700 border-amber-200 text-xs">實習生</Badge>
+                            ) : (
+                              <Badge className="bg-blue-50 text-blue-700 border-blue-200 text-xs">正職</Badge>
+                            )}
                           </td>
                           <td className="px-4 py-3 text-center">
                             <StatusBadge status={a.status} />

@@ -141,6 +141,7 @@ export const assignments = mysqlTable("assignments", {
   actualHours: int("actualHours"), // 以分鐘為單位
   varianceHours: int("varianceHours"), // 以分鐘為單位
   status: mysqlEnum("status", ["assigned", "completed", "cancelled", "disputed"]).default("assigned").notNull(),
+  role: mysqlEnum("role", ["regular", "intern"]).default("regular").notNull(), // 正職 or 實習生
   note: text("note"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),

@@ -35,6 +35,7 @@ export default function DemandDetail() {
   const demandId = parseInt(params?.id || "0");
 
   const [selectedWorkerIds, setSelectedWorkerIds] = useState<number[]>([]);
+  const [assignRole, setAssignRole] = useState<"regular" | "intern">("regular");
   const [isInactiveExpanded, setIsInactiveExpanded] = useState(false);
   const [isExpiredPermitExpanded, setIsExpiredPermitExpanded] = useState(false);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
@@ -385,6 +386,7 @@ export default function DemandDetail() {
       workerIds: selectedWorkerIds,
       scheduledStart,
       scheduledEnd,
+      role: assignRole,
     });
   };
 
@@ -761,6 +763,11 @@ export default function DemandDetail() {
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
+                      {(assignment as any).role === "intern" ? (
+                        <Badge className="bg-amber-50 text-amber-700 border-amber-200 text-xs">實習生</Badge>
+                      ) : (
+                        <Badge className="bg-blue-50 text-blue-700 border-blue-200 text-xs">正職</Badge>
+                      )}
                       <Badge variant="secondary" className="bg-blue-100 text-blue-700 text-xs">
                         {assignment.status === "assigned" && "已指派"}
                         {assignment.status === "completed" && "已完成"}
@@ -792,7 +799,7 @@ export default function DemandDetail() {
         {/* 操作列 */}
         <Card className="shadow-md border-border/40">
           <CardContent className="p-4">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between gap-3 flex-wrap">
               <div className="text-sm">
                 已選 <span className="font-semibold text-blue-600">{selectedWorkerIds.length}</span>
                 {" / "}
@@ -804,7 +811,37 @@ export default function DemandDetail() {
                   </span>
                 )}
               </div>
-              <div className="flex gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
+                {/* 指派角色切換 */}
+                <div className="flex items-center rounded-md border border-border overflow-hidden">
+                  <button
+                    type="button"
+                    onClick={() => setAssignRole("regular")}
+                    className={`px-3 py-1.5 text-xs font-medium transition-colors ${
+                      assignRole === "regular"
+                        ? "bg-blue-600 text-white"
+                        : "bg-transparent text-muted-foreground hover:bg-muted"
+                    }`}
+                  >
+                    正職
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setAssignRole("intern")}
+                    className={`px-3 py-1.5 text-xs font-medium transition-colors border-l border-border ${
+                      assignRole === "intern"
+                        ? "bg-amber-500 text-white"
+                        : "bg-transparent text-muted-foreground hover:bg-muted"
+                    }`}
+                  >
+                    實習生
+                  </button>
+                </div>
+                {assignRole === "intern" && (
+                  <span className="text-xs text-amber-600 bg-amber-50 px-2 py-1 rounded-md border border-amber-200">
+                    實習生不計入需求人數
+                  </span>
+                )}
                 <Button variant="outline" size="sm" onClick={handleAutoFill}>
                   一鍵湊滿
                 </Button>
@@ -815,8 +852,9 @@ export default function DemandDetail() {
                   size="sm"
                   onClick={handleSubmit}
                   disabled={selectedWorkerIds.length === 0 || batchCreateMutation.isPending}
+                  className={assignRole === "intern" ? "bg-amber-500 hover:bg-amber-600 text-white" : ""}
                 >
-                  {batchCreateMutation.isPending ? "指派中..." : "送出指派"}
+                  {batchCreateMutation.isPending ? "指派中..." : assignRole === "intern" ? "指派實習生" : "送出指派"}
                 </Button>
               </div>
             </div>

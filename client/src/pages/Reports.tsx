@@ -252,6 +252,7 @@ export default function Reports() {
                             <TableHead className="text-xs font-medium">日期</TableHead>
                             <TableHead className="text-xs font-medium">開始時間</TableHead>
                             <TableHead className="text-xs font-medium">結束時間</TableHead>
+                            <TableHead className="text-xs font-medium">角色</TableHead>
                             <TableHead className="text-xs font-medium text-right">實際工時(小時)</TableHead>
                           </>
                         ) : (
@@ -273,6 +274,13 @@ export default function Reports() {
                               <TableCell className="text-sm">{row.demandDate}</TableCell>
                               <TableCell className="text-sm">{row.actualStart}</TableCell>
                               <TableCell className="text-sm">{row.actualEnd}</TableCell>
+                              <TableCell className="text-sm">
+                                {row.role === "intern" ? (
+                                  <span className="inline-flex items-center px-1.5 py-0.5 rounded text-xs bg-amber-50 text-amber-700 border border-amber-200">實習生</span>
+                                ) : (
+                                  <span className="inline-flex items-center px-1.5 py-0.5 rounded text-xs bg-blue-50 text-blue-700 border border-blue-200">正職</span>
+                                )}
+                              </TableCell>
                               <TableCell className="text-right text-sm tabular-nums">{row.actualHours}</TableCell>
                             </>
                           ) : (

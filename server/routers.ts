@@ -1713,6 +1713,7 @@ export const appRouter = router({
         workerId: z.number(),
         scheduledStart: z.date(),
         scheduledEnd: z.date(),
+        role: z.enum(["regular", "intern"]).default("regular"),
         note: z.string().optional(),
       }))
       .mutation(async ({ input }) => {
@@ -1721,7 +1722,7 @@ export const appRouter = router({
           throw new Error("結束時間必須晚於開始時間，請檢查時間設定。");
         }
         
-        // 最終檢查：確認無衝突
+        // 最終檢查：確認無衝突（正職與實習生都需要做時段衝突檢查）
         const conflicts = await logic.checkWorkerConflicts(
           input.workerId,
           input.scheduledStart,
@@ -1754,6 +1755,7 @@ export const appRouter = router({
         workerIds: z.array(z.number()),
         scheduledStart: z.date(),
         scheduledEnd: z.date(),
+        role: z.enum(["regular", "intern"]).default("regular"),
       }))
       .mutation(async ({ input }) => {
         // 驗證：結束時間必須晚於開始時間
@@ -1766,7 +1768,7 @@ export const appRouter = router({
         
         for (const workerId of input.workerIds) {
           try {
-            // 最終檢查
+            // 時段衝突檢查（正職與實習生都需要做）
             const conflicts = await logic.checkWorkerConflicts(
               workerId,
               input.scheduledStart,
@@ -1794,6 +1796,7 @@ export const appRouter = router({
               scheduledStart: input.scheduledStart,
               scheduledEnd: input.scheduledEnd,
               scheduledHours,
+              role: input.role,
             });
             
             successCount.value++;
@@ -1803,15 +1806,19 @@ export const appRouter = router({
           }
         }
         
-        // 自動狀態更新：檢查是否達到需求人數
-        const demand = await db.getDemandById(input.demandId);
-        if (demand && demand.status === "draft") {
-          const assignments = await db.getAssignmentsByDemand(input.demandId);
-          const activeAssignments = assignments.filter(a => a.status !== "cancelled");
-          
-          // 如果已指派人數達到需求人數，自動改為已確認
-          if (activeAssignments.length >= demand.requiredWorkers) {
-            await db.updateDemand(input.demandId, { status: "confirmed" });
+        // 自動狀態更新：僅正職指派才影響需求單人數與狀態
+        if (input.role === "regular") {
+          const demand = await db.getDemandById(input.demandId);
+          if (demand && demand.status === "draft") {
+            const allAssignments = await db.getAssignmentsByDemand(input.demandId);
+            // 只計算正職的有效指派
+            const regularActiveCount = allAssignments.filter(
+              a => a.status !== "cancelled" && (a.role === "regular" || a.role === null)
+            ).length;
+            
+            if (regularActiveCount >= demand.requiredWorkers) {
+              await db.updateDemand(input.demandId, { status: "confirmed" });
+            }
           }
         }
         
@@ -1936,6 +1943,7 @@ export const appRouter = router({
               actualHours: (actualMinutes / 60).toFixed(2),
               breakHours: (breakMinutes / 60).toFixed(2),
               billableHours: (billableMinutes / 60).toFixed(2),
+              role: assignment.role || "regular",
             };
           })
         );

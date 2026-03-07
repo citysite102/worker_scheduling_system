@@ -568,7 +568,7 @@ export async function getAssignmentsByDateRange(startDate: Date, endDate: Date) 
   );
 }
 
-export async function createAssignment(data: { demandId: number; workerId: number; scheduledStart: Date; scheduledEnd: Date; scheduledHours: number; status?: "assigned" | "completed" | "cancelled" | "disputed"; note?: string }) {
+export async function createAssignment(data: { demandId: number; workerId: number; scheduledStart: Date; scheduledEnd: Date; scheduledHours: number; role?: "regular" | "intern"; status?: "assigned" | "completed" | "cancelled" | "disputed"; note?: string }) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   const result = await db.insert(assignments).values(data);
