@@ -447,7 +447,13 @@ export default function DemandDetail() {
           <Button
             variant="outline"
             size="sm"
-            onClick={() => setIsEditDialogOpen(true)}
+            onClick={() => {
+              // 在開啟 Dialog 前同步初始化表單狀態，避免非同步狀態更新導致 Select 空白
+              setEditClientId(demand.clientId != null ? demand.clientId.toString() : "");
+              setSelectedDemandTypeId(demand.demandTypeId || undefined);
+              setSelectedOptions(demand.selectedOptions || []);
+              setIsEditDialogOpen(true);
+            }}
           >
             <Edit className="mr-1.5 h-3.5 w-3.5" />
             編輯
@@ -1204,10 +1210,10 @@ export default function DemandDetail() {
         setIsEditDialogOpen(open);
         if (open && demand) {
           // 當對話框開啟時，初始化需求類型與選項
-          setEditClientId(demand.clientId?.toString() || "");
+          setEditClientId(demand.clientId != null ? demand.clientId.toString() : "");
           setSelectedDemandTypeId(demand.demandTypeId || undefined);
           setSelectedOptions(demand.selectedOptions || []);
-        } else {
+        } else if (!open) {
           // 當對話框關閉時，清空狀態
           setSelectedDemandTypeId(undefined);
           setSelectedOptions([]);
@@ -1222,9 +1228,15 @@ export default function DemandDetail() {
             const breakHoursStr = formData.get("breakHours") as string;
             const breakHours = breakHoursStr ? parseFloat(breakHoursStr) * 60 : 0;
 
+            const clientIdNum = parseInt(editClientId);
+            if (isNaN(clientIdNum)) {
+              toast.error("請選擇客戶");
+              return;
+            }
+
             const data = {
               id: demandId,
-              clientId: parseInt(editClientId),
+              clientId: clientIdNum,
               date,
               startTime: formData.get("startTime") as string,
               endTime: formData.get("endTime") as string,

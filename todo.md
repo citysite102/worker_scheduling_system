@@ -2004,3 +2004,8 @@
 - [x] 修正後端 fillPayroll：同步移除重複回填限制，允許修改薪資資料
 - [x] 修正前端 ActualTime.tsx：已填工時的排班顯示「修改」而非「回填」
 - [x] 確認修改後的 UI 流程：預填現有値、儲存後顯示最新資料
+
+## 使用者回報問題（2026/03/08 - 需求單詳情頁面編輯 clientId NaN）
+
+- [x] 修正 DemandDetail.tsx 編輯表單：clientId Select 的値轉換為 parseInt 時產生 NaN
+- [x] 確認編輯對話框預填 clientId 的邏輯正確
