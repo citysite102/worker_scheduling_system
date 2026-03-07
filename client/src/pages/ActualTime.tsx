@@ -13,7 +13,12 @@ import { toast } from "sonner";
 type PayType = "hourly" | "unit" | "fixed";
 
 export default function ActualTime() {
-  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split("T")[0]);
+  // 初始值：取台灣時區（UTC+8）的今日日期，避免 toISOString() 回傳 UTC 前一天的日期
+  const [selectedDate, setSelectedDate] = useState(() => {
+    const now = new Date();
+    const taiwanNow = new Date(now.getTime() + 8 * 60 * 60 * 1000);
+    return taiwanNow.toISOString().split("T")[0];
+  });
   const [editingAssignment, setEditingAssignment] = useState<any>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [dialogMode, setDialogMode] = useState<"time" | "payroll">("time");
@@ -172,7 +177,8 @@ export default function ActualTime() {
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
             <CardTitle className="text-base font-medium">
-              {new Date(selectedDate).toLocaleDateString("zh-TW")} 的排班記錄
+              {/* 直接用 selectedDate 字串格式化，避免 new Date("YYYY-MM-DD") 在台灣時區偏移一天 */}
+              {selectedDate.replace(/-/g, "/").replace(/\/0(\d)/g, "/$1")} 的排班記錄
             </CardTitle>
             <span className="text-xs text-muted-foreground">{assignments?.length || 0} 筆記錄</span>
           </div>
