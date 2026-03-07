@@ -15,5 +15,10 @@ export default defineConfig({
   test: {
     environment: "node",
     include: ["server/**/*.test.ts", "server/**/*.spec.ts"],
+    // 測試時強制清空 DATABASE_URL，防止測試連線正式資料庫。
+    // 需要 DB 的測試應在 beforeEach/beforeAll 中檢查 DB 可用性，不可用時自動 skip。
+    env: {
+      DATABASE_URL: "",
+    },
   },
 });

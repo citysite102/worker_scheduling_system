@@ -22,6 +22,7 @@ export default function ClientDetail() {
   const params = useParams();
   const [, setLocation] = useLocation();
   const clientId = parseInt(params.id || "0");
+  const utils = trpc.useUtils();
 
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
@@ -71,6 +72,8 @@ export default function ClientDetail() {
       setIsEditDialogOpen(false);
       setLogoFile(null);
       setLogoPreview(null);
+      // 重新查詢客戶資料，確保 Logo 等欄位立即更新
+      utils.clients.getDetailById.invalidate({ id: clientId });
     },
     onError: (error) => {
       toast.error(`更新失敗：${error.message}`);

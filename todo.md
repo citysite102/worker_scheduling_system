@@ -1,50 +1,3 @@
-<<<<<<< Updated upstream
-# Worker Scheduling System Dev - TODO
-
-## 整合任務（從原始專案 citysite102/worker_scheduling_system）
-
-- [x] 安裝原始專案額外依賴套件（bcrypt、nodemailer、@google/generative-ai 等）
-- [x] 整合 drizzle/schema.ts（完整資料庫 schema）
-- [x] 整合 drizzle/ 遷移 SQL 檔案
-- [x] 整合 shared/ 目錄（types、constants、cities、avatars）
-- [x] 執行資料庫 schema 遷移（所有資料表已建立）
-- [x] 整合 server/db.ts（完整查詢輔助函式）
-- [x] 整合 server/businessLogic.ts
-- [x] 整合 server/routers.ts（完整 tRPC 路由）
-- [x] 整合 server/email.ts
-- [x] 整合 server/storage.ts
-- [x] 整合 server/password.ts
-- [x] 整合 server/gemini-ocr.ts
-- [x] 整合 client/src/pages/（所有頁面）
-- [x] 整合 client/src/components/（所有元件）
-- [x] 整合 client/src/contexts/（ThemeContext 等）
-- [x] 整合 client/src/hooks/（自訂 hooks）
-- [x] 整合 client/src/lib/（工具函式）
-- [x] 整合 client/src/const.ts
-- [x] 整合 client/src/index.css
-- [x] 整合 client/index.html
-- [x] 整合 vite.config.ts
-- [x] 整合 tsconfig.json
-- [x] 整合 components.json
-- [x] 整合 drizzle.config.ts
-- [x] 整合 vitest.config.ts
-- [x] 整合測試檔案（server/*.test.ts，共 29 個測試檔案）
-- [x] 整合 server/test-utils.ts
-- [x] 整合 server/clear-test-data.ts
-- [x] 整合 seed-data.mjs
-- [x] 整合 scripts/ 目錄
-- [x] 整合 patches/ 目錄
-- [x] 驗證專案可正常啟動（dev server running）
-- [x] 驗證核心測試通過（businessLogic、auth、break-hours、conflict-detection 等）
-- [x] 儲存 checkpoint
-
-## 後續功能調整
-
-- [x] 在系統名稱後加上「(Beta)」標註
-- [x] 在頁面頂部加入測試環境提示 banner
-- [x] 指派員工時顯示「許可已過期」員工（加警標籤，管理員端與客戶端同步）
-- [x] 客戶 Portal 補上已指派員工資訊與簡易員工資料查看
-=======
 # 員工排班與工時計算系統 - 功能清單
 
 ## 資料庫與後端
@@ -1972,12 +1925,14 @@
 - [x] 將 jacob.wang0419@gmail.com 設置為管理者
 - [x] 將 lulu0127.yeh@gmail.com 設置為管理者
 - [x] 驗證管理員權限
->>>>>>> Stashed changes
 
-## 正式環境清理（2026/03/04）
-- [x] 移除測試環境橫幅（DashboardLayout.tsx）
-- [x] 清理 User 角色帳號，只保留指定的 5 個
+## 使用者需求（2026/03/07）
+- [x] 修正客戶詳細頁面 Logo 顯示：上傳 Logo 後，詳細頁面應顯示上傳的圖片而非預設圖示（修正 updateClientMutation onSuccess 加入 invalidate 重新查詢）
 
-## 正式環境更新（2026/03/04 - 第二次）
-- [x] 從 dev branch 拉取最新功能
-- [x] 移除所有 Beta 和測試環境標籤
+## 使用者需求（2026/03/07 - 正式環境測試隔離）
+- [x] 修改 vitest.config.ts：測試時強制 DATABASE_URL='' 避免連線正式 DB
+- [x] 修改 test-utils.ts：加入 DB 不可用時的 graceful skip 機制
+- [x] 調整所有需要 DB 的測試：DB 不可用時自動 skip 而非失敗
+- [x] 確保純業務邏輯測試（不需要 DB）仍能通過
+- [x] 驗證 pnpm test 不會在正式資料庫建立任何資料（Test Files 30 passed, Tests 188 passed）
+- [ ] 儲存 checkpoint
