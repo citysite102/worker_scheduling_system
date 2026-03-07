@@ -1,0 +1,8 @@
+{
+  "query": "\nSELECT \n  a.id,\n  w.name as worker_name,\n  a.demand_id,\n  a.scheduled_start,\n  a.scheduled_end,\n  a.scheduled_hours,\n  a.actual_start,\n  a.actual_end,\n  a.actual_hours,\n  a.status\nFROM assignments a\nJOIN workers w ON a.worker_id = w.id\nWHERE w.name LIKE '%孔仁琳%'\n  AND a.scheduled_start >= '2026-03-07 00:00:00'\n  AND a.scheduled_start < '2026-03-08 00:00:00'\nORDER BY a.scheduled_start;\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2iEKifVQ9gKtEas.9cbf5414b428 --database CMgr35KntT8tLtgpfJPejw --execute \nSELECT \n  a.id,\n  w.name as worker_name,\n  a.demand_id,\n  a.scheduled_start,\n  a.scheduled_end,\n  a.scheduled_hours,\n  a.actual_start,\n  a.actual_end,\n  a.actual_hours,\n  a.status\nFROM assignments a\nJOIN workers w ON a.worker_id = w.id\nWHERE w.name LIKE '%孔仁琳%'\n  AND a.scheduled_start >= '2026-03-07 00:00:00'\n  AND a.scheduled_start < '2026-03-08 00:00:00'\nORDER BY a.scheduled_start;\n",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1054 (42S22) at line 2: Unknown column 'a.worker_id' in 'on clause'"
+  ]
+}

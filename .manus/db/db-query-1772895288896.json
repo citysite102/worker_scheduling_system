@@ -1,0 +1,70 @@
+{
+  "query": "\nSELECT \n  a.id,\n  w.name as worker_name,\n  a.demandId,\n  a.scheduledStart,\n  a.scheduledEnd,\n  a.scheduledHours,\n  a.actualStart,\n  a.actualEnd,\n  a.actualHours,\n  a.status\nFROM assignments a\nJOIN workers w ON a.workerId = w.id\nWHERE w.name LIKE '%孔仁琳%'\nORDER BY a.scheduledStart DESC\nLIMIT 5;\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2iEKifVQ9gKtEas.9cbf5414b428 --database CMgr35KntT8tLtgpfJPejw --execute \nSELECT \n  a.id,\n  w.name as worker_name,\n  a.demandId,\n  a.scheduledStart,\n  a.scheduledEnd,\n  a.scheduledHours,\n  a.actualStart,\n  a.actualEnd,\n  a.actualHours,\n  a.status\nFROM assignments a\nJOIN workers w ON a.workerId = w.id\nWHERE w.name LIKE '%孔仁琳%'\nORDER BY a.scheduledStart DESC\nLIMIT 5;\n",
+  "rows": [
+    {
+      "id": "660001",
+      "worker_name": "孔仁琳 KAMASANI REDDAPPA REDDY",
+      "demandId": "930002",
+      "scheduledStart": "2026-03-07 10:00:00",
+      "scheduledEnd": "2026-03-07 16:00:00",
+      "scheduledHours": "360",
+      "actualStart": "2026-03-07 10:00:00",
+      "actualEnd": "2026-03-07 16:00:00",
+      "actualHours": "360",
+      "status": "completed"
+    },
+    {
+      "id": "660017",
+      "worker_name": "孔仁琳 KAMASANI REDDAPPA REDDY",
+      "demandId": "930045",
+      "scheduledStart": "2026-03-06 12:00:00",
+      "scheduledEnd": "2026-03-06 21:00:00",
+      "scheduledHours": "540",
+      "actualStart": "NULL",
+      "actualEnd": "NULL",
+      "actualHours": "NULL",
+      "status": "assigned"
+    },
+    {
+      "id": "660016",
+      "worker_name": "孔仁琳 KAMASANI REDDAPPA REDDY",
+      "demandId": "930029",
+      "scheduledStart": "2026-03-04 10:00:00",
+      "scheduledEnd": "2026-03-04 16:00:00",
+      "scheduledHours": "360",
+      "actualStart": "NULL",
+      "actualEnd": "NULL",
+      "actualHours": "NULL",
+      "status": "assigned"
+    },
+    {
+      "id": "660043",
+      "worker_name": "孔仁琳 KAMASANI REDDAPPA REDDY",
+      "demandId": "930099",
+      "scheduledStart": "2026-02-18 20:30:00",
+      "scheduledEnd": "2026-02-19 01:30:00",
+      "scheduledHours": "300",
+      "actualStart": "2026-02-18 20:30:00",
+      "actualEnd": "2026-02-19 01:30:00",
+      "actualHours": "300",
+      "status": "completed"
+    },
+    {
+      "id": "660042",
+      "worker_name": "孔仁琳 KAMASANI REDDAPPA REDDY",
+      "demandId": "930098",
+      "scheduledStart": "2026-02-16 20:30:00",
+      "scheduledEnd": "2026-02-17 00:30:00",
+      "scheduledHours": "240",
+      "actualStart": "2026-02-16 20:30:00",
+      "actualEnd": "2026-02-17 00:30:00",
+      "actualHours": "240",
+      "status": "completed"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tworker_name\tdemandId\tscheduledStart\tscheduledEnd\tscheduledHours\tactualStart\tactualEnd\tactualHours\tstatus\n660001\t孔仁琳 KAMASANI REDDAPPA REDDY\t930002\t2026-03-07 10:00:00\t2026-03-07 16:00:00\t360\t2026-03-07 10:00:00\t2026-03-07 16:00:00\t360\tcompleted\n660017\t孔仁琳 KAMASANI REDDAPPA REDDY\t930045\t2026-03-06 12:00:00\t2026-03-06 21:00:00\t540\tNULL\tNULL\tNULL\tassigned\n660016\t孔仁琳 KAMASANI REDDAPPA REDDY\t930029\t2026-03-04 10:00:00\t2026-03-04 16:00:00\t360\tNULL\tNULL\tNULL\tassigned\n660043\t孔仁琳 KAMASANI REDDAPPA REDDY\t930099\t2026-02-18 20:30:00\t2026-02-19 01:30:00\t300\t2026-02-18 20:30:00\t2026-02-19 01:30:00\t300\tcompleted\n660042\t孔仁琳 KAMASANI REDDAPPA REDDY\t930098\t2026-02-16 20:30:00\t2026-02-17 00:30:00\t240\t2026-02-16 20:30:00\t2026-02-17 00:30:00\t240\tcompleted\n",
+  "stderr": "",
+  "execution_time_ms": 1527
+}
