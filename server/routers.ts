@@ -1985,6 +1985,7 @@ export const appRouter = router({
           const completed = assignments.filter(a => 
             a.status === "completed" && 
             a.actualHours &&
+            a.role !== "intern" && // 客戶帳單不計入實習生工時
             new Date(a.actualStart || "") >= input.startDate &&
             new Date(a.actualEnd || "") <= input.endDate
           );

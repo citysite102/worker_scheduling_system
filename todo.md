@@ -1979,3 +1979,7 @@
 - [x] 後端：客戶端查詢 demands.getById（含 assignments）過濾 intern
 - [x] 後端：客戶端查詢 demands.listByClientAndMonth 過濾 intern
 - [x] 確認員工歷史指派清單正確顯示正職/實習生角色標籤
+
+### 客戶報表實習生工時排除（2026/03/08）
+- [x] 後端 reports.clientHours：過濾 role=intern，帳單只計正職工時
+- [x] 後端 reports.workerPayroll：確認員工薪資報表正確顯示 role 欄位（實習生也計薪，管理端可見）
