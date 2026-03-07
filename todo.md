@@ -1973,3 +1973,9 @@
 - [x] 前端 WorkerDetail 歷史指派顯示 role 標籤（實習生顯示 Badge）
 - [x] 前端 ActualTime 工時回填顯示 role 標籤
 - [x] 前端 Reports 報表顯示 role 欄位
+
+### 客戶端實習生資料隔離（2026/03/07）
+- [x] 後端：客戶端查詢需求單時，assignments 清單過濾掉 role=intern
+- [x] 後端：客戶端查詢 demands.getById（含 assignments）過濾 intern
+- [x] 後端：客戶端查詢 demands.listByClientAndMonth 過濾 intern
+- [x] 確認員工歷史指派清單正確顯示正職/實習生角色標籤

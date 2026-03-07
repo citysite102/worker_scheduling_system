@@ -1110,10 +1110,12 @@ export const appRouter = router({
         // 附加指派資訊
         const result = await Promise.all(
           monthDemands.map(async (demand: any) => {
-            const assignments = await db.getAssignmentsByDemand(demand.id);
+            const allDemandAssignments = await db.getAssignmentsByDemand(demand.id);
+            // 此查詢僅客戶端使用，過濾實習生指派
+            const assignments = allDemandAssignments.filter(a => a.role !== 'intern');
             const assignedCount = assignments.filter(a => a.status !== "cancelled").length;
             
-            // 獲取已指派的員工資訊
+            // 獲取已指派的員工資訊（不包含實習生）
             const assignedWorkers = await Promise.all(
               assignments
                 .filter(a => a.status !== "cancelled")
@@ -1152,10 +1154,14 @@ export const appRouter = router({
         }
         
         const client = await db.getClientById(demand.clientId);
-        const rawAssignments = await db.getAssignmentsByDemand(demand.id);
+        const allAssignments = await db.getAssignmentsByDemand(demand.id);
         
         // 附加員工資訊，客戶端過濾敏感資料
         const isClientRole = ctx.user?.role === 'client';
+        // 客戶端不顯示實習生指派
+        const rawAssignments = isClientRole
+          ? allAssignments.filter(a => a.role !== 'intern')
+          : allAssignments;
         const assignments = await Promise.all(
           rawAssignments.map(async (assignment) => {
             const worker = await db.getWorkerById(assignment.workerId);
