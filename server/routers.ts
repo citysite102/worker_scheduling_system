@@ -1322,7 +1322,7 @@ export const appRouter = router({
         selectedOptions: z.string().optional(), // 已勾選的選項 ID（JSON 格式）
         location: z.string().optional(),
         note: z.string().optional(),
-        status: z.enum(["draft", "confirmed", "cancelled", "closed"]).optional(),
+        status: z.enum(["draft", "pending", "confirmed", "completed", "cancelled", "closed"]).optional(),
       }))
       .mutation(async ({ input }) => {
         const { id, breakHours, ...rest } = input;
@@ -1503,6 +1503,22 @@ export const appRouter = router({
         return results;
       }),
 
+    // 手動結案（將 completed 改為 closed）
+    close: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input, ctx }) => {
+        if (ctx.user.role !== 'admin' && ctx.user.role !== 'user') {
+          throw new TRPCError({ code: "FORBIDDEN", message: "只有內部人員可以結案需求單" });
+        }
+        const demand = await db.getDemandById(input.id);
+        if (!demand) throw new TRPCError({ code: "NOT_FOUND", message: "需求單不存在" });
+        if (demand.status !== 'completed') {
+          throw new TRPCError({ code: "BAD_REQUEST", message: "只有「已完成」的需求單才可以結案" });
+        }
+        await db.updateDemand(input.id, { status: "closed" });
+        return { success: true };
+      }),
+
     // 計算人力可行性
     feasibility: publicProcedure
       .input(z.object({
@@ -1667,18 +1683,20 @@ export const appRouter = router({
           status,
         });
         
-        // 檢查該需求單的所有 assignment 是否都已回填實際工時
+        // 檢查該需求單是否有任何指派已完成回填（支援部分完成情境）
         const allAssignments = await db.getAssignmentsByDemand(assignment.demandId);
-        const allCompleted = allAssignments.every(a => 
+        const anyCompleted = allAssignments.some(a => 
           a.status === "completed" || a.status === "disputed"
         );
         
-        // 如果所有 assignment 都已完成，自動將需求單狀態改為「已結案」
-        if (allCompleted && allAssignments.length > 0) {
-          await db.updateDemand(assignment.demandId, { status: "closed" });
+        // 只要有任何一筆回填完成，自動將需求單狀態改為「已完成」
+        // 結案（closed）需要手動觸發（財務確認後）
+        const currentDemand = await db.getDemandById(assignment.demandId);
+        if (anyCompleted && currentDemand && currentDemand.status !== "closed" && currentDemand.status !== "cancelled") {
+          await db.updateDemand(assignment.demandId, { status: "completed" });
         }
         
-        return { success: true, status, demandClosed: allCompleted };
+        return { success: true, status, demandCompleted: anyCompleted };
       }),
 
     create: publicProcedure

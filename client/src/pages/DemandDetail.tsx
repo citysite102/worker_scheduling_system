@@ -13,7 +13,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import {
   AlertCircle, CheckCircle2, ChevronDown, ChevronUp, ArrowLeft, Loader2,
   Calendar, Clock, MapPin, Users, Filter, GraduationCap, FileCheck, Stethoscope, X,
-  Edit, Copy, Trash2, ShieldAlert
+  Edit, Copy, Trash2, ShieldAlert, CheckSquare
 } from "lucide-react";
 import { useRoute, useLocation, Link } from "wouter";;
 import { useState, useMemo } from "react";
@@ -95,6 +95,17 @@ export default function DemandDetail() {
     },
     onError: (error) => {
       toast.error(`複製失敗：${error.message}`);
+    },
+  });
+
+  // 手動結案
+  const closeDemandMutation = trpc.demands.close.useMutation({
+    onSuccess: () => {
+      toast.success("需求單已結案");
+      utils.demands.getById.invalidate({ id: demandId });
+    },
+    onError: (error) => {
+      toast.error(`結案失敗：${error.message}`);
     },
   });
 
@@ -449,6 +460,26 @@ export default function DemandDetail() {
             <Copy className="mr-1.5 h-3.5 w-3.5" />
             複製
           </Button>
+          {demand.status === 'completed' && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="border-green-500/50 text-green-700 hover:bg-green-50 hover:text-green-800"
+              onClick={() => {
+                if (window.confirm("確定要結案這個需求單嗎？結案後狀態將變為「已結案」，無法再次修改。")) {
+                  closeDemandMutation.mutate({ id: demandId });
+                }
+              }}
+              disabled={closeDemandMutation.isPending}
+            >
+              {closeDemandMutation.isPending ? (
+                <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+              ) : (
+                <CheckSquare className="mr-1.5 h-3.5 w-3.5" />
+              )}
+              結案
+            </Button>
+          )}
           <Button
             variant="outline"
             size="sm"
