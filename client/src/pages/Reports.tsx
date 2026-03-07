@@ -27,14 +27,14 @@ export default function Reports() {
   const { data: workers } = trpc.workers.list.useQuery({ status: "active" });
   const { data: clients } = trpc.clients.list.useQuery();
 
-  // 修正時區問題：系統日期以 UTC 零時儲存，前端傳入日期時必須加上 Z 後綴避免本地時區偵移
-  const reportStartDate = startDate ? new Date(startDate + "T00:00:00Z") : new Date();
-  const reportEndDate = endDate ? new Date(endDate + "T23:59:59Z") : new Date();
+  // 使用日期字串直接傳遞，後端用 MySQL CONVERT_TZ 比對台灣時區，完全繞過 JS Date 物件的時區序列化問題
+  const reportStartStr = startDate || "";
+  const reportEndStr = endDate || "";
 
   const { data: workerReport, isLoading: workerLoading, refetch: refetchWorker } = trpc.reports.workerPayroll.useQuery(
     { 
-      startDate: reportStartDate, 
-      endDate: reportEndDate,
+      startDate: reportStartStr || "2000-01-01", 
+      endDate: reportEndStr || "2099-12-31",
       workerId: selectedWorker === "all" ? undefined : parseInt(selectedWorker)
     },
     { enabled: false }
@@ -42,8 +42,8 @@ export default function Reports() {
 
   const { data: clientReport, isLoading: clientLoading, refetch: refetchClient } = trpc.reports.clientHours.useQuery(
     { 
-      startDate: reportStartDate, 
-      endDate: reportEndDate,
+      startDate: reportStartStr || "2000-01-01", 
+      endDate: reportEndStr || "2099-12-31",
       clientId: selectedClient === "all" ? undefined : parseInt(selectedClient)
     },
     { enabled: false }
@@ -51,8 +51,8 @@ export default function Reports() {
 
   const { data: monthlyReport, isLoading: monthlyLoading, refetch: refetchMonthly } = (trpc.reports as any).workerMonthlySummary.useQuery(
     { 
-      startDate: reportStartDate, 
-      endDate: reportEndDate,
+      startDate: reportStartStr || "2000-01-01", 
+      endDate: reportEndStr || "2099-12-31",
       workerId: selectedWorker === "all" ? undefined : parseInt(selectedWorker)
     },
     { enabled: false }

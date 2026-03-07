@@ -1601,23 +1601,10 @@ export const appRouter = router({
       }),
 
     listByDate: publicProcedure
-      .input(z.object({ date: z.date() }))
+      .input(z.object({ dateStr: z.string().regex(/^\d{4}-\d{2}-\d{2}$/) }))
       .query(async ({ input }) => {
-        // 使用 UTC 方法設定日期範圍，避免時區問題
-        const startOfDay = new Date(Date.UTC(
-          input.date.getUTCFullYear(),
-          input.date.getUTCMonth(),
-          input.date.getUTCDate(),
-          0, 0, 0, 0
-        ));
-        const endOfDay = new Date(Date.UTC(
-          input.date.getUTCFullYear(),
-          input.date.getUTCMonth(),
-          input.date.getUTCDate(),
-          23, 59, 59, 999
-        ));
-        
-        const assignments = await db.getAssignmentsByDateRange(startOfDay, endOfDay);
+        // 使用台灣時區日期字串直接查詢，完全繞過 JavaScript Date 物件的時區序列化問題
+        const assignments = await db.getAssignmentsByTaiwanDate(input.dateStr);
         
         const result = await Promise.all(
           assignments.map(async (assignment) => {
@@ -1942,12 +1929,12 @@ export const appRouter = router({
     // 員工薪資報表
     workerPayroll: publicProcedure
       .input(z.object({
-        startDate: z.date(),
-        endDate: z.date(),
+        startDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+        endDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
         workerId: z.number().optional(),
       }))
       .query(async ({ input }) => {
-        const assignments = await db.getAssignmentsByDateRange(input.startDate, input.endDate);
+        const assignments = await db.getAssignmentsByTaiwanDateRange(input.startDate, input.endDate);
         
         // 只包含已完成的排班
         let completed = assignments.filter(a => a.status === "completed" && a.actualHours);
@@ -2008,12 +1995,12 @@ export const appRouter = router({
     // 員工薪資月結彙總（按員工彙總當月所有指派）
     workerMonthlySummary: publicProcedure
       .input(z.object({
-        startDate: z.date(),
-        endDate: z.date(),
+        startDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+        endDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
         workerId: z.number().optional(),
       }))
       .query(async ({ input }) => {
-        const assignments = await db.getAssignmentsByDateRange(input.startDate, input.endDate);
+        const assignments = await db.getAssignmentsByTaiwanDateRange(input.startDate, input.endDate);
         
         // 只包含已完成的排班（不限 actualHours，因為件薪可能沒有工時）
         let completed = assignments.filter(a => a.status === "completed");
@@ -2113,8 +2100,8 @@ export const appRouter = router({
     // 客戶工時報表（彙總格式）
     clientHours: publicProcedure
       .input(z.object({
-        startDate: z.date(),
-        endDate: z.date(),
+        startDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+        endDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
         clientId: z.number().optional(),
       }))
       .query(async ({ input }) => {
@@ -2138,9 +2125,7 @@ export const appRouter = router({
           const completed = assignments.filter(a => 
             a.status === "completed" && 
             a.actualHours &&
-            a.role !== "intern" && // 客戶帳單不計入實習生工時
-            new Date(a.actualStart || "") >= input.startDate &&
-            new Date(a.actualEnd || "") <= input.endDate
+            a.role !== "intern" // 客戶帳單不計入實習生工時
           );
           
           for (const assignment of completed) {
@@ -2196,27 +2181,30 @@ export const appRouter = router({
       .input(z.object({ days: z.number().default(14) }).optional())
       .query(async ({ input }) => {
         const days = input?.days || 14;
-        const endDate = new Date();
-        endDate.setUTCHours(23, 59, 59, 999); // 使用 UTC
-        const startDate = new Date();
-        startDate.setDate(startDate.getDate() - days + 1);
-        startDate.setUTCHours(0, 0, 0, 0); // 使用 UTC
+        
+        // 用台灣時區計算日期範圍
+        const nowTW = new Date(Date.now() + 8 * 60 * 60 * 1000);
+        const endStr = `${nowTW.getUTCFullYear()}-${String(nowTW.getUTCMonth() + 1).padStart(2, "0")}-${String(nowTW.getUTCDate()).padStart(2, "0")}`;
+        const startTW = new Date(nowTW);
+        startTW.setUTCDate(startTW.getUTCDate() - days + 1);
+        const startStr = `${startTW.getUTCFullYear()}-${String(startTW.getUTCMonth() + 1).padStart(2, "0")}-${String(startTW.getUTCDate()).padStart(2, "0")}`;
 
-        const assignments = await db.getAssignmentsByDateRange(startDate, endDate);
+        const assignments = await db.getAssignmentsByTaiwanDateRange(startStr, endStr);
         const activeAssignments = assignments.filter(a => a.status !== "cancelled");
 
-        // 按日期分組（使用 UTC 日期方法）
+        // 按台灣時區日期分組
         const dailyMap: Record<string, number> = {};
         for (let i = 0; i < days; i++) {
-          const d = new Date(startDate);
+          const d = new Date(startTW);
           d.setUTCDate(d.getUTCDate() + i);
           const key = `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}-${String(d.getUTCDate()).padStart(2, "0")}`;
           dailyMap[key] = 0;
         }
 
         for (const a of activeAssignments) {
-          const d = new Date(a.scheduledStart);
-          const key = `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}-${String(d.getUTCDate()).padStart(2, "0")}`;
+          // 用 CONVERT_TZ 的等效 JS 計算：加 8 小時後取 UTC 日期
+          const twTime = new Date(new Date(a.scheduledStart).getTime() + 8 * 60 * 60 * 1000);
+          const key = `${twTime.getUTCFullYear()}-${String(twTime.getUTCMonth() + 1).padStart(2, "0")}-${String(twTime.getUTCDate()).padStart(2, "0")}`;
           if (dailyMap[key] !== undefined) {
             dailyMap[key]++;
           }

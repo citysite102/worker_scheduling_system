@@ -30,12 +30,8 @@ export default function ActualTime() {
   const [payRate, setPayRate] = useState("");
   const [payAmount, setPayAmount] = useState("");
 
-  // 修正時區問題：系統將時間字串（HH:mm）直接用 setUTCHours 存入資料庫，日期部分也是 UTC
-  // 所以前端傳入日期時應直接用 UTC 零時，讓後端 getUTCDate() 取到正確日期
-  const queryDate = new Date(selectedDate + "T00:00:00Z");
-
   const { data: assignments, isLoading, refetch } = trpc.assignments.listByDate.useQuery({
-    date: queryDate,
+    dateStr: selectedDate,
   });
 
   const fillActualTimeMutation = trpc.assignments.fillActualTime.useMutation({

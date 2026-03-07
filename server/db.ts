@@ -571,6 +571,34 @@ export async function getAssignmentsByDateRange(startDate: Date, endDate: Date) 
   );
 }
 
+/**
+ * 依台灣時區日期查詢指派記錄
+ * 使用 MySQL CONVERT_TZ 把 UTC 的 scheduledStart 轉成台灣時間（+08:00）後比對日期
+ * 完全繞過 Node.js / mysql2 的時區序列化問題
+ * @param dateStr 台灣時區的日期字串，格式 YYYY-MM-DD
+ */
+export async function getAssignmentsByTaiwanDate(dateStr: string) {
+  const db = await getDb();
+  if (!db) return [];
+  return await db.select().from(assignments).where(
+    sql`DATE(CONVERT_TZ(${assignments.scheduledStart}, '+00:00', '+08:00')) = ${dateStr}`
+  );
+}
+
+/**
+ * 依台灣時區日期範圍查詢指派記錄（用於月報、週報等範圍查詢）
+ * 使用 MySQL CONVERT_TZ 把 UTC 的 scheduledStart 轉成台灣時間（+08:00）後比對日期範圍
+ * @param startDateStr 開始日期字串，格式 YYYY-MM-DD
+ * @param endDateStr 結束日期字串，格式 YYYY-MM-DD
+ */
+export async function getAssignmentsByTaiwanDateRange(startDateStr: string, endDateStr: string) {
+  const db = await getDb();
+  if (!db) return [];
+  return await db.select().from(assignments).where(
+    sql`DATE(CONVERT_TZ(${assignments.scheduledStart}, '+00:00', '+08:00')) BETWEEN ${startDateStr} AND ${endDateStr}`
+  );
+}
+
 export async function createAssignment(data: { demandId: number; workerId: number; scheduledStart: Date; scheduledEnd: Date; scheduledHours: number; role?: "regular" | "intern"; status?: "assigned" | "completed" | "cancelled" | "disputed"; note?: string }) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");

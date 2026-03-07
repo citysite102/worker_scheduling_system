@@ -2027,3 +2027,19 @@
 - [x] 查詢 930098 的 scheduledStart 原始 UTC 値，確認偵移方向
 - [x] 修正 listByDate 後端查詢：改為依台灣時區（UTC+8）的日期範圍查詢
 - [x] 修正前端 ActualTime.tsx 日期傳遞，確保與後端查詢邏輯一致
+
+## 使用者回報問題（2026/03/08 - 工時回填日期偏移根本原因未解決）
+
+- [ ] 查詢米窩指派的 scheduledStart 原始 UTC 値，確認偏移方向
+- [ ] 修正後端 listByDate：改為台灣時區（UTC+8）日期範圍查詢
+- [ ] 修正前端 ActualTime.tsx：日期傳遞與顯示一致
+
+## 使用者回報問題（2026/03/08 - 工時回填日期偏移根本原因修正）
+
+- [x] 確認根本原因：Node.js 伺服器時區為 America/New_York（UTC-5），mysql2 驅動在序列化 Date 物件時使用本地時區，導致查詢條件偏移
+- [x] 修正 db.ts：新增 getAssignmentsByTaiwanDate（單日）和 getAssignmentsByTaiwanDateRange（範圍），使用 MySQL CONVERT_TZ 直接比對台灣時區日期
+- [x] 修正 routers.ts：listByDate 改為接受 dateStr 字串，使用 getAssignmentsByTaiwanDate
+- [x] 修正 routers.ts：workerPayroll、workerMonthlySummary、clientHours 改為接受日期字串，使用 getAssignmentsByTaiwanDateRange
+- [x] 修正 routers.ts：dailyAssignmentTrend 改用台灣時區日期計算
+- [x] 修正 ActualTime.tsx：改為傳遞 dateStr 字串
+- [x] 修正 Reports.tsx：改為傳遞日期字串
