@@ -2009,6 +2009,111 @@ export const appRouter = router({
         return records;
       }),
 
+    // 員工薪資月結彙總（按員工彙總當月所有指派）
+    workerMonthlySummary: publicProcedure
+      .input(z.object({
+        startDate: z.date(),
+        endDate: z.date(),
+        workerId: z.number().optional(),
+      }))
+      .query(async ({ input }) => {
+        const assignments = await db.getAssignmentsByDateRange(input.startDate, input.endDate);
+        
+        // 只包含已完成的排班（不限 actualHours，因為件薪可能沒有工時）
+        let completed = assignments.filter(a => a.status === "completed");
+        
+        if (input.workerId) {
+          completed = completed.filter(a => a.workerId === input.workerId);
+        }
+        
+        // 按員工彙總
+        const summaryMap = new Map<number, {
+          workerId: number;
+          workerName: string;
+          role: string;
+          assignmentCount: number;
+          totalMinutes: number;       // 總工時（分鐘）
+          totalUnitCount: number;     // 總件數
+          totalPayAmount: number;     // 總薪資
+          payrollFilledCount: number; // 已填薪資的筆數
+          details: Array<{
+            demandDate: string;
+            clientName: string;
+            actualHours: string;
+            payType: string;
+            unitCount: number | null;
+            unitType: string | null;
+            payAmount: number | null;
+          }>;
+        }>();
+        
+        for (const assignment of completed) {
+          const worker = await db.getWorkerById(assignment.workerId);
+          const demand = await db.getDemandById(assignment.demandId);
+          const client = demand ? await db.getClientById(demand.clientId) : null;
+          if (!worker) continue;
+          
+          const actualMinutes = assignment.actualHours || 0;
+          const payAmount = assignment.payAmount ?? null;
+          const unitCount = assignment.unitCount ?? null;
+          const unitType = assignment.unitType ?? null;
+          const payType = assignment.payType || "hourly";
+          
+          const existing = summaryMap.get(worker.id);
+          const detail = {
+            demandDate: logic.formatDate(new Date(demand?.date || "")),
+            clientName: client?.name || "",
+            actualHours: (actualMinutes / 60).toFixed(2),
+            payType,
+            unitCount,
+            unitType,
+            payAmount,
+          };
+          
+          if (existing) {
+            existing.assignmentCount += 1;
+            existing.totalMinutes += actualMinutes;
+            existing.totalUnitCount += unitCount || 0;
+            existing.totalPayAmount += payAmount || 0;
+            if (payAmount !== null) existing.payrollFilledCount += 1;
+            existing.details.push(detail);
+          } else {
+            summaryMap.set(worker.id, {
+              workerId: worker.id,
+              workerName: worker.name,
+              role: assignment.role || "regular",
+              assignmentCount: 1,
+              totalMinutes: actualMinutes,
+              totalUnitCount: unitCount || 0,
+              totalPayAmount: payAmount || 0,
+              payrollFilledCount: payAmount !== null ? 1 : 0,
+              details: [detail],
+            });
+          }
+        }
+        
+        const records = Array.from(summaryMap.values()).map(item => ({
+          workerId: item.workerId,
+          workerName: item.workerName,
+          role: item.role,
+          assignmentCount: item.assignmentCount,
+          totalHours: (item.totalMinutes / 60).toFixed(2),
+          totalUnitCount: item.totalUnitCount,
+          totalPayAmount: item.totalPayAmount,
+          payrollFilledCount: item.payrollFilledCount,
+          payrollPendingCount: item.assignmentCount - item.payrollFilledCount,
+          details: item.details,
+        }));
+        
+        // 排序：角色（正職優先）→ 員工姓名
+        records.sort((a, b) => {
+          if (a.role !== b.role) return a.role === "regular" ? -1 : 1;
+          return a.workerName.localeCompare(b.workerName, "zh-TW");
+        });
+        
+        return records;
+      }),
+
     // 客戶工時報表（彙總格式）
     clientHours: publicProcedure
       .input(z.object({
@@ -2394,3 +2499,4 @@ export const appRouter = router({
 });
 
 export type AppRouter = typeof appRouter;
+

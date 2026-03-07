@@ -41,7 +41,8 @@ export default function ActualTime() {
     },
   });
 
-  const fillPayrollMutation = trpc.assignments.fillPayroll.useMutation({
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const fillPayrollMutation = (trpc.assignments as any).fillPayroll.useMutation({
     onSuccess: () => {
       toast.success("薪資資料已儲存");
       setIsDialogOpen(false);
