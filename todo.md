@@ -1935,4 +1935,8 @@
 - [x] 調整所有需要 DB 的測試：DB 不可用時自動 skip 而非失敗
 - [x] 確保純業務邏輯測試（不需要 DB）仍能通過
 - [x] 驗證 pnpm test 不會在正式資料庫建立任何資料（Test Files 30 passed, Tests 188 passed）
-- [ ] 儲存 checkpoint
+- [x] 儲存 checkpoint（version: 35f5638f）
+
+## Bug 修正（2026/03/07）
+- [x] 修正人力可行性：已指派員工應計入可用人數，不再顯示缺口（effectiveShortage = shortage - activeAssignments.length）
+- [x] 修正需求單狀態顯示：副標題根據 demand.status 動態顯示（草稿/已確認/已指派/已完成/已結案）

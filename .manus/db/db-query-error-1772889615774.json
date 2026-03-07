@@ -1,0 +1,8 @@
+{
+  "query": "\nSELECT id, clientCode, name FROM clients WHERE clientCode = '630001';\nSELECT id, workerCode, name FROM workers WHERE workerCode = '780001';\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2iEKifVQ9gKtEas.9cbf5414b428 --database CMgr35KntT8tLtgpfJPejw --execute \nSELECT id, clientCode, name FROM clients WHERE clientCode = '630001';\nSELECT id, workerCode, name FROM workers WHERE workerCode = '780001';\n",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1054 (42S22) at line 3: Unknown column 'workercode' in 'where clause'"
+  ]
+}

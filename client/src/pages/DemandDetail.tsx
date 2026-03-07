@@ -419,7 +419,16 @@ export default function DemandDetail() {
               {demand.client?.name}
             </Link>
           </h1>
-          <p className="text-sm text-muted-foreground mt-1">指派員工至此需求單</p>
+          <p className="text-sm text-muted-foreground mt-1">
+            {demand.status === 'draft' && '草稿 — 尚未確認'}
+            {demand.status === 'pending' && '待審核'}
+            {demand.status === 'confirmed' && '已確認，可指派員工'}
+            {demand.status === 'assigned' && '已指派員工'}
+            {demand.status === 'completed' && '已完成'}
+            {demand.status === 'cancelled' && '已取消'}
+            {demand.status === 'closed' && '已結案'}
+            {!demand.status && '指派員工至此需求單'}
+          </p>
         </div>
         <div className="flex gap-2">
           <Button
@@ -537,16 +546,33 @@ export default function DemandDetail() {
                   <span className="text-muted-foreground">不可用員工</span>
                   <span className="font-medium">{feasibility.unavailableWorkers.filter(uw => uw.worker.status === "active").length} 人</span>
                 </div>
-                {feasibility.shortage > 0 && (
-                  <Alert variant="destructive" className="mt-2">
-                    <AlertCircle className="h-4 w-4" />
-                    <AlertDescription className="text-xs">
-                      <strong>缺口：{feasibility.shortage} 人</strong>
-                      <br />
-                      可用員工不足，建議調整時段或拆分需求單。
-                    </AlertDescription>
-                  </Alert>
-                )}
+                {(() => {
+                  const effectiveShortage = Math.max(0, feasibility.shortage - activeAssignments.length);
+                  if (effectiveShortage > 0) {
+                    return (
+                      <Alert variant="destructive" className="mt-2">
+                        <AlertCircle className="h-4 w-4" />
+                        <AlertDescription className="text-xs">
+                          <strong>缺口：{effectiveShortage} 人</strong>
+                          <br />
+                          可用員工不足，建議調整時段或拆分需求單。
+                        </AlertDescription>
+                      </Alert>
+                    );
+                  } else if (activeAssignments.length > 0 && feasibility.shortage > 0) {
+                    return (
+                      <Alert className="mt-2 border-emerald-200 bg-emerald-50 dark:border-emerald-800 dark:bg-emerald-950">
+                        <AlertCircle className="h-4 w-4 text-emerald-600" />
+                        <AlertDescription className="text-xs text-emerald-700 dark:text-emerald-400">
+                          <strong>已滿足需求</strong>
+                          <br />
+                          已指派 {activeAssignments.length} 人，人力需求已滿足。
+                        </AlertDescription>
+                      </Alert>
+                    );
+                  }
+                  return null;
+                })()}
               </div>
             </CardContent>
           </Card>

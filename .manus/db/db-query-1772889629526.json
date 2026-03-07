@@ -1,0 +1,20 @@
+{
+  "query": "SELECT id, clientCode, name FROM clients LIMIT 5;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2iEKifVQ9gKtEas.9cbf5414b428 --database CMgr35KntT8tLtgpfJPejw --execute SELECT id, clientCode, name FROM clients LIMIT 5;",
+  "rows": [
+    {
+      "id": "630001",
+      "clientCode": "CLI-20260226-001",
+      "name": "米窩"
+    },
+    {
+      "id": "720001",
+      "clientCode": "CLI-20260307-001",
+      "name": "良新國際洋酒"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tclientCode\tname\n630001\tCLI-20260226-001\t米窩\n720001\tCLI-20260307-001\t良新國際洋酒\n",
+  "stderr": "",
+  "execution_time_ms": 1520
+}
