@@ -17,6 +17,7 @@ import {
   formatTaiwanDate,
   generateDateRange,
 } from "@/lib/dateUtils";
+import { WorkerAvatar, formatWorkerId } from "@/components/WorkerAvatar";
 
 type PayType = "hourly" | "unit" | "fixed";
 
@@ -341,9 +342,22 @@ export default function ActualTime() {
                           >
                             {/* 上方：員工資訊與狀態 */}
                             <div className="flex items-start justify-between gap-3">
+                              {/* 員工頭像 */}
+                              <WorkerAvatar
+                                workerId={assignment.worker?.id || assignment.workerId}
+                                name={assignment.worker?.name || "?"}
+                                avatarUrl={assignment.worker?.avatarUrl}
+                                size="md"
+                              />
                               <div className="flex-1 min-w-0">
                                 <div className="flex items-center gap-2 mb-1.5 flex-wrap">
-                                  <span className="font-medium text-sm">{assignment.demand.client?.name || "未知客戶"}</span>
+                                  {/* 員工姓名 + 工號 */}
+                                  <span className="font-medium text-sm">{assignment.worker?.name || "未知員工"}</span>
+                                  <span className="text-xs text-muted-foreground font-mono bg-muted px-1.5 py-0.5 rounded">
+                                    {formatWorkerId(assignment.worker?.id || assignment.workerId)}
+                                  </span>
+                                  <span className="text-muted-foreground">·</span>
+                                  <span className="text-sm text-muted-foreground">{assignment.demand.client?.name || "未知客戶"}</span>
                                   {isIntern ? (
                                     <Badge className="bg-amber-50 text-amber-700 border-amber-200 text-xs">實習生</Badge>
                                   ) : (
@@ -371,10 +385,12 @@ export default function ActualTime() {
                                   )}
                                 </div>
                                 <div className="flex items-center gap-3 text-xs text-muted-foreground flex-wrap">
-                                  <span className="flex items-center gap-1">
-                                    <User className="h-3 w-3" />
-                                    {assignment.worker?.name || "未知員工"}
-                                  </span>
+                                  {assignment.worker?.idNumber && (
+                                    <span className="flex items-center gap-1">
+                                      <User className="h-3 w-3" />
+                                      證號：{assignment.worker.idNumber.slice(-4).padStart(assignment.worker.idNumber.length, "*")}
+                                    </span>
+                                  )}
                                   <span className="flex items-center gap-1">
                                     <Clock className="h-3 w-3" />
                                     預計：{assignment.demand.startTime} - {assignment.demand.endTime} ({plannedHours}h)
