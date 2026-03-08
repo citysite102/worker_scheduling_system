@@ -1601,6 +1601,47 @@ export const appRouter = router({
         return result;
       }),
 
+    listByWeek: publicProcedure
+      .input(z.object({
+        weekStartStr: z.string().regex(/^\d{4}-\d{2}-\d{2}$/), // 週一日期字串 YYYY-MM-DD
+      }))
+      .query(async ({ input }) => {
+        // 計算週一到週日的日期字串
+        const start = new Date(input.weekStartStr + "T00:00:00Z");
+        const end = new Date(start);
+        end.setUTCDate(end.getUTCDate() + 6);
+        const weekEndStr = end.toISOString().split("T")[0];
+
+        const rawAssignments = await db.getAssignmentsByTaiwanDateRange(input.weekStartStr, weekEndStr);
+
+        const result = await Promise.all(
+          rawAssignments.map(async (assignment) => {
+            const worker = await db.getWorkerById(assignment.workerId);
+            const demand = await db.getDemandById(assignment.demandId);
+            const client = demand ? await db.getClientById(demand.clientId) : null;
+
+            // 計算台灣日期字串（用於前端分組）
+            const twDate = assignment.scheduledStart
+              ? new Date(new Date(assignment.scheduledStart).getTime() + 8 * 60 * 60 * 1000)
+              : null;
+            const taiwanDateStr = twDate
+              ? `${twDate.getUTCFullYear()}-${String(twDate.getUTCMonth() + 1).padStart(2, "0")}-${String(twDate.getUTCDate()).padStart(2, "0")}`
+              : input.weekStartStr;
+
+            return {
+              ...assignment,
+              actualStartTime: assignment.actualStart ? logic.formatTime(new Date(assignment.actualStart)) : null,
+              actualEndTime: assignment.actualEnd ? logic.formatTime(new Date(assignment.actualEnd)) : null,
+              taiwanDateStr,
+              worker,
+              demand: { ...demand, client },
+            };
+          })
+        );
+
+        return result;
+      }),
+
     listByDate: publicProcedure
       .input(z.object({ dateStr: z.string().regex(/^\d{4}-\d{2}-\d{2}$/) }))
       .query(async ({ input }) => {

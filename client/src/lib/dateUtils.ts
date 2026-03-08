@@ -192,3 +192,65 @@ export function generateDateRange(startDateStr: string, endDateStr: string): str
 export function compareDateStr(a: string, b: string): number {
   return a.localeCompare(b);
 }
+
+/**
+ * 取得台灣時區當週的週一日期字串（"YYYY-MM-DD"）
+ * 台灣習慣：週一為一週起始
+ *
+ * @param dateStr - 可選，指定日期字串（預設為今日）
+ * @example
+ * getTaiwanWeekStartStr() // "2026-03-02" (本週週一)
+ * getTaiwanWeekStartStr("2026-03-08") // "2026-03-02"
+ */
+export function getTaiwanWeekStartStr(dateStr?: string): string {
+  let tw: Date;
+  if (dateStr) {
+    const [y, m, d] = dateStr.split("-").map(Number);
+    tw = new Date(Date.UTC(y, m - 1, d));
+  } else {
+    tw = getTaiwanNow();
+  }
+  // getUTCDay(): 0=日, 1=一, ..., 6=六
+  const dayOfWeek = tw.getUTCDay();
+  // 台灣週一為起始：週日(0) 往前 6 天，其他往前 (dayOfWeek - 1) 天
+  const daysToMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+  const monday = new Date(tw);
+  monday.setUTCDate(monday.getUTCDate() - daysToMonday);
+  const y = monday.getUTCFullYear();
+  const m = String(monday.getUTCMonth() + 1).padStart(2, "0");
+  const d = String(monday.getUTCDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
+}
+
+/**
+ * 將日期字串加減 N 天，回傳新的日期字串
+ *
+ * @param dateStr - "YYYY-MM-DD" 格式
+ * @param days - 正數往後，負數往前
+ * @example
+ * addDaysToDateStr("2026-03-02", 7) // "2026-03-09"
+ * addDaysToDateStr("2026-03-02", -7) // "2026-02-23"
+ */
+export function addDaysToDateStr(dateStr: string, days: number): string {
+  const [y, m, d] = dateStr.split("-").map(Number);
+  const date = new Date(Date.UTC(y, m - 1, d));
+  date.setUTCDate(date.getUTCDate() + days);
+  const ny = date.getUTCFullYear();
+  const nm = String(date.getUTCMonth() + 1).padStart(2, "0");
+  const nd = String(date.getUTCDate()).padStart(2, "0");
+  return `${ny}-${nm}-${nd}`;
+}
+
+/**
+ * 取得日期字串對應的星期幾（中文）
+ *
+ * @param dateStr - "YYYY-MM-DD" 格式
+ * @example
+ * getWeekdayLabel("2026-03-08") // "日"
+ * getWeekdayLabel("2026-03-09") // "一"
+ */
+export function getWeekdayLabel(dateStr: string): string {
+  const [y, m, d] = dateStr.split("-").map(Number);
+  const date = new Date(Date.UTC(y, m - 1, d));
+  return ["日", "一", "二", "三", "四", "五", "六"][date.getUTCDay()];
+}
