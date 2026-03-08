@@ -8,10 +8,20 @@ import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { Download, FileText, Loader2, ChevronDown, ChevronRight } from "lucide-react";
-import { useState } from "react";
+import { Download, FileText, Loader2, ChevronDown, ChevronRight, Lock, Unlock, CheckCircle2, AlertTriangle } from "lucide-react";
+import { useState, useMemo } from "react";
 import { toast } from "sonner";
 import { getTaiwanMonthStartStr, getTaiwanMonthEndStr, formatTaiwanDate } from "@/lib/dateUtils";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 type ReportType = "worker" | "client";
 type ViewMode = "detail" | "monthly";
@@ -26,8 +36,90 @@ export default function Reports() {
   const [hasGenerated, setHasGenerated] = useState(false);
   const [expandedWorkers, setExpandedWorkers] = useState<Set<number>>(new Set());
 
+  // 月結結算確認狀態
+  const [settleDialogOpen, setSettleDialogOpen] = useState(false);
+  const [unsettleDialogOpen, setUnsettleDialogOpen] = useState(false);
+  const [pendingSettleWorker, setPendingSettleWorker] = useState<{ workerId: number; workerName: string; totalAmount: number; totalHours: number; assignmentCount: number } | null>(null);
+  const [pendingUnsettleWorker, setPendingUnsettleWorker] = useState<{ workerId: number; workerName: string } | null>(null);
+
   const { data: workers } = trpc.workers.list.useQuery({ status: "active" });
   const { data: clients } = trpc.clients.list.useQuery();
+
+  // 從 startDate 解析年月（用於結算 API）
+  const reportYearMonth = useMemo(() => {
+    if (!startDate) return { year: new Date().getFullYear(), month: new Date().getMonth() + 1 };
+    const [y, m] = startDate.split("-").map(Number);
+    return { year: y, month: m };
+  }, [startDate]);
+
+  // 批次查詢月份結算狀態
+  const { data: settlementBatch, refetch: refetchSettlements } = (trpc.reports as any).settlementBatchStatus.useQuery(
+    { year: reportYearMonth.year, month: reportYearMonth.month },
+    { enabled: hasGenerated && reportType === "worker" && viewMode === "monthly" }
+  );
+
+  const settleMutation = (trpc.reports as any).settle.useMutation({
+    onSuccess: () => {
+      toast.success(`${pendingSettleWorker?.workerName} ${reportYearMonth.year}年${reportYearMonth.month}月薪資已結算鎖定`);
+      setSettleDialogOpen(false);
+      setPendingSettleWorker(null);
+      refetchSettlements();
+    },
+    onError: (err: any) => {
+      toast.error(err.message || "結算失敗，請稍後再試");
+      setSettleDialogOpen(false);
+    },
+  });
+
+  const unsettleMutation = (trpc.reports as any).unsettle.useMutation({
+    onSuccess: () => {
+      toast.success(`${pendingUnsettleWorker?.workerName} ${reportYearMonth.year}年${reportYearMonth.month}月結算已解除`);
+      setUnsettleDialogOpen(false);
+      setPendingUnsettleWorker(null);
+      refetchSettlements();
+    },
+    onError: (err: any) => {
+      toast.error(err.message || "解除結算失敗，請稍後再試");
+      setUnsettleDialogOpen(false);
+    },
+  });
+
+  const handleSettle = (row: any) => {
+    setPendingSettleWorker({
+      workerId: row.workerId,
+      workerName: row.workerName,
+      totalAmount: row.totalPayAmount,
+      totalHours: Math.round(parseFloat(row.totalHours) * 60),
+      assignmentCount: row.assignmentCount,
+    });
+    setSettleDialogOpen(true);
+  };
+
+  const handleUnsettle = (row: any) => {
+    setPendingUnsettleWorker({ workerId: row.workerId, workerName: row.workerName });
+    setUnsettleDialogOpen(true);
+  };
+
+  const confirmSettle = () => {
+    if (!pendingSettleWorker) return;
+    settleMutation.mutate({
+      workerId: pendingSettleWorker.workerId,
+      year: reportYearMonth.year,
+      month: reportYearMonth.month,
+      totalAmount: pendingSettleWorker.totalAmount,
+      totalHours: pendingSettleWorker.totalHours,
+      assignmentCount: pendingSettleWorker.assignmentCount,
+    });
+  };
+
+  const confirmUnsettle = () => {
+    if (!pendingUnsettleWorker) return;
+    unsettleMutation.mutate({
+      workerId: pendingUnsettleWorker.workerId,
+      year: reportYearMonth.year,
+      month: reportYearMonth.month,
+    });
+  };
 
   // 使用日期字串直接傳遞，後端用 MySQL CONVERT_TZ 比對台灣時區，完全繞過 JS Date 物件的時區序列化問題
   const reportStartStr = startDate || "";
@@ -144,6 +236,85 @@ export default function Reports() {
 
   return (
     <div className="p-6 lg:p-8 max-w-6xl mx-auto">
+      {/* 結算確認對話框 */}
+      <AlertDialog open={settleDialogOpen} onOpenChange={setSettleDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <Lock className="h-4 w-4 text-emerald-600" />
+              確認結算鎖定
+            </AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-3">
+                <p>您即將對以下員工進行月結結算：</p>
+                <div className="bg-muted/40 rounded-lg p-3 space-y-1.5 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">員工姓名</span>
+                    <span className="font-medium">{pendingSettleWorker?.workerName}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">結算月份</span>
+                    <span className="font-medium">{reportYearMonth.year}年{reportYearMonth.month}月</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">指派筆數</span>
+                    <span className="font-medium">{pendingSettleWorker?.assignmentCount} 筆</span>
+                  </div>
+                  <div className="flex justify-between border-t pt-1.5 mt-1.5">
+                    <span className="text-muted-foreground">應付薪資</span>
+                    <span className="font-semibold text-emerald-700">${pendingSettleWorker?.totalAmount.toLocaleString()}</span>
+                  </div>
+                </div>
+                <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded p-2">
+                  <AlertTriangle className="h-3 w-3 inline mr-1" />
+                  結算後該月薪資資料將被鎖定，管理員將無法再修改。如需修改請先解除結算。
+                </p>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>取消</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmSettle}
+              className="bg-emerald-600 hover:bg-emerald-700 text-white"
+            >
+              {settleMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Lock className="h-4 w-4 mr-1" />}
+              確認結算
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* 解除結算對話框 */}
+      <AlertDialog open={unsettleDialogOpen} onOpenChange={setUnsettleDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <Unlock className="h-4 w-4 text-amber-600" />
+              解除結算鎖定
+            </AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-3">
+                <p>您即將解除 <strong>{pendingUnsettleWorker?.workerName}</strong> {reportYearMonth.year}年{reportYearMonth.month}月的結算鎖定。</p>
+                <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded p-2">
+                  <AlertTriangle className="h-3 w-3 inline mr-1" />
+                  解除後該月薪資資料可被重新修改。請確認後再操作。
+                </p>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>取消</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmUnsettle}
+              className="bg-amber-600 hover:bg-amber-700 text-white"
+            >
+              {unsettleMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Unlock className="h-4 w-4 mr-1" />}
+              確認解除
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
       <div className="mb-8">
         <h1 className="text-2xl font-semibold text-foreground">報表輸出</h1>
         <p className="text-sm text-muted-foreground mt-1">生成員工薪資或客戶工時報表，並下載 CSV 檔案</p>
@@ -370,6 +541,7 @@ export default function Reports() {
                             <TableHead className="text-xs font-medium text-right">總件數</TableHead>
                             <TableHead className="text-xs font-medium text-right">應付薪資(元)</TableHead>
                             <TableHead className="text-xs font-medium text-right">薪資狀態</TableHead>
+                            <TableHead className="text-xs font-medium text-right">結算狀態</TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -406,6 +578,40 @@ export default function Reports() {
                                   {row.payrollPendingCount > 0
                                     ? <Badge variant="outline" className="text-xs bg-amber-50 text-amber-700 border-amber-200">{row.payrollPendingCount} 筆待填</Badge>
                                     : <Badge variant="outline" className="text-xs bg-green-50 text-green-700 border-green-200">已完整</Badge>}
+                                </TableCell>
+                                <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
+                                  {row.role === "intern" ? (
+                                    <span className="text-xs text-muted-foreground">無須結算</span>
+                                  ) : settlementBatch?.[row.workerId]?.settled ? (
+                                    <div className="flex items-center justify-end gap-1.5">
+                                      <span className="inline-flex items-center gap-1 text-xs text-emerald-700 bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 rounded">
+                                        <Lock className="h-3 w-3" />已結算
+                                      </span>
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        className="h-6 px-1.5 text-xs text-muted-foreground hover:text-destructive"
+                                        onClick={() => handleUnsettle(row)}
+                                      >
+                                        <Unlock className="h-3 w-3" />
+                                      </Button>
+                                    </div>
+                                  ) : (
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      className={`h-6 px-2 text-xs ${
+                                        row.payrollPendingCount > 0
+                                          ? "text-muted-foreground border-border/50 cursor-not-allowed opacity-50"
+                                          : "text-emerald-700 border-emerald-300 hover:bg-emerald-50"
+                                      }`}
+                                      disabled={row.payrollPendingCount > 0}
+                                      onClick={() => handleSettle(row)}
+                                      title={row.payrollPendingCount > 0 ? "請先完整填寫所有薪資再結算" : "確認結算"}
+                                    >
+                                      <CheckCircle2 className="h-3 w-3 mr-0.5" />結算確認
+                                    </Button>
+                                  )}
                                 </TableCell>
                               </TableRow>
 

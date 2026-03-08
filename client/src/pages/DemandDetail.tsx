@@ -1,4 +1,5 @@
 import { trpc } from "@/lib/trpc";
+import { utcToTaiwanDateStr, formatTaiwanDate } from "@/lib/dateUtils";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -516,9 +517,13 @@ export default function DemandDetail() {
                   <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
                   <span className="text-muted-foreground">日期：</span>
                   <span className="font-medium">
-                    {localDate.toLocaleDateString("zh-TW", {
-                      year: "numeric", month: "long", day: "numeric", weekday: "long",
-                    })}
+                    {(() => {
+                      const dateStr = utcToTaiwanDateStr(demand.date);
+                      const [y, m, d] = dateStr.split("-").map(Number);
+                      const weekdays = ["日", "一", "二", "三", "四", "五", "六"];
+                      const weekday = weekdays[new Date(Date.UTC(y, m - 1, d)).getUTCDay()];
+                      return `${y}年${m}月${d}日（星期${weekday}）`;
+                    })()}
                   </span>
                 </div>
                 <div className="flex items-center gap-2">
@@ -1279,7 +1284,7 @@ export default function DemandDetail() {
                   id="date" 
                   name="date" 
                   type="date" 
-                  defaultValue={demand?.date ? new Date(demand.date).toISOString().split('T')[0] : ''}
+                  defaultValue={demand?.date ? utcToTaiwanDateStr(demand.date) : ''}
                   required 
                 />
               </div>

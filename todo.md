@@ -2056,3 +2056,20 @@
 ## 使用者回報問題（2026/03/08 - Reports.tsx TableBody key prop 警告）
 
 - [x] 修正 Reports.tsx TableBody 中缺少 key prop 的列表渲染
+
+## 新功能開發（2026/03/08 - 月結結算確認與時區修正）
+
+### 月結結算確認鎖定功能
+- [x] 新增 payroll_settlements 資料表（workerId, year, month, settledAt, settledBy, totalAmount）
+- [x] 實作 settlements.settle mutation（鎖定月份薪資）
+- [x] 實作 settlements.unsettle mutation（解除鎖定，需二次確認）
+- [x] 實作 settlements.getStatus query（查詢月份結算狀態）
+- [x] Reports.tsx 月結模式加入「結算確認」按鈕（僅限薪資已全部填寫時可操作）
+- [x] 已結算月份顯示鎖定狀態（結算時間、結算人）
+- [x] 已結算月份的薪資資料防止被修改（後端 fillPayroll 加入鎖定檢查）
+- [x] 解鎖需二次確認對話框
+
+### 需求單詳情頁時間顯示修正
+- [x] 檢查 DemandDetail.tsx 中 scheduledStart/scheduledEnd 的顯示邏輯
+- [x] 確認時間是否以台灣時區（UTC+8）正確顯示
+- [x] 修正時區偏移問題（已修正）

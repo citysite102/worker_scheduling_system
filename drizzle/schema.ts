@@ -201,3 +201,25 @@ export const adminInvites = mysqlTable("admin_invites", {
 
 export type AdminInvite = typeof adminInvites.$inferSelect;
 export type InsertAdminInvite = typeof adminInvites.$inferInsert;
+
+/**
+ * PayrollSettlements (月結結算確認) - 管理員對員工某月薪資進行鎖定結算
+ * 一旦結算，該月份的薪資資料不可再修改（需解鎖才能重新填寫）
+ */
+export const payrollSettlements = mysqlTable("payroll_settlements", {
+  id: int("id").autoincrement().primaryKey(),
+  workerId: int("workerId").notNull().references(() => workers.id),
+  year: int("year").notNull(),           // 結算年份（例如：2026）
+  month: int("month").notNull(),          // 結算月份（1-12）
+  totalAmount: int("totalAmount"),        // 結算總金額（元），可為 null（若有待填項目）
+  totalHours: int("totalHours"),          // 結算總工時（分鐘）
+  assignmentCount: int("assignmentCount"), // 結算指派筆數
+  settledBy: int("settledBy").references(() => users.id), // 執行結算的管理員 userId
+  settledAt: timestamp("settledAt").defaultNow().notNull(), // 結算時間
+  note: text("note"),                     // 結算備註
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type PayrollSettlement = typeof payrollSettlements.$inferSelect;
+export type InsertPayrollSettlement = typeof payrollSettlements.$inferInsert;

@@ -1,7 +1,7 @@
 import { eq, and, gte, lte, lt, or, sql, desc } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
 import mysql from "mysql2";
-import { InsertUser, users } from "../drizzle/schema";
+import { InsertUser, users, payrollSettlements } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -902,4 +902,82 @@ export async function getUserById(userId: number) {
     .limit(1);
 
   return result[0] || null;
+}
+
+// ============ PayrollSettlements (月結結算確認) ============
+
+/**
+ * 查詢指定員工指定月份的結算狀態
+ */
+export async function getPayrollSettlement(workerId: number, year: number, month: number) {
+  const db = await getDb();
+  if (!db) return null;
+  const result = await db
+    .select()
+    .from(payrollSettlements)
+    .where(and(
+      eq(payrollSettlements.workerId, workerId),
+      eq(payrollSettlements.year, year),
+      eq(payrollSettlements.month, month),
+    ))
+    .limit(1);
+  return result[0] || null;
+}
+
+/**
+ * 批次查詢多位員工指定月份的結算狀態（用於月結報表）
+ */
+export async function getPayrollSettlementsByMonth(year: number, month: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return await db
+    .select()
+    .from(payrollSettlements)
+    .where(and(
+      eq(payrollSettlements.year, year),
+      eq(payrollSettlements.month, month),
+    ));
+}
+
+/**
+ * 建立月結結算記錄（鎖定）
+ */
+export async function createPayrollSettlement(data: {
+  workerId: number;
+  year: number;
+  month: number;
+  totalAmount?: number;
+  totalHours?: number;
+  assignmentCount?: number;
+  settledBy?: number;
+  note?: string;
+}) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.insert(payrollSettlements).values({
+    workerId: data.workerId,
+    year: data.year,
+    month: data.month,
+    totalAmount: data.totalAmount ?? null,
+    totalHours: data.totalHours ?? null,
+    assignmentCount: data.assignmentCount ?? null,
+    settledBy: data.settledBy ?? null,
+    note: data.note ?? null,
+  });
+  return await getPayrollSettlement(data.workerId, data.year, data.month);
+}
+
+/**
+ * 刪除月結結算記錄（解鎖）
+ */
+export async function deletePayrollSettlement(workerId: number, year: number, month: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db
+    .delete(payrollSettlements)
+    .where(and(
+      eq(payrollSettlements.workerId, workerId),
+      eq(payrollSettlements.year, year),
+      eq(payrollSettlements.month, month),
+    ));
 }

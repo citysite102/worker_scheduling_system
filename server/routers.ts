@@ -1899,7 +1899,7 @@ export const appRouter = router({
         payRate: z.number().int().min(0).optional(),   // 計薪單價（元/小時 或 元/件）
         payAmount: z.number().int().min(0),            // 最終薪資金額（元）
       }))
-      .mutation(async ({ input }) => {
+      .mutation(async ({ input, ctx }) => {
         const assignment = await db.getAssignmentById(input.assignmentId);
         if (!assignment) throw new TRPCError({ code: "NOT_FOUND", message: "排班記錄不存在" });
         
@@ -1911,6 +1911,23 @@ export const appRouter = router({
         // 件薪時必須填入件數
         if (input.payType === "unit" && (input.unitCount === undefined || input.unitCount === null)) {
           throw new TRPCError({ code: "BAD_REQUEST", message: "件薪計算方式必須填入完成件數。" });
+        }
+        
+        // 月結鎖定檢查：若該員工該月已結算，拒絕修改薪資
+        const demand = await db.getDemandById(assignment.demandId);
+        if (demand?.date) {
+          const demandDate = new Date(demand.date);
+          // 轉換為台灣時區的年月
+          const twDate = new Date(demandDate.getTime() + 8 * 60 * 60 * 1000);
+          const year = twDate.getUTCFullYear();
+          const month = twDate.getUTCMonth() + 1;
+          const settlement = await db.getPayrollSettlement(assignment.workerId, year, month);
+          if (settlement) {
+            throw new TRPCError({
+              code: "FORBIDDEN",
+              message: `${year}年${month}月薪資已結算鎖定，如需修改請先解除結算。`,
+            });
+          }
         }
         
         await db.updateAssignment(input.assignmentId, {
@@ -2172,6 +2189,98 @@ export const appRouter = router({
         });
         
         return records;
+      }),
+
+    // ===== 月結結算確認 API =====
+
+    // 查詢單一員工月份結算狀態
+    settlementStatus: publicProcedure
+      .input(z.object({
+        workerId: z.number(),
+        year: z.number(),
+        month: z.number().min(1).max(12),
+      }))
+      .query(async ({ input }) => {
+        const settlement = await db.getPayrollSettlement(input.workerId, input.year, input.month);
+        if (!settlement) return { settled: false };
+        // 查詢結算人姓名
+        const settledByUser = settlement.settledBy ? await db.getUserById(settlement.settledBy) : null;
+        return {
+          settled: true,
+          settledAt: settlement.settledAt,
+          settledByName: settledByUser?.name || "管理員",
+          totalAmount: settlement.totalAmount,
+          totalHours: settlement.totalHours,
+          assignmentCount: settlement.assignmentCount,
+          note: settlement.note,
+        };
+      }),
+
+    // 批次查詢月份所有員工結算狀態（用於月結報表頁面）
+    settlementBatchStatus: publicProcedure
+      .input(z.object({
+        year: z.number(),
+        month: z.number().min(1).max(12),
+      }))
+      .query(async ({ input }) => {
+        const settlements = await db.getPayrollSettlementsByMonth(input.year, input.month);
+        // 回傳 Map：workerId -> 結算狀態
+        const result: Record<number, { settled: boolean; settledAt?: Date; settledByName?: string }> = {};
+        for (const s of settlements) {
+          const settledByUser = s.settledBy ? await db.getUserById(s.settledBy) : null;
+          result[s.workerId] = {
+            settled: true,
+            settledAt: s.settledAt,
+            settledByName: settledByUser?.name || "管理員",
+          };
+        }
+        return result;
+      }),
+
+    // 執行月結結算（鎖定）
+    settle: protectedProcedure
+      .input(z.object({
+        workerId: z.number(),
+        year: z.number(),
+        month: z.number().min(1).max(12),
+        totalAmount: z.number().int().min(0).optional(),
+        totalHours: z.number().int().min(0).optional(),
+        assignmentCount: z.number().int().min(0).optional(),
+        note: z.string().max(500).optional(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        // 檢查是否已結算
+        const existing = await db.getPayrollSettlement(input.workerId, input.year, input.month);
+        if (existing) {
+          throw new TRPCError({ code: "CONFLICT", message: `${input.year}年${input.month}月已結算，請勿重複操作。` });
+        }
+        const settlement = await db.createPayrollSettlement({
+          workerId: input.workerId,
+          year: input.year,
+          month: input.month,
+          totalAmount: input.totalAmount,
+          totalHours: input.totalHours,
+          assignmentCount: input.assignmentCount,
+          settledBy: ctx.user.id,
+          note: input.note,
+        });
+        return { success: true, settlement };
+      }),
+
+    // 解除月結結算（解鎖）
+    unsettle: protectedProcedure
+      .input(z.object({
+        workerId: z.number(),
+        year: z.number(),
+        month: z.number().min(1).max(12),
+      }))
+      .mutation(async ({ input }) => {
+        const existing = await db.getPayrollSettlement(input.workerId, input.year, input.month);
+        if (!existing) {
+          throw new TRPCError({ code: "NOT_FOUND", message: `${input.year}年${input.month}月尚未結算。` });
+        }
+        await db.deletePayrollSettlement(input.workerId, input.year, input.month);
+        return { success: true };
       }),
   }),
 
