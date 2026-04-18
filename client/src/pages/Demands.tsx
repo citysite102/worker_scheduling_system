@@ -402,7 +402,8 @@ export default function Demands() {
                       id="date" 
                       name="date" 
                       type="date" 
-                      defaultValue={editingDemand?.date ? new Date(editingDemand.date).toISOString().split('T')[0] : ''}
+                      key={editingDemand?.id ?? 'new'}
+                      defaultValue={editingDemand?.date ? (() => { const d = new Date(editingDemand.date); return new Date(d.getTime() + 8 * 60 * 60 * 1000).toISOString().split('T')[0]; })() : ''}
                       required={!isBatchMode}
                     />
                   </div>
@@ -724,7 +725,8 @@ export default function Demands() {
                         onClick={(e) => {
                           e.stopPropagation();
                           setEditingDemand(demand);
-                          setSelectedClientId(demand.clientId);
+                          // 確保 clientId 為 number | undefined（不傳入 null）
+                          setSelectedClientId(demand.clientId != null ? demand.clientId : undefined);
                           setSelectedDemandTypeId(demand.demandTypeId || undefined);
                           setSelectedOptions(demand.selectedOptions ? JSON.parse(demand.selectedOptions) : []);
                           setIsDialogOpen(true);
