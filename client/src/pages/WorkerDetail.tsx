@@ -68,49 +68,73 @@ export default function WorkerDetail() {
     { enabled: !isNaN(workerId) && workerId > 0 }
   );
   
-  // 篩選指派記錄（必須在最上層定義，不能在條件判斷後）
+  // 取得台灣時區的今日日期字串（YYYY-MM-DD）
+  const getTaiwanToday = () => {
+    const now = new Date();
+    // UTC+8
+    const taiwanMs = now.getTime() + 8 * 60 * 60 * 1000;
+    return new Date(taiwanMs).toISOString().split('T')[0];
+  };
+
+  // 將 UTC timestamp 轉為台灣日期字串（YYYY-MM-DD）
+  const toTaiwanDateStr = (ts: number | string | Date) => {
+    const ms = typeof ts === 'object' ? ts.getTime() : new Date(ts).getTime();
+    const taiwanMs = ms + 8 * 60 * 60 * 1000;
+    return new Date(taiwanMs).toISOString().split('T')[0];
+  };
+
+  // 築選指派記錄（必須在最上層定義，不能在條件判斷後）
   const filteredAssignments = useMemo(() => {
     if (!data?.assignments) return [];
     if (dateFilter === "all") return data.assignments;
     
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    const todayStr = getTaiwanToday(); // YYYY-MM-DD
+    const todayDate = new Date(todayStr + 'T00:00:00');
+    // 使用本地時間的星期幾（台灣環境下正確）
+    const dayOfWeek = todayDate.getDay(); // 0=日, 1=一...6=六
     
-    let startDate: Date;
-    let endDate: Date;
+    let startStr: string;
+    let endStr: string;
     
     if (dateFilter === "this_week") {
-      // 本週：從今天到週日
-      startDate = new Date(today);
-      endDate = new Date(today);
-      const dayOfWeek = today.getUTCDay();
-      const daysUntilSunday = dayOfWeek === 0 ? 0 : 7 - dayOfWeek;
-      endDate.setDate(endDate.getDate() + daysUntilSunday);
+      // 本週：週一到週日（以週一為週始）
+      const daysFromMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+      const monday = new Date(todayDate);
+      monday.setDate(monday.getDate() - daysFromMonday);
+      const sunday = new Date(monday);
+      sunday.setDate(sunday.getDate() + 6);
+      startStr = monday.toISOString().split('T')[0];
+      endStr = sunday.toISOString().split('T')[0];
     } else if (dateFilter === "next_week") {
       // 下週：下個週一到下個週日
-      startDate = new Date(today);
-      const dayOfWeek = today.getUTCDay();
-      const daysUntilNextMonday = dayOfWeek === 0 ? 1 : 8 - dayOfWeek;
-      startDate.setDate(startDate.getDate() + daysUntilNextMonday);
-      endDate = new Date(startDate);
-      endDate.setDate(endDate.getDate() + 6);
+      const daysFromMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+      const nextMonday = new Date(todayDate);
+      nextMonday.setDate(nextMonday.getDate() - daysFromMonday + 7);
+      const nextSunday = new Date(nextMonday);
+      nextSunday.setDate(nextSunday.getDate() + 6);
+      startStr = nextMonday.toISOString().split('T')[0];
+      endStr = nextSunday.toISOString().split('T')[0];
     } else if (dateFilter === "this_month") {
-      // 本月：從今天到月底
-      startDate = new Date(today);
-      endDate = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+      // 本月：整個月份（不限於今日以後，方便查看歷史）
+      const year = todayDate.getFullYear();
+      const month = todayDate.getMonth();
+      const firstDay = new Date(year, month, 1);
+      const lastDay = new Date(year, month + 1, 0);
+      startStr = firstDay.toISOString().split('T')[0];
+      endStr = lastDay.toISOString().split('T')[0];
     } else if (dateFilter === "custom" && customStartDate && customEndDate) {
       // 自訂區間
-      startDate = new Date(customStartDate);
-      endDate = new Date(customEndDate);
+      startStr = customStartDate;
+      endStr = customEndDate;
     } else {
       return data.assignments;
     }
     
     return data.assignments.filter((a: any) => {
       if (!a.demand?.date) return false;
-      const assignmentDate = new Date(a.demand.date);
-      assignmentDate.setHours(0, 0, 0, 0);
-      return assignmentDate >= startDate && assignmentDate <= endDate;
+      // 將 UTC timestamp 轉為台灣日期字串再比較，避免時區偏移
+      const assignmentDateStr = toTaiwanDateStr(a.demand.date);
+      return assignmentDateStr >= startStr && assignmentDateStr <= endStr;
     });
   }, [data?.assignments, dateFilter, customStartDate, customEndDate]);
   
