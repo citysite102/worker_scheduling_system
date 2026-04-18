@@ -409,3 +409,148 @@ export function formatTime(date: Date): string {
 export function calculateMinutesBetween(start: Date, end: Date): number {
   return Math.round((end.getTime() - start.getTime()) / (1000 * 60));
 }
+
+/**
+ * 計算員工對需求的排班吻合度分數
+ * 回傳 0-100 分：
+ *   100 = 完全吻合（在可排班時段內，無衝突）
+ *   70-99 = 部分重疊（排班時段有部分重疊）
+ *   30-69 = 同日有排班但時段不符
+ *   1-29 = 本週有排班但非同日
+ *   0 = 無排班設定或有指派衝突
+ */
+export async function calculateWorkerFitScore(
+  workerId: number,
+  demandDate: Date,
+  startTime: string,
+  endTime: string,
+  hasConflict: boolean
+): Promise<{ score: number; fitLabel: string; fitDetail?: string }> {
+  if (hasConflict) {
+    return { score: 0, fitLabel: "排班衝突", fitDetail: "該時段已有其他指派" };
+  }
+
+  const weekStartDate = getWeekStart(demandDate);
+  const availability = await getAvailabilityByWorkerAndWeek(workerId, weekStartDate);
+
+  if (!availability || !availability.confirmedAt) {
+    return { score: 0, fitLabel: "無排班設定", fitDetail: "本週排班時間未設定或未確認" };
+  }
+
+  let timeBlocks: Array<{
+    dayOfWeek: number;
+    startTime?: string;
+    endTime?: string;
+    timeSlots?: Array<{ startTime: string; endTime: string }>;
+  }> = [];
+
+  try {
+    timeBlocks = JSON.parse(availability.timeBlocks);
+  } catch {
+    return { score: 0, fitLabel: "無排班設定", fitDetail: "排班資料格式錯誤" };
+  }
+
+  const dayOfWeek = demandDate.getUTCDay() === 0 ? 7 : demandDate.getUTCDay();
+  const demandStart = timeToMinutes(startTime);
+  const demandEnd = timeToMinutes(endTime);
+  const demandDuration = demandEnd - demandStart;
+
+  // 找出同日的時段
+  const dayBlocks = timeBlocks.filter((b) => b.dayOfWeek === dayOfWeek);
+
+  if (dayBlocks.length > 0) {
+    // 計算最大重疊分鐘數
+    let maxOverlapMinutes = 0;
+    for (const block of dayBlocks) {
+      const slots = block.timeSlots && Array.isArray(block.timeSlots)
+        ? block.timeSlots
+        : block.startTime && block.endTime
+          ? [{ startTime: block.startTime, endTime: block.endTime }]
+          : [];
+
+      for (const slot of slots) {
+        const slotStart = timeToMinutes(slot.startTime);
+        const slotEnd = timeToMinutes(slot.endTime);
+        const overlapStart = Math.max(demandStart, slotStart);
+        const overlapEnd = Math.min(demandEnd, slotEnd);
+        const overlap = Math.max(0, overlapEnd - overlapStart);
+        maxOverlapMinutes = Math.max(maxOverlapMinutes, overlap);
+      }
+    }
+
+    if (demandDuration > 0 && maxOverlapMinutes >= demandDuration) {
+      // 完全覆蓋（但已被 checkWorkerAvailability 標為不可用，可能是其他原因）
+      return { score: 85, fitLabel: "時段接近", fitDetail: "排班時段完全覆蓋需求" };
+    } else if (maxOverlapMinutes > 0) {
+      const overlapPct = Math.round((maxOverlapMinutes / demandDuration) * 100);
+      const score = 50 + Math.round(overlapPct * 0.35); // 50-85
+      return {
+        score,
+        fitLabel: "部分重疊",
+        fitDetail: `排班時段與需求重疊 ${maxOverlapMinutes} 分鐘（${overlapPct}%）`,
+      };
+    } else {
+      // 同日有排班但時段不重疊
+      return { score: 30, fitLabel: "同日有排班", fitDetail: "同日有排班但時段不重疊" };
+    }
+  }
+
+  // 本週其他日有排班
+  if (timeBlocks.length > 0) {
+    return { score: 10, fitLabel: "本週有排班", fitDetail: "本週有排班，但非需求當日" };
+  }
+
+  return { score: 0, fitLabel: "無排班設定", fitDetail: "本週無任何排班設定" };
+}
+
+/**
+ * 計算需求單的人力可行性（含全部員工，依吻合度排序）
+ * 回傳 availableWorkers（完全符合）、schedulableWorkers（排班外但可聯繫）、conflictWorkers（有指派衝突）
+ */
+export async function calculateDemandFeasibilityWithAll(
+  demandId: number,
+  demandDate: Date,
+  startTime: string,
+  endTime: string,
+  requiredWorkers: number
+) {
+  // 複用現有的 feasibility 計算
+  const base = await calculateDemandFeasibility(demandId, demandDate, startTime, endTime, requiredWorkers);
+
+  // 對 unavailableWorkers 計算吻合度分數
+  const unavailableWithScore = await Promise.all(
+    base.unavailableWorkers.map(async (item) => {
+      const hasConflict = item.reasons.some((r) => r.startsWith("排班衝突"));
+      const fit = await calculateWorkerFitScore(
+        item.worker.id,
+        demandDate,
+        startTime,
+        endTime,
+        hasConflict
+      );
+      return {
+        ...item,
+        fitScore: fit.score,
+        fitLabel: fit.fitLabel,
+        fitDetail: fit.fitDetail,
+        isConflict: hasConflict,
+      };
+    })
+  );
+
+  // 分成「可聯繫（排班外）」和「衝突」兩組
+  const schedulableWorkers = unavailableWithScore
+    .filter((w) => !w.isConflict)
+    .sort((a, b) => b.fitScore - a.fitScore || a.worker.name.localeCompare(b.worker.name, "zh-TW"));
+
+  const conflictWorkers = unavailableWithScore
+    .filter((w) => w.isConflict)
+    .sort((a, b) => a.worker.name.localeCompare(b.worker.name, "zh-TW"));
+
+  return {
+    availableWorkers: base.availableWorkers,
+    schedulableWorkers,
+    conflictWorkers,
+    shortage: base.shortage,
+  };
+}

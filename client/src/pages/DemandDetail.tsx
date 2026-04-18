@@ -141,7 +141,7 @@ export default function DemandDetail() {
     return new Date(Date.UTC(year, month, day, 0, 0, 0, 0));
   }, [demand?.date]);
 
-  const { data: feasibility, isLoading: feasibilityLoading } = trpc.demands.feasibility.useQuery(
+  const { data: feasibility, isLoading: feasibilityLoading } = trpc.demands.feasibilityWithAll.useQuery(
     {
       demandId,
       date: localDate,
@@ -270,14 +270,51 @@ export default function DemandDetail() {
   
   const availableTotalPages = Math.ceil(searchedAvailableWorkers.length / ITEMS_PER_PAGE);
 
+  // 排班外（可聯繫）員工篩選
+  const allFilteredSchedulableWorkers = useMemo(() => {
+    if (!feasibility) return [];
+    return (feasibility.schedulableWorkers || [])
+      .filter((uw: any) => uw.worker.status === "active")
+      .filter((uw: any) => {
+        if (filterSchool && !(uw.worker.school || "").toLowerCase().includes(filterSchool.toLowerCase())) return false;
+        if (filterWorkPermit === "yes" && !uw.worker.hasWorkPermit) return false;
+        if (filterWorkPermit === "no" && uw.worker.hasWorkPermit) return false;
+        if (filterWorkPermit === "within_validity") {
+          if (!uw.worker.hasWorkPermit || !uw.worker.workPermitExpiryDate) return false;
+          const expiryDate = new Date(uw.worker.workPermitExpiryDate);
+          const today = new Date();
+          if (expiryDate < today) return false;
+        }
+        if (filterHealthCheck === "yes" && !uw.worker.hasHealthCheck) return false;
+        if (filterHealthCheck === "no" && uw.worker.hasHealthCheck) return false;
+        return true;
+      });
+  }, [feasibility, filterSchool, filterWorkPermit, filterHealthCheck]);
+
+  const searchedSchedulableWorkers = useMemo(() => {
+    if (!unavailableSearchTerm) return allFilteredSchedulableWorkers;
+    const term = unavailableSearchTerm.toLowerCase();
+    return allFilteredSchedulableWorkers.filter((uw: any) =>
+      (uw.worker.name || "").toLowerCase().includes(term) ||
+      (uw.worker.phone || "").toLowerCase().includes(term) ||
+      (uw.worker.school || "").toLowerCase().includes(term)
+    );
+  }, [allFilteredSchedulableWorkers, unavailableSearchTerm]);
+
+  const filteredSchedulableWorkers = useMemo(() => {
+    const startIndex = (unavailablePage - 1) * ITEMS_PER_PAGE;
+    return searchedSchedulableWorkers.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+  }, [searchedSchedulableWorkers, unavailablePage]);
+
+  const schedulableTotalPages = Math.ceil(searchedSchedulableWorkers.length / ITEMS_PER_PAGE);
+
+  // 衝突員工（不可指派）
   const allFilteredUnavailableWorkers = useMemo(() => {
     if (!feasibility) return [];
-    return feasibility.unavailableWorkers
-      .filter((uw) => uw.worker.status === "active")
-      .filter((uw) => {
-        if (filterSchool && !(uw.worker.school || "").toLowerCase().includes(filterSchool.toLowerCase())) {
-          return false;
-        }
+    return (feasibility.conflictWorkers || [])
+      .filter((uw: any) => uw.worker.status === "active")
+      .filter((uw: any) => {
+        if (filterSchool && !(uw.worker.school || "").toLowerCase().includes(filterSchool.toLowerCase())) return false;
         if (filterWorkPermit === "yes" && !uw.worker.hasWorkPermit) return false;
         if (filterWorkPermit === "no" && uw.worker.hasWorkPermit) return false;
         if (filterWorkPermit === "within_validity") {
@@ -292,18 +329,16 @@ export default function DemandDetail() {
       });
   }, [feasibility, filterSchool, filterWorkPermit, filterHealthCheck]);
   
-  // 加入搜尋功能
   const searchedUnavailableWorkers = useMemo(() => {
     if (!unavailableSearchTerm) return allFilteredUnavailableWorkers;
     const term = unavailableSearchTerm.toLowerCase();
-    return allFilteredUnavailableWorkers.filter((uw) => 
+    return allFilteredUnavailableWorkers.filter((uw: any) => 
       (uw.worker.name || "").toLowerCase().includes(term) ||
       (uw.worker.phone || "").toLowerCase().includes(term) ||
       (uw.worker.school || "").toLowerCase().includes(term)
     );
   }, [allFilteredUnavailableWorkers, unavailableSearchTerm]);
   
-  // 加入分頁功能
   const filteredUnavailableWorkers = useMemo(() => {
     const startIndex = (unavailablePage - 1) * ITEMS_PER_PAGE;
     const endIndex = startIndex + ITEMS_PER_PAGE;
@@ -327,7 +362,11 @@ export default function DemandDetail() {
     feasibility.availableWorkers.forEach((w) => {
       if (w.school) schools.add(w.school);
     });
-    feasibility.unavailableWorkers.forEach((uw) => {
+    // 合併 schedulableWorkers 和 conflictWorkers 的學校選項
+    (feasibility.schedulableWorkers || []).forEach((uw: any) => {
+      if (uw.worker.school) schools.add(uw.worker.school);
+    });
+    (feasibility.conflictWorkers || []).forEach((uw: any) => {
       if (uw.worker.school) schools.add(uw.worker.school);
     });
     return Array.from(schools).sort();
@@ -410,12 +449,13 @@ export default function DemandDetail() {
   }
 
   const gap = demand.requiredWorkers - selectedWorkerIds.length;
-  const inactiveWorkers = feasibility.unavailableWorkers.filter(
-    (uw) => uw.worker.status === "inactive"
+  // 已停用員工：從 conflictWorkers 中取得（inactive 狀態）
+  const inactiveWorkers = (feasibility.conflictWorkers || []).filter(
+    (uw: any) => uw.worker.status === "inactive"
   );
-  // 許可已過期的員工：狀態為 active，且僅因許可過期而不可指派
-  const expiredPermitWorkers = feasibility.unavailableWorkers.filter(
-    (uw) => uw.worker.status === "active" && (uw as any).isExpiredPermitOnly === true
+  // 許可已過期的員工：從 conflictWorkers 中取得，狀態為 active 且僅因許可過期
+  const expiredPermitWorkers = (feasibility.conflictWorkers || []).filter(
+    (uw: any) => uw.worker.status === "active" && uw.isExpiredPermitOnly === true
   );
 
   return (
@@ -588,7 +628,7 @@ export default function DemandDetail() {
                 </div>
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-muted-foreground">不可用員工</span>
-                  <span className="font-medium">{feasibility.unavailableWorkers.filter(uw => uw.worker.status === "active").length} 人</span>
+                  <span className="font-medium">{((feasibility.schedulableWorkers || []).length + (feasibility.conflictWorkers || []).filter((uw: any) => uw.worker.status === "active").length)} 人</span>
                 </div>
                 {(() => {
                   const effectiveShortage = Math.max(0, feasibility.shortage - activeAssignments.length);
@@ -1002,9 +1042,9 @@ export default function DemandDetail() {
               </div>
               <CardTitle className="text-base font-medium">
                 不可指派 ({searchedUnavailableWorkers.length})
-                {(hasActiveFilters || unavailableSearchTerm) && feasibility.unavailableWorkers.filter(uw => uw.worker.status === "active").length !== searchedUnavailableWorkers.length && (
+                {(hasActiveFilters || unavailableSearchTerm) && allFilteredUnavailableWorkers.length !== searchedUnavailableWorkers.length && (
                   <span className="text-xs font-normal text-muted-foreground ml-1">
-                    / 全部 {feasibility.unavailableWorkers.filter(uw => uw.worker.status === "active").length}
+                    / 全部 {allFilteredUnavailableWorkers.length}
                   </span>
                 )}
               </CardTitle>

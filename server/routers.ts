@@ -1549,6 +1549,25 @@ export const appRouter = router({
         
         return result;
       }),
+
+    feasibilityWithAll: publicProcedure
+      .input(z.object({
+        demandId: z.number(),
+        date: z.date(),
+        startTime: z.string(),
+        endTime: z.string(),
+        requiredWorkers: z.number(),
+      }))
+      .query(async ({ input }) => {
+        const result = await logic.calculateDemandFeasibilityWithAll(
+          input.demandId,
+          input.date,
+          input.startTime,
+          input.endTime,
+          input.requiredWorkers
+        );
+        return result;
+      }),
   }),
 
   // ============ Assignments ============
