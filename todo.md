@@ -2111,7 +2111,12 @@
 - [x] 修正 DemandDetail.tsx 中所有 unavailableWorkers 引用，改為 schedulableWorkers + conflictWorkers
 
 ### 功能二：週排班複製貼上
-- [ ] 後端 demands.copyWeek API：批次複製指定週的所有需求單到目標週
-- [ ] 複製邏輯：保留時間/地點/人數/需求類型，日期依週差偏移，不複製已指派員工
-- [ ] 前端排班頁面加入「複製本週」按鈕
-- [ ] 複製對話框：選擇來源週、目標週、預覽複製筆數、確認執行
+- [x] 後端 demands.copyWeek API：批次複製指定週的所有需求單到目標週
+- [x] 複製邏輯：保留時間/地點/人數/需求類型，日期依週差偏移，不複製已指派員工
+- [x] 前端需求管理頁面加入「複製本週」按鈕
+- [x] 複製對話框：選擇來源週、目標週、預覽複製筆數、確認執行
+
+## 文件補充（2026/04/18 - PROJECT_README.md API 範例）
+
+- [x] 補充所有主要 tRPC procedure 的呼叫範例與回傳格式
+- [x] 加入常見錯誤處理與 TypeScript 型別說明

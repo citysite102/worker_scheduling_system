@@ -1529,6 +1529,122 @@ export const appRouter = router({
         return { success: true };
       }),
 
+    // 複製整週排班
+    copyWeek: protectedProcedure
+      .input(z.object({
+        sourceWeekStart: z.string().regex(/^\d{4}-\d{2}-\d{2}$/), // 來源週週一 YYYY-MM-DD
+        targetWeekStart: z.string().regex(/^\d{4}-\d{2}-\d{2}$/), // 目標週週一 YYYY-MM-DD
+      }))
+      .mutation(async ({ input, ctx }) => {
+        if (ctx.user.role !== 'admin') {
+          throw new TRPCError({ code: 'FORBIDDEN', message: '只有管理員可以複製週排班' });
+        }
+
+        // 計算來源週的日期範圍（週一到週日）
+        const srcStart = new Date(input.sourceWeekStart + 'T00:00:00Z');
+        const srcEnd = new Date(srcStart);
+        srcEnd.setUTCDate(srcEnd.getUTCDate() + 6);
+        srcEnd.setUTCHours(23, 59, 59, 999);
+
+        // 計算週差（天數）
+        const tgtStart = new Date(input.targetWeekStart + 'T00:00:00Z');
+        const dayDiff = Math.round((tgtStart.getTime() - srcStart.getTime()) / (1000 * 60 * 60 * 24));
+
+        if (dayDiff === 0) {
+          throw new TRPCError({ code: 'BAD_REQUEST', message: '來源週與目標週不能相同' });
+        }
+
+        // 查詢來源週的所有需求單（排除已取消）
+        const sourceDemands = await db.getAllDemands();
+        const weekDemands = sourceDemands.filter(d => {
+          const demandDate = new Date(d.date);
+          return demandDate >= srcStart && demandDate <= srcEnd && d.status !== 'cancelled';
+        });
+
+        if (weekDemands.length === 0) {
+          return { success: true, copiedCount: 0, message: '來源週無需求單可複製' };
+        }
+
+        // 批次複製：日期偏移 dayDiff 天，狀態設為 draft，不複製指派員工
+        const copied: number[] = [];
+        for (const demand of weekDemands) {
+          const originalDate = new Date(demand.date);
+          const newDate = new Date(originalDate);
+          newDate.setUTCDate(newDate.getUTCDate() + dayDiff);
+
+          const newDemand = await db.createDemand({
+            clientId: demand.clientId,
+            date: newDate,
+            startTime: demand.startTime,
+            endTime: demand.endTime,
+            requiredWorkers: demand.requiredWorkers,
+            breakHours: demand.breakHours || 0,
+            location: demand.location || undefined,
+            note: demand.note ? `[複製] ${demand.note}` : undefined,
+            status: 'draft',
+            createdBy: ctx.user.id,
+          });
+
+          // 若有需求類型，更新 demandTypeId 和 selectedOptions
+          if (demand.demandTypeId) {
+            await db.updateDemand(newDemand.id, {
+              demandTypeId: demand.demandTypeId,
+              selectedOptions: demand.selectedOptions,
+            } as any);
+          }
+
+          copied.push(newDemand.id);
+        }
+
+        return {
+          success: true,
+          copiedCount: copied.length,
+          newDemandIds: copied,
+          message: `已成功複製 ${copied.length} 筆需求單到 ${input.targetWeekStart} 當週`,
+        };
+      }),
+
+    // 預覽複製週排班（不實際複製，只回傳筆數和摘要）
+    previewCopyWeek: protectedProcedure
+      .input(z.object({
+        sourceWeekStart: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+        targetWeekStart: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+      }))
+      .query(async ({ input }) => {
+        const srcStart = new Date(input.sourceWeekStart + 'T00:00:00Z');
+        const srcEnd = new Date(srcStart);
+        srcEnd.setUTCDate(srcEnd.getUTCDate() + 6);
+        srcEnd.setUTCHours(23, 59, 59, 999);
+
+        const sourceDemands = await db.getAllDemands();
+        const weekDemands = sourceDemands.filter(d => {
+          const demandDate = new Date(d.date);
+          return demandDate >= srcStart && demandDate <= srcEnd && d.status !== 'cancelled';
+        });
+
+        // 依日期分組統計
+        const byDate: Record<string, number> = {};
+        for (const d of weekDemands) {
+          const dateStr = new Date(d.date).toISOString().split('T')[0];
+          byDate[dateStr] = (byDate[dateStr] || 0) + 1;
+        }
+
+        return {
+          totalCount: weekDemands.length,
+          byDate,
+          demands: weekDemands.map(d => ({
+            id: d.id,
+            date: d.date,
+            startTime: d.startTime,
+            endTime: d.endTime,
+            clientName: d.client?.name || '未知客戶',
+            location: d.location,
+            requiredWorkers: d.requiredWorkers,
+            status: d.status,
+          })),
+        };
+      }),
+
     // 計算人力可行性
     feasibility: publicProcedure
       .input(z.object({

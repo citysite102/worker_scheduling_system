@@ -209,6 +209,193 @@ npx tsc --noEmit
 
 **`reports.settle` / `reports.unsettle`**：月結結算確認與解鎖，結算後 `fillPayroll` 會拒絕修改該月薪資。
 
+**`demands.copyWeek`**：將來源週所有需求單（草稿狀態）批次複製到目標週，日期依週差自動偏移，不複製已指派員工。
+
+### 5.3 主要 API 呼叫範例
+
+以下為各 Router 最常用的 Procedure 呼叫方式與回傳格式，供接手夥伴快速上手。
+
+#### workers（員工管理）
+
+```typescript
+// 取得員工列表
+const { data: workers } = trpc.workers.list.useQuery();
+// 回傳：Worker[] - 包含 id, name, idNumber, phone, status, avatarUrl, workPermitExpiry
+
+// 取得單一員工詳情
+const { data: worker } = trpc.workers.getById.useQuery({ id: 1 });
+// 回傳：Worker & { availabilities, assignmentCount }
+
+// 建立員工
+const createWorker = trpc.workers.create.useMutation({
+  onSuccess: () => utils.workers.list.invalidate(),
+});
+await createWorker.mutateAsync({
+  name: "王小明",
+  idNumber: "A123456789",
+  phone: "0912345678",
+  nationality: "越南",
+});
+```
+
+#### clients（客戶管理）
+
+```typescript
+// 取得客戶列表
+const { data: clients } = trpc.clients.list.useQuery({});
+// 回傳：{ clients: Client[], total: number }
+// Client 包含：id, name, contactName, contactPhone, address, status
+
+// 建立客戶
+const createClient = trpc.clients.create.useMutation();
+await createClient.mutateAsync({
+  name: "良新國際洋酒",
+  contactName: "陳經理",
+  contactPhone: "02-12345678",
+});
+```
+
+#### demands（需求單管理）
+
+```typescript
+// 取得需求單列表（含分頁）
+const { data } = trpc.demands.list.useQuery({
+  status: "pending",  // 可選：pending | approved | assigned | completed | cancelled | closed
+  page: 1,
+  pageSize: 20,
+});
+// 回傳：{ demands: Demand[], pagination: { total, page, pageSize, totalPages } }
+
+// 取得單一需求單詳情
+const { data: demand } = trpc.demands.getById.useQuery({ id: 1 });
+// 回傳：Demand & { client, assignments: Assignment[], demandType }
+
+// 建立需求單
+const createDemand = trpc.demands.create.useMutation();
+await createDemand.mutateAsync({
+  clientId: 1,
+  date: new Date("2026-04-18"),  // ⚠️ 注意：傳 Date 物件，後端存 UTC
+  startTime: "09:00",
+  endTime: "18:00",
+  location: "桃園",
+  requiredWorkers: 3,
+});
+
+// 查詢員工可指派狀態（含吻合度排序）
+const { data: feasibility } = trpc.demands.feasibilityWithAll.useQuery({ demandId: 1 });
+// 回傳：{
+//   availableWorkers: WorkerWithStatus[],    // 完全符合排班
+//   schedulableWorkers: WorkerWithFitScore[], // 排班外可聯繫（fitScore 越高越優先）
+//   conflictWorkers: WorkerWithStatus[],      // 有時段衝突
+// }
+
+// 複製週排班（預覽）
+const { data: preview } = trpc.demands.previewCopyWeek.useQuery({
+  sourceWeekStart: "2026-04-14",  // 來源週週一（YYYY-MM-DD）
+  targetWeekStart: "2026-04-21",  // 目標週週一（YYYY-MM-DD）
+});
+// 回傳：{ demands: DemandPreview[], totalCount: number }
+
+// 複製週排班（執行）
+const copyWeek = trpc.demands.copyWeek.useMutation();
+await copyWeek.mutateAsync({
+  sourceWeekStart: "2026-04-14",
+  targetWeekStart: "2026-04-21",
+});
+// 回傳：{ copiedCount: number, message: string }
+```
+
+#### assignments（排班指派）
+
+```typescript
+// 查詢整週排班（週視圖用）
+const { data: weekData } = trpc.assignments.listByWeek.useQuery({
+  weekStart: "2026-04-14",  // 週一日期字串
+});
+// 回傳：{ [dateStr: string]: Assignment[] }  依台灣日期分組
+// Assignment 包含：id, demandId, workerId, worker, demand, scheduledStart, scheduledEnd,
+//                  actualStart, actualEnd, payType, payAmount, status
+
+// 指派員工到需求單
+const assign = trpc.assignments.assign.useMutation();
+await assign.mutateAsync({
+  demandId: 1,
+  workerId: 5,
+});
+
+// 填寫實際工時
+const fillActual = trpc.assignments.fillActual.useMutation();
+await fillActual.mutateAsync({
+  assignmentId: 10,
+  actualStart: new Date("2026-04-18T01:00:00Z"),  // UTC 時間（台灣 09:00 = UTC 01:00）
+  actualEnd: new Date("2026-04-18T10:00:00Z"),
+});
+
+// 填寫薪資
+const fillPayroll = trpc.assignments.fillPayroll.useMutation();
+await fillPayroll.mutateAsync({
+  assignmentId: 10,
+  payType: "daily",   // hourly | daily | monthly
+  payAmount: 1200,
+});
+// ⚠️ 注意：若該月已結算（payroll_settlements），此操作會被拒絕
+```
+
+#### reports（薪資報表）
+
+```typescript
+// 取得員工月結摘要
+const { data: summary } = trpc.reports.workerMonthlySummary.useQuery({
+  year: 2026,
+  month: 4,
+});
+// 回傳：WorkerMonthlySummary[]，每筆包含 workerId, workerName, totalHours, totalAmount,
+//       assignmentCount, filledCount, isSettled
+
+// 結算確認（鎖定）
+const settle = trpc.reports.settle.useMutation();
+await settle.mutateAsync({
+  workerId: 5,
+  year: 2026,
+  month: 4,
+  totalAmount: 36000,
+});
+
+// 解除結算（需二次確認）
+const unsettle = trpc.reports.unsettle.useMutation();
+await unsettle.mutateAsync({ workerId: 5, year: 2026, month: 4 });
+
+// 批次查詢結算狀態
+const { data: statuses } = trpc.reports.settlementBatchStatus.useQuery({
+  year: 2026,
+  month: 4,
+  workerIds: [1, 2, 3, 4, 5],
+});
+// 回傳：{ [workerId: number]: { isSettled: boolean, settledAt?: Date, settledByName?: string } }
+```
+
+#### availability（可排班時間）
+
+```typescript
+// 取得員工某週的可排班時間
+const { data: avail } = trpc.availability.getByWorkerAndWeek.useQuery({
+  workerId: 5,
+  weekStart: "2026-04-14",
+});
+// 回傳：Availability[]，每筆包含 dayOfWeek(0-6), startTime, endTime, isAvailable
+
+// 設定可排班時間
+const setAvail = trpc.availability.set.useMutation();
+await setAvail.mutateAsync({
+  workerId: 5,
+  weekStart: "2026-04-14",
+  slots: [
+    { dayOfWeek: 1, startTime: "09:00", endTime: "18:00", isAvailable: true },
+    { dayOfWeek: 2, startTime: "09:00", endTime: "18:00", isAvailable: true },
+  ],
+});
+```
+
 ---
 
 ## 6. 程式碼規範

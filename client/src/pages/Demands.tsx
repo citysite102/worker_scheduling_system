@@ -18,9 +18,10 @@ import { DateMultiPicker } from "@/components/DateMultiPicker";
 import { format } from "date-fns";
 import { zhTW } from "date-fns/locale";
 import { Pagination, PaginationContent, PaginationEllipsis, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { toast } from "sonner";
 import { useLocation } from "wouter";
+import { getTaiwanWeekStartStr, addDaysToDateStr, formatTaiwanDate } from "@/lib/dateUtils";
 
 export default function Demands() {
   const [location, setLocation] = useLocation();
@@ -48,6 +49,13 @@ export default function Demands() {
   const [selectedDemandTypeId, setSelectedDemandTypeId] = useState<number | undefined>(undefined);
   const [selectedOptions, setSelectedOptions] = useState<number[]>([]);
   
+  // 複製週排班狀態
+  const [isCopyWeekOpen, setIsCopyWeekOpen] = useState(false);
+  const todayWeekStart = useMemo(() => getTaiwanWeekStartStr(), []);
+  const [copySourceWeek, setCopySourceWeek] = useState(todayWeekStart);
+  const [copyTargetWeek, setCopyTargetWeek] = useState(() => addDaysToDateStr(todayWeekStart, 7));
+  const [copyPreviewEnabled, setCopyPreviewEnabled] = useState(false);
+
   // 批次模式狀態
   const [isBatchMode, setIsBatchMode] = useState(false);
   const [selectedDates, setSelectedDates] = useState<Date[]>([]);
@@ -160,6 +168,24 @@ export default function Demands() {
     },
     onError: (error) => {
       toast.error(`刪除失敗：${error.message}`);
+    },
+  });
+
+  // 預覽複製週排班
+  const { data: copyPreview, isLoading: isPreviewLoading } = trpc.demands.previewCopyWeek.useQuery(
+    { sourceWeekStart: copySourceWeek, targetWeekStart: copyTargetWeek },
+    { enabled: copyPreviewEnabled && copySourceWeek !== copyTargetWeek }
+  );
+
+  const copyWeekMutation = trpc.demands.copyWeek.useMutation({
+    onSuccess: (result) => {
+      toast.success(result.message || `已複製 ${result.copiedCount} 筆需求單`);
+      setIsCopyWeekOpen(false);
+      setCopyPreviewEnabled(false);
+      refetch();
+    },
+    onError: (error) => {
+      toast.error(`複製失敗：${error.message}`);
     },
   });
 
@@ -284,16 +310,31 @@ export default function Demands() {
             setSelectedOptions([]);
           }
         }}>
-          <Button onClick={() => {
-            setEditingDemand(null);
-            setSelectedClientId(undefined);
-            setSelectedDemandTypeId(undefined);
-            setSelectedOptions([]);
-            setIsDialogOpen(true);
-          }} size="sm">
-            <Plus className="mr-2 h-4 w-4" />
-            新增需求單
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                setCopySourceWeek(todayWeekStart);
+                setCopyTargetWeek(addDaysToDateStr(todayWeekStart, 7));
+                setCopyPreviewEnabled(false);
+                setIsCopyWeekOpen(true);
+              }}
+            >
+              <Copy className="mr-2 h-4 w-4" />
+              複製週排班
+            </Button>
+            <Button onClick={() => {
+              setEditingDemand(null);
+              setSelectedClientId(undefined);
+              setSelectedDemandTypeId(undefined);
+              setSelectedOptions([]);
+              setIsDialogOpen(true);
+            }} size="sm">
+              <Plus className="mr-2 h-4 w-4" />
+              新增需求單
+            </Button>
+          </div>
           <DialogContent className="max-w-3xl">
             <form onSubmit={handleSubmit}>
               <DialogHeader>
@@ -862,6 +903,139 @@ export default function Demands() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* 複製週排班對話框 */}
+      <Dialog open={isCopyWeekOpen} onOpenChange={(open) => {
+        setIsCopyWeekOpen(open);
+        if (!open) setCopyPreviewEnabled(false);
+      }}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>複製週排班</DialogTitle>
+            <DialogDescription>
+              將來源週的所有需求單（草稿狀態）複製到目標週，指派員工不會一併複製。
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-5 py-2">
+            {/* 來源週 */}
+            <div className="space-y-1.5">
+              <Label>來源週（週一日期）</Label>
+              <Input
+                type="date"
+                value={copySourceWeek}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  if (val) {
+                    // 對齊到週一
+                    setCopySourceWeek(getTaiwanWeekStartStr(val));
+                    setCopyPreviewEnabled(false);
+                  }
+                }}
+              />
+              {copySourceWeek && (
+                <p className="text-xs text-muted-foreground">
+                  {formatTaiwanDate(copySourceWeek)} ～ {formatTaiwanDate(addDaysToDateStr(copySourceWeek, 6))}（週一到週日）
+                </p>
+              )}
+            </div>
+
+            {/* 目標週 */}
+            <div className="space-y-1.5">
+              <Label>目標週（週一日期）</Label>
+              <Input
+                type="date"
+                value={copyTargetWeek}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  if (val) {
+                    setCopyTargetWeek(getTaiwanWeekStartStr(val));
+                    setCopyPreviewEnabled(false);
+                  }
+                }}
+              />
+              {copyTargetWeek && (
+                <p className="text-xs text-muted-foreground">
+                  {formatTaiwanDate(copyTargetWeek)} ～ {formatTaiwanDate(addDaysToDateStr(copyTargetWeek, 6))}（週一到週日）
+                </p>
+              )}
+              {copySourceWeek === copyTargetWeek && (
+                <p className="text-xs text-destructive">來源週與目標週不能相同</p>
+              )}
+            </div>
+
+            {/* 預覽按鈕 */}
+            {!copyPreviewEnabled && (
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full"
+                disabled={!copySourceWeek || !copyTargetWeek || copySourceWeek === copyTargetWeek}
+                onClick={() => setCopyPreviewEnabled(true)}
+              >
+                預覽複製內容
+              </Button>
+            )}
+
+            {/* 預覽結果 */}
+            {copyPreviewEnabled && (
+              <div className="rounded-lg border border-border bg-muted/30 p-4 space-y-3">
+                {isPreviewLoading ? (
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    載入預覽中...
+                  </div>
+                ) : copyPreview ? (
+                  <>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-medium">共 {copyPreview.totalCount} 筆需求單</span>
+                      <Badge variant="secondary">{copyPreview.totalCount} 筆</Badge>
+                    </div>
+                    {copyPreview.totalCount === 0 ? (
+                      <p className="text-sm text-muted-foreground">來源週無需求單可複製</p>
+                    ) : (
+                      <div className="space-y-1.5 max-h-48 overflow-y-auto">
+                        {copyPreview.demands.map((d: any) => (
+                          <div key={d.id} className="flex items-center justify-between text-xs py-1 border-b border-border/40 last:border-0">
+                            <span className="text-muted-foreground">{formatTaiwanDate(new Date(d.date).toISOString().split('T')[0])}</span>
+                            <span className="font-medium truncate mx-2 max-w-[120px]">{d.clientName}</span>
+                            <span className="text-muted-foreground">{d.startTime}–{d.endTime}</span>
+                            <Badge variant="outline" className="text-xs ml-1">{d.requiredWorkers}人</Badge>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </>
+                ) : null}
+              </div>
+            )}
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsCopyWeekOpen(false)}>取消</Button>
+            <Button
+              disabled={
+                !copyPreviewEnabled ||
+                copySourceWeek === copyTargetWeek ||
+                copyWeekMutation.isPending ||
+                (copyPreview?.totalCount === 0)
+              }
+              onClick={() => {
+                copyWeekMutation.mutate({
+                  sourceWeekStart: copySourceWeek,
+                  targetWeekStart: copyTargetWeek,
+                });
+              }}
+            >
+              {copyWeekMutation.isPending ? (
+                <><Loader2 className="mr-2 h-4 w-4 animate-spin" />複製中...</>
+              ) : (
+                `確認複製 ${copyPreview?.totalCount ?? ''} 筆`
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
