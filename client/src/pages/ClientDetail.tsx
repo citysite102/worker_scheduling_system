@@ -239,6 +239,7 @@ export default function ClientDetail() {
     const note = formData.get("note") as string;
 
     createDemandMutation.mutate({
+      clientId,
       date: selectedDate,
       startTime,
       endTime,
