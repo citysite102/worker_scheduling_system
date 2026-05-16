@@ -560,14 +560,15 @@ export default function Demands() {
 
       {/* 篩選 */}
       <Card className="mb-6 shadow-md border-border/40">
-        <CardContent className="p-4">
-          <div className="flex items-center gap-3 flex-wrap space-y-2">
-              <Label className="text-sm text-muted-foreground shrink-0">狀態篩選</Label>
+        <CardContent className="p-4 space-y-3">
+          {/* 第一列：狀態篩選 + 快速日期按鈕 */}
+          <div className="flex items-center gap-3">
+            <span className="text-sm text-muted-foreground shrink-0 w-14">狀態</span>
             <Select
               value={statusFilter || "all"}
               onValueChange={(value) => setStatusFilter(value === "all" ? undefined : value)}
             >
-              <SelectTrigger className="w-[140px] h-9">
+              <SelectTrigger className="w-[130px] h-9">
                 <SelectValue placeholder="全部" />
               </SelectTrigger>
               <SelectContent>
@@ -578,94 +579,76 @@ export default function Demands() {
                 <SelectItem value="closed">已結案</SelectItem>
               </SelectContent>
             </Select>
-            <div className="flex items-center gap-2 ml-auto">
-              <Button
-                variant={dateFilter === "all" ? "default" : "outline"}
-                size="sm"
-                className="h-9"
-                onClick={() => setDateFilter("all")}
-              >
-                全部
-              </Button>
-              <Button
-                variant={dateFilter === "today" ? "default" : "outline"}
-                size="sm"
-                className="h-9"
-                onClick={() => setDateFilter("today")}
-              >
-                今日
-              </Button>
-              <Button
-                variant={dateFilter === "thisWeek" ? "default" : "outline"}
-                size="sm"
-                className="h-9"
-                onClick={() => setDateFilter("thisWeek")}
-              >
-                本週
-              </Button>
-              <Button
-                variant={dateFilter === "nextWeek" ? "default" : "outline"}
-                size="sm"
-                className="h-9"
-                onClick={() => setDateFilter("nextWeek")}
-              >
-                下週
-              </Button>
-              <Button
-                variant={dateFilter === "thisMonth" ? "default" : "outline"}
-                size="sm"
-                className="h-9"
-                onClick={() => setDateFilter("thisMonth")}
-              >
-                本月
-              </Button>
-              <Button
-                variant={dateFilter === "custom" ? "default" : "outline"}
-                size="sm"
-                className="h-9"
-                onClick={() => setDateFilter("custom")}
-              >
-                自訂區間
-              </Button>
+
+            <div className="h-5 w-px bg-border mx-1" />
+
+            <span className="text-sm text-muted-foreground shrink-0">日期</span>
+            <div className="flex items-center gap-1.5">
+              {([
+                { key: "all", label: "全部" },
+                { key: "today", label: "今日" },
+                { key: "thisWeek", label: "本週" },
+                { key: "nextWeek", label: "下週" },
+                { key: "thisMonth", label: "本月" },
+                { key: "custom", label: "自訂" },
+              ] as const).map(({ key, label }) => (
+                <Button
+                  key={key}
+                  variant={dateFilter === key ? "default" : "outline"}
+                  size="sm"
+                  className="h-8 px-3 text-xs"
+                  onClick={() => setDateFilter(key)}
+                >
+                  {label}
+                </Button>
+              ))}
             </div>
-            
-            {/* 自訂日期區間選擇器 */}
-            {dateFilter === "custom" && (
-              <div className="flex items-center gap-2 ml-auto space-y-2">
-              <Label className="text-sm text-muted-foreground shrink-0">開始日期</Label>
-                <Input
-                  type="date"
-                  value={customStartDate}
-                  onChange={(e) => setCustomStartDate(e.target.value)}
-                  className="w-[150px] h-9"
-                />
-                <Label className="text-sm text-muted-foreground shrink-0">結束日期</Label>
-                <Input
-                  type="date"
-                  value={customEndDate}
-                  onChange={(e) => setCustomEndDate(e.target.value)}
-                  className="w-[150px] h-9"
-                />
-              </div>
+          </div>
+
+          {/* 第二列：自訂日期區間（僅在 custom 模式顯示） + 客戶篩選 */}
+          <div className="flex items-center gap-3">
+            {dateFilter === "custom" ? (
+              <>
+                <span className="text-sm text-muted-foreground shrink-0 w-14">區間</span>
+                <div className="flex items-center gap-2">
+                  <Input
+                    type="date"
+                    value={customStartDate}
+                    onChange={(e) => setCustomStartDate(e.target.value)}
+                    className="w-[148px] h-9 text-sm"
+                  />
+                  <span className="text-sm text-muted-foreground">–</span>
+                  <Input
+                    type="date"
+                    value={customEndDate}
+                    onChange={(e) => setCustomEndDate(e.target.value)}
+                    className="w-[148px] h-9 text-sm"
+                  />
+                </div>
+              </>
+            ) : (
+              <div className="w-14" />
             )}
-            
-            <Label className="text-sm text-muted-foreground shrink-0">客戶篩選</Label>
-            <Select
-              value={clientFilter?.toString() || "all"}
-              onValueChange={(value) => setClientFilter(value === "all" ? undefined : parseInt(value))}
-            >
-              <SelectTrigger className="w-[180px] h-9">
-                <SelectValue placeholder="全部客戶" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">全部客戶</SelectItem>
-                {clients?.map((client) => (
-                  <SelectItem key={client.id} value={client.id.toString()}>
-                    {client.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+
+            <div className="ml-auto flex items-center gap-2">
+              <span className="text-sm text-muted-foreground shrink-0">客戶</span>
+              <Select
+                value={clientFilter?.toString() || "all"}
+                onValueChange={(value) => setClientFilter(value === "all" ? undefined : parseInt(value))}
+              >
+                <SelectTrigger className="w-[180px] h-9">
+                  <SelectValue placeholder="全部客戶" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">全部客戶</SelectItem>
+                  {clients?.map((client) => (
+                    <SelectItem key={client.id} value={client.id.toString()}>
+                      {client.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
         </CardContent>
       </Card>

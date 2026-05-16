@@ -683,32 +683,55 @@ export default function Availability() {
           </DialogHeader>
 
           <div className="space-y-4 py-2">
-            {/* ── 快速選項列 ── */}
-            <div className="flex items-center gap-4 p-3 bg-muted/30 rounded-lg border border-border/40">
-              {/* 整天可工作 */}
-              <label className="flex items-center gap-2 cursor-pointer select-none">
-                <Checkbox
-                  id="allDay"
-                  checked={isAllDay}
-                  onCheckedChange={(v) => handleAllDayToggle(v === true)}
-                />
-                <span className="text-sm font-medium">整天可工作</span>
-              </label>
+            {/* ── 模式選擇（三選一 ToggleGroup） ── */}
+            <div className="grid grid-cols-3 gap-2">
+              {/* 整天 */}
+              <button
+                type="button"
+                onClick={() => { setIsAllDay(true); setIsReverseMode(false); }}
+                className={`flex flex-col items-center gap-1.5 px-3 py-2.5 rounded-lg border text-sm font-medium transition-all ${
+                  isAllDay
+                    ? "bg-emerald-50 border-emerald-400 text-emerald-700 ring-1 ring-emerald-300"
+                    : "bg-card border-border/60 text-muted-foreground hover:border-border hover:text-foreground"
+                }`}
+              >
+                <Check className="h-4 w-4" />
+                整天可工作
+              </button>
 
-              <div className="w-px h-4 bg-border" />
+              {/* 正常模式 */}
+              <button
+                type="button"
+                onClick={() => { setIsAllDay(false); setIsReverseMode(false); }}
+                className={`flex flex-col items-center gap-1.5 px-3 py-2.5 rounded-lg border text-sm font-medium transition-all ${
+                  !isAllDay && !isReverseMode
+                    ? "bg-blue-50 border-blue-400 text-blue-700 ring-1 ring-blue-300"
+                    : "bg-card border-border/60 text-muted-foreground hover:border-border hover:text-foreground"
+                }`}
+              >
+                <Clock className="h-4 w-4" />
+                正常模式
+              </button>
 
               {/* 反向模式 */}
-              <label className="flex items-center gap-2 cursor-pointer select-none">
-                <Checkbox
-                  id="reverseMode"
-                  checked={isReverseMode}
-                  onCheckedChange={(v) => handleReverseModeToggle(v === true)}
-                />
-                <span className="text-sm font-medium flex items-center gap-1">
-                  <FlipHorizontal className="h-3.5 w-3.5 text-muted-foreground" />
-                  反向模式
-                </span>
-              </label>
+              <button
+                type="button"
+                onClick={() => {
+                  setIsAllDay(false);
+                  setIsReverseMode(true);
+                  if (blockedSlots.length === 0) {
+                    setBlockedSlots([{ startTime: "12:00", endTime: "13:00" }]);
+                  }
+                }}
+                className={`flex flex-col items-center gap-1.5 px-3 py-2.5 rounded-lg border text-sm font-medium transition-all ${
+                  isReverseMode
+                    ? "bg-amber-50 border-amber-400 text-amber-700 ring-1 ring-amber-300"
+                    : "bg-card border-border/60 text-muted-foreground hover:border-border hover:text-foreground"
+                }`}
+              >
+                <FlipHorizontal className="h-4 w-4" />
+                反向模式
+              </button>
             </div>
 
             {/* ── 整天模式提示 ── */}
