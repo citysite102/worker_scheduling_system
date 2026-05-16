@@ -453,12 +453,12 @@ export const appRouter = router({
           });
         }
         
-        await db.createWorker({
+        const newWorker = await db.createWorker({
           ...rest,
           hasWorkPermit: hasWorkPermit ? 1 : 0,
           hasHealthCheck: hasHealthCheck ? 1 : 0,
         });
-        return { success: true };
+        return { success: true, id: newWorker?.id };
       }),
 
     batchCreate: publicProcedure

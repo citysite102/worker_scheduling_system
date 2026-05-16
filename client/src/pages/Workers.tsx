@@ -44,6 +44,8 @@ export default function Workers() {
   const [deletingWorker, setDeletingWorker] = useState<any>(null);
   const [cityValue, setCityValue] = useState<string>("");
   const [filterJobCategoryIds, setFilterJobCategoryIds] = useState<number[]>([]);
+  // Dialog 內的工作種類選擇狀態
+  const [dialogJobCategoryIds, setDialogJobCategoryIds] = useState<number[]>([]);
 
   const deleteWorkerMutation = trpc.workers.delete.useMutation({
     onSuccess: () => {
@@ -61,6 +63,8 @@ export default function Workers() {
   const { data: allJobCategories = [] } = trpc.jobCategories.list.useQuery();
   const { data: workerCategoryMapData } = trpc.jobCategories.getWorkerCategoryMap.useQuery();
   const workerCategoryMap: Record<number, number[]> = workerCategoryMapData ?? {};
+  // Dialog 內用的 setWorkerCategories mutation
+  const dialogSetCategoriesMutation = trpc.jobCategories.setWorkerCategories.useMutation();
 
   const { data: workers, isLoading, refetch } = trpc.workers.list.useQuery({
     search: searchTerm,
@@ -71,9 +75,17 @@ export default function Workers() {
   });
 
   const createMutation = trpc.workers.create.useMutation({
-    onSuccess: () => {
+    onSuccess: async (newWorker) => {
+      // 新增完後同步工作種類
+      if (dialogJobCategoryIds.length > 0 && newWorker?.id) {
+        await dialogSetCategoriesMutation.mutateAsync({
+          workerId: newWorker.id,
+          jobCategoryIds: dialogJobCategoryIds,
+        });
+      }
       toast.success("員工新增成功");
       setIsDialogOpen(false);
+      setDialogJobCategoryIds([]);
       refetch();
     },
     onError: (error) => {
@@ -82,15 +94,21 @@ export default function Workers() {
   });
 
   const updateMutation = trpc.workers.update.useMutation({
-    onSuccess: (_, variables) => {
+    onSuccess: async (_, variables) => {
       if (variables.status) {
         toast.success(variables.status === "inactive" ? "已停用員工" : "已啟用員工");
         setConfirmToggleWorker(null);
         refetch();
       } else {
+        // 編輯時同步工作種類
+        await dialogSetCategoriesMutation.mutateAsync({
+          workerId: variables.id,
+          jobCategoryIds: dialogJobCategoryIds,
+        });
         toast.success("員工資料更新成功");
         setIsDialogOpen(false);
         setEditingWorker(null);
+        setDialogJobCategoryIds([]);
         refetch();
       }
     },
@@ -186,7 +204,18 @@ export default function Workers() {
           </DropdownMenuContent>
         </DropdownMenu>
 
-        <Dialog open={isDialogOpen} onOpenChange={(open) => { setIsDialogOpen(open); if (!open) { setEditingWorker(null); setHasWorkPermitChecked(false); setWorkPermitExpiryDate(""); setCityValue(""); } }}>
+        <Dialog open={isDialogOpen} onOpenChange={(open) => {
+          setIsDialogOpen(open);
+          if (open && editingWorker) {
+            // 編輯時帶入現有工作種類
+            const existingCats = workerCategoryMap[editingWorker.id] || [];
+            setDialogJobCategoryIds(existingCats);
+          } else if (open) {
+            // 新增時清空
+            setDialogJobCategoryIds([]);
+          }
+          if (!open) { setEditingWorker(null); setHasWorkPermitChecked(false); setWorkPermitExpiryDate(""); setCityValue(""); setDialogJobCategoryIds([]); }
+        }}>
           <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
             <form onSubmit={handleSubmit}>
               <DialogHeader>
@@ -393,6 +422,50 @@ export default function Workers() {
                 <div className="space-y-2">
               <Label htmlFor="note">備註</Label>
                   <Textarea id="note" name="note" defaultValue={editingWorker?.note} />
+                </div>
+                {/* 工作種類多選 */}
+                <div className="space-y-2">
+                  <Label>工作種類</Label>
+                  {allJobCategories.length === 0 ? (
+                    <p className="text-xs text-muted-foreground">尚無工作種類，請先到「工作種類管理」新增</p>
+                  ) : (
+                    <div className="flex flex-wrap gap-2 p-3 border rounded-lg bg-muted/30">
+                      {allJobCategories.map((cat) => {
+                        const isChecked = dialogJobCategoryIds.includes(cat.id);
+                        return (
+                          <label
+                            key={cat.id}
+                            className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border cursor-pointer text-sm transition-all ${
+                              isChecked ? "opacity-100" : "opacity-50 hover:opacity-75"
+                            }`}
+                            style={{
+                              backgroundColor: isChecked ? cat.color + "20" : "transparent",
+                              borderColor: isChecked ? cat.color : "hsl(var(--border))",
+                              color: isChecked ? cat.color : "hsl(var(--muted-foreground))",
+                            }}
+                          >
+                            <Checkbox
+                              checked={isChecked}
+                              onCheckedChange={(checked) => {
+                                setDialogJobCategoryIds(
+                                  checked
+                                    ? [...dialogJobCategoryIds, cat.id]
+                                    : dialogJobCategoryIds.filter((id) => id !== cat.id)
+                                );
+                              }}
+                              className="h-3.5 w-3.5"
+                            />
+                            <span
+                              className="w-2 h-2 rounded-full"
+                              style={{ backgroundColor: cat.color }}
+                            />
+                            {cat.name}
+                          </label>
+                        );
+                      })}
+                    </div>
+                  )}
+                  <p className="text-xs text-muted-foreground">勾選此員工能夠執行的工作種類</p>
                 </div>
               </div>
               <DialogFooter>
