@@ -42,6 +42,7 @@ export default function Demands() {
   const [customStartDate, setCustomStartDate] = useState<string>("");
   const [customEndDate, setCustomEndDate] = useState<string>("");
   const [clientFilter, setClientFilter] = useState<number | undefined>(undefined);
+  const [filterJobCategoryId, setFilterJobCategoryId] = useState<number | undefined>(undefined);
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 20;
   const [selectedClientId, setSelectedClientId] = useState<number | undefined>(undefined);
@@ -118,6 +119,7 @@ export default function Demands() {
 
   const { data: clients } = trpc.clients.list.useQuery({});
   const { data: demandTypes = [] } = trpc.demandTypes.list.useQuery();
+  const { data: allJobCategories = [] } = trpc.jobCategories.list.useQuery();
 
   const createMutation = trpc.demands.create.useMutation({
     onSuccess: () => {
@@ -630,7 +632,35 @@ export default function Demands() {
               <div className="w-14" />
             )}
 
-            <div className="ml-auto flex items-center gap-2">
+            <div className="ml-auto flex items-center gap-3">
+              {/* 工作種類篩選 */}
+              <span className="text-sm text-muted-foreground shrink-0">種類</span>
+              <Select
+                value={filterJobCategoryId?.toString() || "all"}
+                onValueChange={(value) => setFilterJobCategoryId(value === "all" ? undefined : parseInt(value))}
+              >
+                <SelectTrigger className="w-[160px] h-9">
+                  <SelectValue placeholder="全部種類" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">全部種類</SelectItem>
+                  {allJobCategories.map((cat: any) => (
+                    <SelectItem key={cat.id} value={cat.id.toString()}>
+                      <div className="flex items-center gap-2">
+                        <span
+                          className="inline-block w-2 h-2 rounded-full shrink-0"
+                          style={{ backgroundColor: cat.color || "#94a3b8" }}
+                        />
+                        {cat.name}
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              <div className="h-5 w-px bg-border" />
+
+              {/* 客戶篩選 */}
               <span className="text-sm text-muted-foreground shrink-0">客戶</span>
               <Select
                 value={clientFilter?.toString() || "all"}
@@ -681,6 +711,15 @@ export default function Demands() {
               filteredDemands = filteredDemands.filter((demand: any) => demand.clientId === clientFilter);
             }
 
+            // 根據工作種類篩選（透過需求類型的 requiredJobCategoryId）
+            if (filterJobCategoryId) {
+              filteredDemands = filteredDemands.filter((demand: any) => {
+                if (!demand.demandTypeId) return false;
+                const dt = demandTypes.find((d: any) => d.id === demand.demandTypeId);
+                return dt?.requiredJobCategoryId === filterJobCategoryId;
+              });
+            }
+
             if (filteredDemands.length === 0) {
               return <div className="text-center py-10 text-muted-foreground text-sm">無符合條件的需求單</div>;
             }
@@ -723,6 +762,33 @@ export default function Demands() {
                             建立於 {new Date(demand.createdAt).toLocaleString("zh-TW", { month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit" })}
                           </span>
                         )}
+                        {/* 需求類型 + 工作種類 Badge */}
+                        {demand.demandTypeId && (() => {
+                          const dt = demandTypes.find((d: any) => d.id === demand.demandTypeId);
+                          if (!dt) return null;
+                          const jc = dt.requiredJobCategoryId
+                            ? allJobCategories.find((c: any) => c.id === dt.requiredJobCategoryId)
+                            : null;
+                          return (
+                            <span className="flex items-center gap-1">
+                              <span className="text-[10px] bg-muted px-1.5 py-0.5 rounded border border-border/50 text-muted-foreground">
+                                {dt.name}
+                              </span>
+                              {jc && (
+                                <span
+                                  className="text-[10px] px-1.5 py-0.5 rounded border font-medium"
+                                  style={{
+                                    backgroundColor: `${jc.color}18`,
+                                    borderColor: `${jc.color}50`,
+                                    color: jc.color,
+                                  }}
+                                >
+                                  {jc.name}
+                                </span>
+                              )}
+                            </span>
+                          );
+                        })()}
                         {(demand.createdByRole === "admin" || demand.createdByRole === "user") && demand.createdByName && (
                           <span className="flex items-center gap-1 text-[10px] font-medium text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 rounded px-1.5 py-0.5">
                             <UserCog className="h-3 w-3" />
