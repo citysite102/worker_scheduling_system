@@ -10,7 +10,8 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Plus, Search, Edit, UserX, UserCheck, Loader2, Phone, Mail, GraduationCap, ShieldCheck, HeartPulse, Filter, ChevronDown, Upload, UserPlus, Download, MapPin, Trash2 } from "lucide-react";
+import { Plus, Search, Edit, UserX, UserCheck, Loader2, Phone, Mail, GraduationCap, ShieldCheck, HeartPulse, Filter, ChevronDown, Upload, UserPlus, Download, MapPin, Trash2, Tag, X } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Link } from "wouter";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -42,6 +43,7 @@ export default function Workers() {
   const [showAvatarPicker, setShowAvatarPicker] = useState(false);
   const [deletingWorker, setDeletingWorker] = useState<any>(null);
   const [cityValue, setCityValue] = useState<string>("");
+  const [filterJobCategoryIds, setFilterJobCategoryIds] = useState<number[]>([]);
 
   const deleteWorkerMutation = trpc.workers.delete.useMutation({
     onSuccess: () => {
@@ -54,6 +56,11 @@ export default function Workers() {
       setDeletingWorker(null);
     },
   });
+
+  // 工作種類資料
+  const { data: allJobCategories = [] } = trpc.jobCategories.list.useQuery();
+  const { data: workerCategoryMapData } = trpc.jobCategories.getWorkerCategoryMap.useQuery();
+  const workerCategoryMap: Record<number, number[]> = workerCategoryMapData ?? {};
 
   const { data: workers, isLoading, refetch } = trpc.workers.list.useQuery({
     search: searchTerm,
@@ -141,7 +148,12 @@ export default function Workers() {
     });
   };
 
-  const activeFilterCount = [schoolFilter, workPermitFilter !== undefined, healthCheckFilter !== undefined].filter(Boolean).length;
+  const activeFilterCount = [
+    schoolFilter,
+    workPermitFilter !== undefined,
+    healthCheckFilter !== undefined,
+    filterJobCategoryIds.length > 0,
+  ].filter(Boolean).length;
 
   return (
     <div className="p-6 lg:p-8 max-w-6xl mx-auto">
@@ -476,6 +488,75 @@ export default function Workers() {
                   <SelectItem value="no">無體檢</SelectItem>
                 </SelectContent>
               </Select>
+              {/* 工作種類多選篩選 */}
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className={`h-8 text-sm gap-1.5 ${
+                      filterJobCategoryIds.length > 0
+                        ? "border-primary text-primary bg-primary/5"
+                        : ""
+                    }`}
+                  >
+                    <Tag className="h-3.5 w-3.5" />
+                    工作種類
+                    {filterJobCategoryIds.length > 0 && (
+                      <span className="ml-0.5 bg-primary text-primary-foreground text-[10px] rounded-full h-4 w-4 flex items-center justify-center">
+                        {filterJobCategoryIds.length}
+                      </span>
+                    )}
+                    <ChevronDown className="h-3 w-3 ml-0.5 text-muted-foreground" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-56 p-2" align="start">
+                  <div className="space-y-1">
+                    <div className="flex items-center justify-between px-1 pb-1 border-b mb-1">
+                      <span className="text-xs font-medium text-muted-foreground">選擇工作種類</span>
+                      {filterJobCategoryIds.length > 0 && (
+                        <button
+                          onClick={() => setFilterJobCategoryIds([])}
+                          className="text-[10px] text-muted-foreground hover:text-foreground flex items-center gap-0.5"
+                        >
+                          <X className="h-3 w-3" />
+                          清除
+                        </button>
+                      )}
+                    </div>
+                    {allJobCategories.length === 0 ? (
+                      <div className="text-xs text-muted-foreground text-center py-2">尚無工作種類</div>
+                    ) : (
+                      allJobCategories.map((cat) => {
+                        const isChecked = filterJobCategoryIds.includes(cat.id);
+                        return (
+                          <label
+                            key={cat.id}
+                            className="flex items-center gap-2 px-1 py-1.5 rounded hover:bg-muted/60 cursor-pointer"
+                          >
+                            <Checkbox
+                              checked={isChecked}
+                              onCheckedChange={(checked) => {
+                                setFilterJobCategoryIds(
+                                  checked
+                                    ? [...filterJobCategoryIds, cat.id]
+                                    : filterJobCategoryIds.filter((id) => id !== cat.id)
+                                );
+                              }}
+                            />
+                            <span
+                              className="w-2.5 h-2.5 rounded-full shrink-0"
+                              style={{ backgroundColor: cat.color }}
+                            />
+                            <span className="text-sm">{cat.name}</span>
+                          </label>
+                        );
+                      })
+                    )}
+                  </div>
+                </PopoverContent>
+              </Popover>
+
               {activeFilterCount > 0 && (
                 <Button
                   variant="ghost"
@@ -485,6 +566,7 @@ export default function Workers() {
                     setSchoolFilter("");
                     setWorkPermitFilter(undefined);
                     setHealthCheckFilter(undefined);
+                    setFilterJobCategoryIds([]);
                   }}
                 >
                   清除篩選
@@ -562,8 +644,16 @@ export default function Workers() {
           ) : (
             <div className="space-y-2">
               {(() => {
+                // 工作種類前端過濾（AND 邏輯：員工必須擁有所有勾選的種類）
+                const jobFilteredWorkers = filterJobCategoryIds.length === 0
+                  ? workers
+                  : workers.filter((worker) => {
+                      const workerCats = workerCategoryMap[worker.id] || [];
+                      return filterJobCategoryIds.every((catId) => workerCats.includes(catId));
+                    });
+
                 // 排序邏輯
-                const sortedWorkers = [...workers].sort((a, b) => {
+                const sortedWorkers = [...jobFilteredWorkers].sort((a, b) => {
                   if (sortBy === "createdAt") {
                     // 按照建立日期排序（最新的在最前）
                     return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
@@ -579,7 +669,10 @@ export default function Workers() {
                   }
                 });
                 return sortedWorkers;
-              })().map((worker) => (
+              })().map((worker) => {
+                const workerCats = workerCategoryMap[worker.id] || [];
+                const workerCatObjects = allJobCategories.filter(c => workerCats.includes(c.id));
+                return (
                 <div
                   key={worker.id}
                   className="flex items-center gap-3 p-4 rounded-lg border border-border/60 hover:bg-muted/40 transition-colors"
@@ -685,6 +778,28 @@ export default function Workers() {
                     {worker.note && (
                       <div className="text-xs text-muted-foreground mt-1">{worker.note}</div>
                     )}
+                    {/* 工作種類標籤 */}
+                    {workerCatObjects.length > 0 && (
+                      <div className="flex flex-wrap gap-1 mt-1.5">
+                        {workerCatObjects.map((cat) => (
+                          <span
+                            key={cat.id}
+                            className="inline-flex items-center gap-1 text-[11px] px-1.5 py-0.5 rounded-full border"
+                            style={{
+                              backgroundColor: cat.color + "18",
+                              borderColor: cat.color + "55",
+                              color: cat.color,
+                            }}
+                          >
+                            <span
+                              className="w-1.5 h-1.5 rounded-full"
+                              style={{ backgroundColor: cat.color }}
+                            />
+                            {cat.name}
+                          </span>
+                        ))}
+                      </div>
+                    )}
                   </div>
                   <div className="flex gap-1.5 shrink-0 ml-3">
                     <Button
@@ -732,7 +847,8 @@ export default function Workers() {
                     </Button>
                   </div>
                 </div>
-              ))}  
+              );
+              })}
             </div>
           )}
         </CardContent>
