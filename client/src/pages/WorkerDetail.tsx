@@ -73,19 +73,23 @@ export default function WorkerDetail() {
 
   // 工作種類相關
   const { data: allCategories = [] } = trpc.jobCategories.list.useQuery();
-  const { data: workerCategories = [], refetch: refetchWorkerCategories } = trpc.jobCategories.getWorkerCategories.useQuery(
+  const { data: workerCategoriesData, refetch: refetchWorkerCategories } = trpc.jobCategories.getWorkerCategories.useQuery(
     { workerId },
     { enabled: !isNaN(workerId) && workerId > 0 }
   );
+  // 穩定化工作種類列表，避免預設値 [] 建立新陣列導致 useEffect 無限觸發
+  const workerCategories = workerCategoriesData ?? [];
   const [selectedCategoryIds, setSelectedCategoryIds] = useState<number[]>([]);
   const [categoryEditing, setCategoryEditing] = useState(false);
   const [categorySaving, setCategorySaving] = useState(false);
   const setWorkerCategoriesMutation = trpc.jobCategories.setWorkerCategories.useMutation();
 
-  // 同步已選工作種類到本地狀態
+  // 同步已選工作種類到本地狀態（用 workerCategoriesData 作為依賴，避免 workerCategories 引用不穩定）
   useEffect(() => {
-    setSelectedCategoryIds(workerCategories.map((c) => c.id));
-  }, [workerCategories]);
+    if (workerCategoriesData !== undefined) {
+      setSelectedCategoryIds(workerCategoriesData.map((c) => c.id));
+    }
+  }, [workerCategoriesData]);
 
   const handleSaveCategories = async () => {
     setCategorySaving(true);
