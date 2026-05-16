@@ -17,7 +17,7 @@ import {
   Edit, Copy, Trash2, ShieldAlert, CheckSquare, Tag
 } from "lucide-react";
 import { useRoute, useLocation, Link } from "wouter";;
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { toast } from "sonner";
 import {
   AlertDialog,
@@ -52,6 +52,7 @@ export default function DemandDetail() {
   const [filterWorkPermit, setFilterWorkPermit] = useState<string>("all"); // "all" | "yes" | "no" | "within_validity"
   const [filterHealthCheck, setFilterHealthCheck] = useState<string>("all"); // "all" | "yes" | "no"
   const [filterJobCategory, setFilterJobCategory] = useState<string>("all"); // "all" | "match" | number id string
+  const autoAppliedRef = useRef(false); // 防止重複自動套用
   
   // 搜尋和分頁狀態
   const [availableSearchTerm, setAvailableSearchTerm] = useState("");
@@ -132,6 +133,16 @@ export default function DemandDetail() {
     { id: demandId },
     { enabled: !!demandId && demandId > 0 }
   );
+
+  // demand 載入後自動套用工作種類篩選
+  useEffect(() => {
+    if (!demand || autoAppliedRef.current) return;
+    const requiredCatId = (demand?.demandType as any)?.requiredJobCategoryId;
+    if (requiredCatId) {
+      setFilterJobCategory("match");
+      autoAppliedRef.current = true;
+    }
+  }, [demand]);
 
   // 將 UTC 日期轉換為台灣時區的日期（用於顯示和 API 呼叫）
   const localDate = useMemo(() => {
@@ -719,6 +730,11 @@ export default function DemandDetail() {
                   <label className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
                     <Tag className="h-3.5 w-3.5" />
                     工作種類
+                    {filterJobCategory === "match" && autoAppliedRef.current && (
+                      <span className="ml-1 text-[10px] font-medium text-emerald-600 bg-emerald-50 border border-emerald-200 rounded px-1.5 py-0.5">
+                        自動套用
+                      </span>
+                    )}
                   </label>
                   <Select value={filterJobCategory} onValueChange={setFilterJobCategory}>
                     <SelectTrigger className="h-9 text-sm">
