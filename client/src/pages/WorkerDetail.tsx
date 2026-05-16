@@ -1,5 +1,5 @@
 import { useRoute, Link } from "wouter";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { trpc } from "@/lib/trpc";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -83,7 +83,7 @@ export default function WorkerDetail() {
   const setWorkerCategoriesMutation = trpc.jobCategories.setWorkerCategories.useMutation();
 
   // 同步已選工作種類到本地狀態
-  useMemo(() => {
+  useEffect(() => {
     setSelectedCategoryIds(workerCategories.map((c) => c.id));
   }, [workerCategories]);
 
