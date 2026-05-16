@@ -206,12 +206,8 @@ export default function Workers() {
 
         <Dialog open={isDialogOpen} onOpenChange={(open) => {
           setIsDialogOpen(open);
-          if (open && editingWorker) {
-            // 編輯時帶入現有工作種類
-            const existingCats = workerCategoryMap[editingWorker.id] || [];
-            setDialogJobCategoryIds(existingCats);
-          } else if (open) {
-            // 新增時清空
+          // 新增時（editingWorker 為 null）才清空工作種類；編輯時已在 onClick 設定完成
+          if (open && !editingWorker) {
             setDialogJobCategoryIds([]);
           }
           if (!open) { setEditingWorker(null); setHasWorkPermitChecked(false); setWorkPermitExpiryDate(""); setCityValue(""); setDialogJobCategoryIds([]); }
@@ -888,6 +884,9 @@ export default function Workers() {
                             : ""
                         );
                         setCityValue(worker.city || "");
+                        // 直接在這裡設定工作種類，避免 onOpenChange 時 editingWorker 還是 null 的時序問題
+                        const existingCats = workerCategoryMap[worker.id] || [];
+                        setDialogJobCategoryIds(existingCats);
                         setIsDialogOpen(true);
                       }}
                     >
