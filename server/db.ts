@@ -981,3 +981,120 @@ export async function deletePayrollSettlement(workerId: number, year: number, mo
       eq(payrollSettlements.month, month),
     ));
 }
+
+
+// ─── Job Categories (工作種類) ────────────────────────────────────────────────
+import { jobCategories, workerJobCategories, InsertJobCategory } from "../drizzle/schema";
+
+/**
+ * 取得所有工作種類
+ */
+export async function getAllJobCategories() {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(jobCategories).orderBy(jobCategories.name);
+}
+
+/**
+ * 根據 ID 取得工作種類
+ */
+export async function getJobCategoryById(id: number) {
+  const db = await getDb();
+  if (!db) return null;
+  const [row] = await db.select().from(jobCategories).where(eq(jobCategories.id, id));
+  return row ?? null;
+}
+
+/**
+ * 建立工作種類
+ */
+export async function createJobCategory(data: InsertJobCategory) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const [result] = await db.insert(jobCategories).values(data);
+  return result.insertId as number;
+}
+
+/**
+ * 更新工作種類
+ */
+export async function updateJobCategory(id: number, data: Partial<InsertJobCategory>) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.update(jobCategories).set(data).where(eq(jobCategories.id, id));
+}
+
+/**
+ * 刪除工作種類（同時清除關聯記錄）
+ */
+export async function deleteJobCategory(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  // 先清除員工關聯
+  await db.delete(workerJobCategories).where(eq(workerJobCategories.jobCategoryId, id));
+  // 清除需求類型的 requiredJobCategoryId（設為 null）
+  await db.update(demandTypes).set({ requiredJobCategoryId: null } as any).where(eq(demandTypes.requiredJobCategoryId as any, id));
+  // 刪除工作種類
+  await db.delete(jobCategories).where(eq(jobCategories.id, id));
+}
+
+/**
+ * 取得員工的工作種類清單
+ */
+export async function getWorkerJobCategories(workerId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  const rows = await db
+    .select({ jobCategory: jobCategories })
+    .from(workerJobCategories)
+    .innerJoin(jobCategories, eq(workerJobCategories.jobCategoryId, jobCategories.id))
+    .where(eq(workerJobCategories.workerId, workerId));
+  return rows.map(r => r.jobCategory);
+}
+
+/**
+ * 設定員工的工作種類（完整替換）
+ */
+export async function setWorkerJobCategories(workerId: number, jobCategoryIds: number[]) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  // 先刪除現有關聯
+  await db.delete(workerJobCategories).where(eq(workerJobCategories.workerId, workerId));
+  // 重新插入
+  if (jobCategoryIds.length > 0) {
+    await db.insert(workerJobCategories).values(
+      jobCategoryIds.map(jobCategoryId => ({ workerId, jobCategoryId }))
+    );
+  }
+}
+
+/**
+ * 取得可執行指定工作種類的員工 ID 清單
+ */
+export async function getWorkerIdsByJobCategory(jobCategoryId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  const rows = await db
+    .select({ workerId: workerJobCategories.workerId })
+    .from(workerJobCategories)
+    .where(eq(workerJobCategories.jobCategoryId, jobCategoryId));
+  return rows.map(r => r.workerId);
+}
+
+// 取得所有員工的工作種類對應 Map（workerId -> jobCategoryId[]）
+export async function getWorkerCategoryMap(): Promise<Record<number, number[]>> {
+  const db = await getDb();
+  if (!db) return {};
+  const rows = await db
+    .select({
+      workerId: workerJobCategories.workerId,
+      jobCategoryId: workerJobCategories.jobCategoryId,
+    })
+    .from(workerJobCategories);
+  const map: Record<number, number[]> = {};
+  for (const row of rows) {
+    if (!map[row.workerId]) map[row.workerId] = [];
+    map[row.workerId].push(row.jobCategoryId);
+  }
+  return map;
+}

@@ -2132,3 +2132,18 @@
 - [x] 加入「反向模式」：讓使用者指定不能工作的時段，系統自動轉換為可工作時段
 - [x] 確保最終寫入 DB 的資料格式與現有邏輯完全相同，不影響其他功能
 - [x] 撰寫相關測試驗證轉換邏輯正確性（10 個測試全數通過）
+
+## 工作種類管理系統（2026/05/16）
+
+- [x] 建立 job_categories 資料表（id, name, description, color）
+- [x] 建立 worker_job_categories 關聯表（workerId, jobCategoryId）
+- [x] demand_types 加入 requiredJobCategoryId 欄位
+- [x] 新增 jobCategories tRPC 路由（list/create/update/delete/getWorkerCategories/setWorkerCategories/getWorkerIdsByCategory/getWorkerCategoryMap）
+- [x] 新增 demandTypes.setRequiredJobCategory procedure
+- [x] 建立工作種類管理頁面（/job-categories），側邊欄加入入口
+- [x] WorkerDetail 加入「工作種類」Tab，支援多選標記與儲存
+- [x] DemandTypes 加入所需工作種類設定（Select 下拉，卡片顯示標籤）
+- [x] DemandDetail 篩選器加入工作種類篩選（all/match/指定 ID）
+- [x] DemandDetail 員工列表加入工作種類符合標示 Badge
+- [x] 新增 jobCategories.test.ts（15 個測試，全數通過）
+- [x] 全部 238 個測試通過，TypeScript 零錯誤

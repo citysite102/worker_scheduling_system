@@ -14,7 +14,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import {
   AlertCircle, CheckCircle2, ChevronDown, ChevronUp, ArrowLeft, Loader2,
   Calendar, Clock, MapPin, Users, Filter, GraduationCap, FileCheck, Stethoscope, X,
-  Edit, Copy, Trash2, ShieldAlert, CheckSquare
+  Edit, Copy, Trash2, ShieldAlert, CheckSquare, Tag
 } from "lucide-react";
 import { useRoute, useLocation, Link } from "wouter";;
 import { useState, useMemo } from "react";
@@ -51,6 +51,7 @@ export default function DemandDetail() {
   const [filterSchool, setFilterSchool] = useState("");
   const [filterWorkPermit, setFilterWorkPermit] = useState<string>("all"); // "all" | "yes" | "no" | "within_validity"
   const [filterHealthCheck, setFilterHealthCheck] = useState<string>("all"); // "all" | "yes" | "no"
+  const [filterJobCategory, setFilterJobCategory] = useState<string>("all"); // "all" | "match" | number id string
   
   // 搜尋和分頁狀態
   const [availableSearchTerm, setAvailableSearchTerm] = useState("");
@@ -66,6 +67,12 @@ export default function DemandDetail() {
 
   // 查詢需求類型列表
   const { data: demandTypes = [] } = trpc.demandTypes.list.useQuery();
+
+  // 查詢工作種類列表
+  const { data: jobCategories = [] } = trpc.jobCategories.list.useQuery();
+
+  // 查詢員工工作種類對應（批次取得）
+  const { data: workerCategoryMap = {} } = trpc.jobCategories.getWorkerCategoryMap.useQuery();
 
   // 當前選擇的需求類型
   const selectedDemandType = demandTypes.find(t => t.id === selectedDemandTypeId);
@@ -246,9 +253,21 @@ export default function DemandDetail() {
       }
       if (filterHealthCheck === "yes" && !worker.hasHealthCheck) return false;
       if (filterHealthCheck === "no" && worker.hasHealthCheck) return false;
+      // 工作種類篩選
+      if (filterJobCategory === "match") {
+        const requiredCatId = (demand?.demandType as any)?.requiredJobCategoryId;
+        if (requiredCatId) {
+          const workerCats: number[] = (workerCategoryMap as any)[worker.id] || [];
+          if (!workerCats.includes(requiredCatId)) return false;
+        }
+      } else if (filterJobCategory !== "all") {
+        const catId = Number(filterJobCategory);
+        const workerCats: number[] = (workerCategoryMap as any)[worker.id] || [];
+        if (!workerCats.includes(catId)) return false;
+      }
       return true;
     });
-  }, [feasibility, filterSchool, filterWorkPermit, filterHealthCheck]);
+  }, [feasibility, filterSchool, filterWorkPermit, filterHealthCheck, filterJobCategory, workerCategoryMap, demand]);
   
   // 加入搜尋功能
   const searchedAvailableWorkers = useMemo(() => {
@@ -348,11 +367,12 @@ export default function DemandDetail() {
   const unavailableTotalPages = Math.ceil(searchedUnavailableWorkers.length / ITEMS_PER_PAGE);
 
   // 是否有啟用任何篩選
-  const hasActiveFilters = filterSchool !== "" || filterWorkPermit !== "all" || filterHealthCheck !== "all";
+  const hasActiveFilters = filterSchool !== "" || filterWorkPermit !== "all" || filterHealthCheck !== "all" || filterJobCategory !== "all";
   const activeFilterCount = [
     filterSchool !== "",
     filterWorkPermit !== "all",
     filterHealthCheck !== "all",
+    filterJobCategory !== "all",
   ].filter(Boolean).length;
 
   // 取得所有不重複的學校名稱
@@ -406,6 +426,7 @@ export default function DemandDetail() {
     setFilterSchool("");
     setFilterWorkPermit("all");
     setFilterHealthCheck("all");
+    setFilterJobCategory("all");
   };
 
   const handleSubmit = () => {
@@ -693,6 +714,38 @@ export default function DemandDetail() {
 
             {isFilterOpen && (
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-4 pt-4 border-t border-border/40">
+                {/* 工作種類篩選 */}
+                <div className="space-y-1.5">
+                  <label className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
+                    <Tag className="h-3.5 w-3.5" />
+                    工作種類
+                  </label>
+                  <Select value={filterJobCategory} onValueChange={setFilterJobCategory}>
+                    <SelectTrigger className="h-9 text-sm">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">不限</SelectItem>
+                      {(demand?.demandType as any)?.requiredJobCategoryId && (
+                        <SelectItem value="match">
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-emerald-600">✓</span>
+                            符合需求類型要求
+                          </div>
+                        </SelectItem>
+                      )}
+                      {jobCategories.map((cat) => (
+                        <SelectItem key={cat.id} value={cat.id.toString()}>
+                          <div className="flex items-center gap-2">
+                            <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: cat.color }} />
+                            {cat.name}
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
                 {/* 學校篩選 */}
                 <div className="space-y-1.5">
                   <label className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
@@ -991,6 +1044,26 @@ export default function DemandDetail() {
                             體檢
                           </Badge>
                         ) : null}
+                        {/* 工作種類符合標示 */}
+                        {(() => {
+                          const requiredCatId = (demand?.demandType as any)?.requiredJobCategoryId;
+                          if (!requiredCatId) return null;
+                          const workerCats: number[] = (workerCategoryMap as any)[worker.id] || [];
+                          const cat = jobCategories.find(c => c.id === requiredCatId);
+                          if (!cat) return null;
+                          if (workerCats.includes(requiredCatId)) {
+                            return (
+                              <Badge
+                                className="text-[10px] px-1.5 py-0 font-medium"
+                                style={{ backgroundColor: cat.color + "18", color: cat.color, borderColor: cat.color + "40" }}
+                              >
+                                <Tag className="h-2.5 w-2.5 mr-0.5" />
+                                {cat.name}
+                              </Badge>
+                            );
+                          }
+                          return null;
+                        })()}
                       </div>
                       <div className="text-xs text-muted-foreground mt-0.5">
                         {worker.phone} {worker.email && `· ${worker.email}`}

@@ -6,20 +6,30 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, Edit2, Trash2, GripVertical, X } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Plus, Edit2, Trash2, GripVertical, X, Tag } from "lucide-react";
 import { toast } from "sonner";
 
 export default function DemandTypes() {
-  const [editingType, setEditingType] = useState<{ id?: number; name: string; description: string } | null>(null);
+  const [editingType, setEditingType] = useState<{
+    id?: number;
+    name: string;
+    description: string;
+    requiredJobCategoryId: number | null;
+  } | null>(null);
   const [editingOptions, setEditingOptions] = useState<{ demandTypeId: number; name: string } | null>(null);
   const [optionInputs, setOptionInputs] = useState<string[]>([""]);
 
   const { data: demandTypes = [], isLoading, refetch } = trpc.demandTypes.list.useQuery();
+  const { data: jobCategories = [] } = trpc.jobCategories.list.useQuery();
+
   const createType = trpc.demandTypes.create.useMutation();
   const updateType = trpc.demandTypes.update.useMutation();
   const deleteType = trpc.demandTypes.delete.useMutation();
   const createOption = trpc.demandTypes.createOption.useMutation();
   const deleteOption = trpc.demandTypes.deleteOption.useMutation();
+  const setRequiredJobCategory = trpc.demandTypes.setRequiredJobCategory.useMutation();
 
   const handleSaveType = async () => {
     if (!editingType) return;
@@ -29,6 +39,7 @@ export default function DemandTypes() {
     }
 
     try {
+      let typeId = editingType.id;
       if (editingType.id) {
         await updateType.mutateAsync({
           id: editingType.id,
@@ -37,12 +48,22 @@ export default function DemandTypes() {
         });
         toast.success("需求類型已更新");
       } else {
-        await createType.mutateAsync({
+        const result = await createType.mutateAsync({
           name: editingType.name,
           description: editingType.description,
         });
+        typeId = result.id;
         toast.success("需求類型已建立");
       }
+
+      // 儲存所需工作種類
+      if (typeId) {
+        await setRequiredJobCategory.mutateAsync({
+          id: typeId,
+          requiredJobCategoryId: editingType.requiredJobCategoryId,
+        });
+      }
+
       refetch();
       setEditingType(null);
     } catch (error) {
@@ -112,6 +133,10 @@ export default function DemandTypes() {
     setOptionInputs(newInputs);
   };
 
+  // 根據 ID 找到工作種類
+  const findCategory = (id: number | null | undefined) =>
+    id ? jobCategories.find((c) => c.id === id) : null;
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
@@ -125,9 +150,9 @@ export default function DemandTypes() {
       <div className="flex justify-between items-center mb-6">
         <div>
           <h1 className="text-3xl font-bold">需求類型管理</h1>
-          <p className="text-muted-foreground mt-1">建立與管理用工需求的類型與選項</p>
+          <p className="text-muted-foreground mt-1">建立與管理用工需求的類型、選項，以及所需工作種類</p>
         </div>
-        <Button onClick={() => setEditingType({ name: "", description: "" })}>
+        <Button onClick={() => setEditingType({ name: "", description: "", requiredJobCategoryId: null })}>
           <Plus className="h-4 w-4 mr-2" />
           新增需求類型
         </Button>
@@ -137,7 +162,7 @@ export default function DemandTypes() {
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-12">
             <p className="text-muted-foreground mb-4">尚未建立任何需求類型</p>
-            <Button onClick={() => setEditingType({ name: "", description: "" })}>
+            <Button onClick={() => setEditingType({ name: "", description: "", requiredJobCategoryId: null })}>
               <Plus className="h-4 w-4 mr-2" />
               建立第一個需求類型
             </Button>
@@ -145,80 +170,109 @@ export default function DemandTypes() {
         </Card>
       ) : (
         <div className="grid gap-6">
-          {demandTypes.map((type) => (
-            <Card key={type.id}>
-              <CardHeader>
-                <div className="flex justify-between items-start">
-                  <div className="flex-1">
-                    <CardTitle>{type.name}</CardTitle>
-                    {type.description && (
-                      <CardDescription className="mt-2">{type.description}</CardDescription>
+          {demandTypes.map((type) => {
+            const requiredCategory = findCategory((type as any).requiredJobCategoryId);
+            return (
+              <Card key={type.id}>
+                <CardHeader>
+                  <div className="flex justify-between items-start">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-3 flex-wrap">
+                        <CardTitle>{type.name}</CardTitle>
+                        {/* 所需工作種類標籤 */}
+                        {requiredCategory ? (
+                          <Badge
+                            style={{
+                              backgroundColor: requiredCategory.color + "18",
+                              color: requiredCategory.color,
+                              borderColor: requiredCategory.color + "40",
+                            }}
+                            className="border text-xs gap-1"
+                          >
+                            <Tag className="w-3 h-3" />
+                            需要：{requiredCategory.name}
+                          </Badge>
+                        ) : (
+                          <Badge variant="outline" className="text-xs text-muted-foreground gap-1">
+                            <Tag className="w-3 h-3" />
+                            無工作種類限制
+                          </Badge>
+                        )}
+                      </div>
+                      {type.description && (
+                        <CardDescription className="mt-2">{type.description}</CardDescription>
+                      )}
+                    </div>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setEditingType({
+                          id: type.id,
+                          name: type.name,
+                          description: type.description || "",
+                          requiredJobCategoryId: (type as any).requiredJobCategoryId ?? null,
+                        })}
+                      >
+                        <Edit2 className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleDeleteType(type.id, type.name)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    <div className="flex justify-between items-center">
+                      <Label className="text-sm font-medium">選項清單</Label>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          setEditingOptions({ demandTypeId: type.id, name: type.name });
+                          setOptionInputs([""]);
+                        }}
+                      >
+                        <Plus className="h-4 w-4 mr-2" />
+                        新增選項
+                      </Button>
+                    </div>
+                    {type.options && type.options.length > 0 ? (
+                      <div className="space-y-2">
+                        {type.options.map((option) => (
+                          <div
+                            key={option.id}
+                            className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg group"
+                          >
+                            <GripVertical className="h-4 w-4 text-muted-foreground" />
+                            <div className="flex-1 flex items-center gap-2">
+                              <span className="text-sm text-muted-foreground">□</span>
+                              <span className="text-sm">{option.content}</span>
+                            </div>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="opacity-0 group-hover:opacity-100 transition-opacity"
+                              onClick={() => handleDeleteOption(option.id)}
+                            >
+                              <Trash2 className="h-4 w-4 text-destructive" />
+                            </Button>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-sm text-muted-foreground">尚未建立任何選項</p>
                     )}
                   </div>
-                  <div className="flex gap-2">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setEditingType({ id: type.id, name: type.name, description: type.description || "" })}
-                    >
-                      <Edit2 className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleDeleteType(type.id, type.name)}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  <div className="flex justify-between items-center">
-                    <Label className="text-sm font-medium">選項清單</Label>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => {
-                        setEditingOptions({ demandTypeId: type.id, name: type.name });
-                        setOptionInputs([""]);
-                      }}
-                    >
-                      <Plus className="h-4 w-4 mr-2" />
-                      新增選項
-                    </Button>
-                  </div>
-                  {type.options && type.options.length > 0 ? (
-                    <div className="space-y-2">
-                      {type.options.map((option, index) => (
-                        <div
-                          key={option.id}
-                          className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg group"
-                        >
-                          <GripVertical className="h-4 w-4 text-muted-foreground" />
-                          <div className="flex-1 flex items-center gap-2">
-                            <span className="text-sm text-muted-foreground">□</span>
-                            <span className="text-sm">{option.content}</span>
-                          </div>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="opacity-0 group-hover:opacity-100 transition-opacity"
-                            onClick={() => handleDeleteOption(option.id)}
-                          >
-                            <Trash2 className="h-4 w-4 text-destructive" />
-                          </Button>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <p className="text-sm text-muted-foreground">尚未建立任何選項</p>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+                </CardContent>
+              </Card>
+            );
+          })}
         </div>
       )}
 
@@ -228,7 +282,7 @@ export default function DemandTypes() {
           <DialogHeader>
             <DialogTitle>{editingType?.id ? "編輯需求類型" : "新增需求類型"}</DialogTitle>
             <DialogDescription>
-              設定需求類型的名稱與說明，稍後可以為此類型新增多個選項。
+              設定需求類型的名稱、說明，以及執行此需求所需的工作種類。
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
@@ -251,13 +305,53 @@ export default function DemandTypes() {
                 rows={3}
               />
             </div>
+            {/* 所需工作種類 */}
+            <div className="space-y-2">
+              <Label htmlFor="required-job-category" className="flex items-center gap-1.5">
+                <Tag className="w-3.5 h-3.5" />
+                所需工作種類
+              </Label>
+              <Select
+                value={editingType?.requiredJobCategoryId?.toString() ?? "none"}
+                onValueChange={(val) =>
+                  setEditingType(editingType
+                    ? { ...editingType, requiredJobCategoryId: val === "none" ? null : Number(val) }
+                    : null
+                  )
+                }
+              >
+                <SelectTrigger id="required-job-category">
+                  <SelectValue placeholder="選擇所需工作種類（選填）" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">無限制（任何員工皆可）</SelectItem>
+                  {jobCategories.map((cat) => (
+                    <SelectItem key={cat.id} value={cat.id.toString()}>
+                      <div className="flex items-center gap-2">
+                        <span
+                          className="w-2.5 h-2.5 rounded-full shrink-0"
+                          style={{ backgroundColor: cat.color }}
+                        />
+                        {cat.name}
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">
+                設定後，在配對員工時系統會標示符合此工作種類的員工
+              </p>
+            </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setEditingType(null)}>
               取消
             </Button>
-            <Button onClick={handleSaveType} disabled={createType.isPending || updateType.isPending}>
-              {createType.isPending || updateType.isPending ? "儲存中..." : "儲存"}
+            <Button
+              onClick={handleSaveType}
+              disabled={createType.isPending || updateType.isPending || setRequiredJobCategory.isPending}
+            >
+              {(createType.isPending || updateType.isPending) ? "儲存中..." : "儲存"}
             </Button>
           </DialogFooter>
         </DialogContent>

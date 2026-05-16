@@ -2750,6 +2750,94 @@ export const appRouter = router({
         await db.updateDemandTypeOptionsOrder(input.updates);
         return { success: true };
       }),
+
+    // 更新需求類型的所需工作種類
+    setRequiredJobCategory: publicProcedure
+      .input(z.object({
+        id: z.number(),
+        requiredJobCategoryId: z.number().nullable(),
+      }))
+      .mutation(async ({ input }) => {
+        await db.updateDemandType(input.id, { requiredJobCategoryId: input.requiredJobCategoryId ?? undefined });
+        return { success: true };
+      }),
+  }),
+
+  // ─── 工作種類管理 ──────────────────────────────────────────────────────────
+  jobCategories: router({
+    // 取得所有工作種類
+    list: publicProcedure.query(async () => {
+      return db.getAllJobCategories();
+    }),
+
+    // 建立工作種類
+    create: publicProcedure
+      .input(z.object({
+        name: z.string().min(1, "工作種類名稱不可為空"),
+        description: z.string().optional(),
+        color: z.string().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const id = await db.createJobCategory({
+          name: input.name,
+          description: input.description || null,
+          color: input.color || "#6366f1",
+        });
+        return { id };
+      }),
+
+    // 更新工作種類
+    update: publicProcedure
+      .input(z.object({
+        id: z.number(),
+        name: z.string().min(1).optional(),
+        description: z.string().optional(),
+        color: z.string().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const { id, ...data } = input;
+        await db.updateJobCategory(id, data);
+        return { success: true };
+      }),
+
+    // 刪除工作種類
+    delete: publicProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input }) => {
+        await db.deleteJobCategory(input.id);
+        return { success: true };
+      }),
+
+    // 取得員工的工作種類
+    getWorkerCategories: publicProcedure
+      .input(z.object({ workerId: z.number() }))
+      .query(async ({ input }) => {
+        return db.getWorkerJobCategories(input.workerId);
+      }),
+
+    // 設定員工的工作種類（完整替換）
+    setWorkerCategories: publicProcedure
+      .input(z.object({
+        workerId: z.number(),
+        jobCategoryIds: z.array(z.number()),
+      }))
+      .mutation(async ({ input }) => {
+        await db.setWorkerJobCategories(input.workerId, input.jobCategoryIds);
+        return { success: true };
+      }),
+
+    // 取得可執行指定工作種類的員工 ID 清單
+    getWorkerIdsByCategory: publicProcedure
+      .input(z.object({ jobCategoryId: z.number() }))
+      .query(async ({ input }) => {
+        return db.getWorkerIdsByJobCategory(input.jobCategoryId);
+      }),
+
+    // 取得所有員工的工作種類對應 Map（workerId -> jobCategoryId[]）
+    getWorkerCategoryMap: publicProcedure
+      .query(async () => {
+        return db.getWorkerCategoryMap();
+      }),
   }),
 });
 

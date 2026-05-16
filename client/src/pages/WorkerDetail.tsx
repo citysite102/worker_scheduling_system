@@ -25,7 +25,10 @@ import {
   XCircle,
   AlertCircle,
   FileText,
+  Tag,
+  Loader2,
 } from "lucide-react";
+import { toast } from "sonner";
 
 const DAY_NAMES = ["", "週一", "週二", "週三", "週四", "週五", "週六", "週日"];
 
@@ -67,6 +70,39 @@ export default function WorkerDetail() {
     { id: workerId },
     { enabled: !isNaN(workerId) && workerId > 0 }
   );
+
+  // 工作種類相關
+  const { data: allCategories = [] } = trpc.jobCategories.list.useQuery();
+  const { data: workerCategories = [], refetch: refetchWorkerCategories } = trpc.jobCategories.getWorkerCategories.useQuery(
+    { workerId },
+    { enabled: !isNaN(workerId) && workerId > 0 }
+  );
+  const [selectedCategoryIds, setSelectedCategoryIds] = useState<number[]>([]);
+  const [categoryEditing, setCategoryEditing] = useState(false);
+  const [categorySaving, setCategorySaving] = useState(false);
+  const setWorkerCategoriesMutation = trpc.jobCategories.setWorkerCategories.useMutation();
+
+  // 同步已選工作種類到本地狀態
+  useMemo(() => {
+    setSelectedCategoryIds(workerCategories.map((c) => c.id));
+  }, [workerCategories]);
+
+  const handleSaveCategories = async () => {
+    setCategorySaving(true);
+    try {
+      await setWorkerCategoriesMutation.mutateAsync({
+        workerId,
+        jobCategoryIds: selectedCategoryIds,
+      });
+      await refetchWorkerCategories();
+      setCategoryEditing(false);
+      toast.success("工作種類已更新");
+    } catch (e: any) {
+      toast.error(`更新失敗：${e.message}`);
+    } finally {
+      setCategorySaving(false);
+    }
+  };
   
   // 取得台灣時區的今日日期字串（YYYY-MM-DD）
   const getTaiwanToday = () => {
@@ -450,6 +486,9 @@ export default function WorkerDetail() {
           <TabsTrigger value="availability" className="gap-1.5 data-[state=active]:bg-white data-[state=active]:shadow-sm">
             <CalendarDays className="h-3.5 w-3.5" /> 排班紀錄
           </TabsTrigger>
+          <TabsTrigger value="job-categories" className="gap-1.5 data-[state=active]:bg-white data-[state=active]:shadow-sm">
+            <Tag className="h-3.5 w-3.5" /> 工作種類
+          </TabsTrigger>
         </TabsList>
 
         {/* 歷史指派清單 */}
@@ -615,6 +654,123 @@ export default function WorkerDetail() {
                       </div>
                     </div>
                   ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* 工作種類 Tab */}
+        <TabsContent value="job-categories" className="mt-4">
+          <Card className="border border-gray-100 shadow-sm">
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-base font-semibold text-gray-700 flex items-center gap-2">
+                  <Tag className="h-4 w-4" />
+                  可執行工作種類
+                </CardTitle>
+                {!categoryEditing ? (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="gap-1.5 h-8"
+                    onClick={() => setCategoryEditing(true)}
+                  >
+                    編輯種類
+                  </Button>
+                ) : (
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-8"
+                      onClick={() => {
+                        setSelectedCategoryIds(workerCategories.map((c) => c.id));
+                        setCategoryEditing(false);
+                      }}
+                    >
+                      取消
+                    </Button>
+                    <Button
+                      size="sm"
+                      className="h-8 gap-1.5"
+                      disabled={categorySaving}
+                      onClick={handleSaveCategories}
+                    >
+                      {categorySaving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : null}
+                      儲存
+                    </Button>
+                  </div>
+                )}
+              </div>
+            </CardHeader>
+            <CardContent>
+              {allCategories.length === 0 ? (
+                <div className="text-center py-10 text-muted-foreground">
+                  <Tag className="w-10 h-10 mx-auto mb-3 opacity-30" />
+                  <p className="text-sm">尚未建立任何工作種類</p>
+                  <p className="text-xs mt-1">請先到「工作種類管理」頁面建立種類</p>
+                </div>
+              ) : categoryEditing ? (
+                <div className="space-y-2">
+                  <p className="text-sm text-muted-foreground mb-3">選擇此員工可執行的工作種類：</p>
+                  <div className="flex flex-wrap gap-2">
+                    {allCategories.map((cat) => {
+                      const selected = selectedCategoryIds.includes(cat.id);
+                      return (
+                        <button
+                          key={cat.id}
+                          type="button"
+                          onClick={() => {
+                            setSelectedCategoryIds(
+                              selected
+                                ? selectedCategoryIds.filter((id) => id !== cat.id)
+                                : [...selectedCategoryIds, cat.id]
+                            );
+                          }}
+                          className={`px-3 py-1.5 rounded-full border text-sm font-medium transition-all ${
+                            selected
+                              ? "shadow-sm scale-105"
+                              : "opacity-50 hover:opacity-80"
+                          }`}
+                          style={{
+                            backgroundColor: selected ? cat.color + "20" : "transparent",
+                            color: cat.color,
+                            borderColor: selected ? cat.color + "60" : cat.color + "30",
+                          }}
+                        >
+                          {selected && <span className="mr-1">✓</span>}
+                          {cat.name}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              ) : (
+                <div>
+                  {workerCategories.length === 0 ? (
+                    <div className="text-center py-10 text-muted-foreground">
+                      <Tag className="w-10 h-10 mx-auto mb-3 opacity-30" />
+                      <p className="text-sm">尚未標記任何工作種類</p>
+                      <p className="text-xs mt-1">點擊「編輯種類」進行設定</p>
+                    </div>
+                  ) : (
+                    <div className="flex flex-wrap gap-2">
+                      {workerCategories.map((cat) => (
+                        <span
+                          key={cat.id}
+                          className="px-3 py-1.5 rounded-full border text-sm font-medium"
+                          style={{
+                            backgroundColor: cat.color + "18",
+                            color: cat.color,
+                            borderColor: cat.color + "40",
+                          }}
+                        >
+                          {cat.name}
+                        </span>
+                      ))}
+                    </div>
+                  )}
                 </div>
               )}
             </CardContent>

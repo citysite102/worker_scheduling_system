@@ -163,6 +163,7 @@ export const demandTypes = mysqlTable("demandTypes", {
   id: int("id").autoincrement().primaryKey(),
   name: varchar("name", { length: 100 }).notNull(), // 需求名稱（例如：櫃檯接待服務）
   description: text("description"), // 需求說明
+  requiredJobCategoryId: int("requiredJobCategoryId"), // 執行此需求類型所需的工作種類（nullable）
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });
@@ -223,3 +224,31 @@ export const payrollSettlements = mysqlTable("payroll_settlements", {
 
 export type PayrollSettlement = typeof payrollSettlements.$inferSelect;
 export type InsertPayrollSettlement = typeof payrollSettlements.$inferInsert;
+/**
+ * JobCategories (工作種類) - 可執行的工作類型清單
+ * 例如：房務、看護、餐飲服務、保全等
+ */
+export const jobCategories = mysqlTable("jobCategories", {
+  id: int("id").autoincrement().primaryKey(),
+  name: varchar("name", { length: 100 }).notNull(),       // 種類名稱（例如：房務）
+  description: text("description"),                        // 說明
+  color: varchar("color", { length: 20 }).default("#6366f1").notNull(), // 標籤顏色（hex）
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type JobCategory = typeof jobCategories.$inferSelect;
+export type InsertJobCategory = typeof jobCategories.$inferInsert;
+
+/**
+ * WorkerJobCategories (員工工作種類關聯) - 員工可執行的工作種類（多對多）
+ */
+export const workerJobCategories = mysqlTable("workerJobCategories", {
+  id: int("id").autoincrement().primaryKey(),
+  workerId: int("workerId").notNull().references(() => workers.id),
+  jobCategoryId: int("jobCategoryId").notNull().references(() => jobCategories.id),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type WorkerJobCategory = typeof workerJobCategories.$inferSelect;
+export type InsertWorkerJobCategory = typeof workerJobCategories.$inferInsert;
