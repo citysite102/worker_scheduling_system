@@ -6,11 +6,13 @@
  *   dispatch.getMatchingWorkers  — 需求視角：查詢某需求單可配對的員工（複用 feasibilityWithAll 邏輯）
  *   dispatch.listOpenDemands     — 需求視角左側：列出指定日期範圍內未滿員的需求單
  *
- * 效能優化（方案A + 方案B + 方案C + 方案一）：
+ * 效能優化（方案A + 方案B + 方案C + 方案一 + 方案二）：
  *   - 方案B：getAllDemands 加入 dateFrom/dateTo SQL 層過濾，不再全表載入後 JS 過濾
  *   - 方案A：getMatchingDemands 批次預載入 availability 和 assignments，消除 N+1 查詢
  *   - 方案C：前端 300ms 防抖（見 QuickMatch.tsx）
  *   - 方案一：LRU Cache（60s TTL）快取配對結果，命中時直接回傳，指派後自動 invalidate
+ *   - 方案二：Worker Thread 卸載 CPU 密集計算（吻合度分數、衝突判斷、排序）
+ *     主執行緒負責 DB 查詢，資料打包後傳給 Worker Thread，避免阻塞 event loop
  */
 
 import { z } from "zod";
@@ -23,6 +25,8 @@ import {
   matchingDemandsKey,
   invalidateDispatchCache,
 } from "../cache";
+import { runFeasibilityWorker } from "../workers/workerPool.js";
+import type { FeasibilityInput, WorkerRow, AssignmentRow, AvailabilityRow, DemandRow } from "../workers/feasibilityWorker.js";
 
 // ─── helpers ─────────────────────────────────────────────────────────────────
 
@@ -376,8 +380,7 @@ async function computeMatchingDemands(
 
   return { worker, workerCategories, results, dateFrom, dateTo };
 }
-
-/** 需求視角配對計算（抽離為獨立函式，方便快取包裝） */
+/** 需求視角配對計算（方案二：主執行緒 DB 查詢 + Worker Thread CPU 計算） */
 async function computeMatchingWorkers(demandId: number) {
   // 使用 getAllDemands 以取得含 client 物件的完整資料
   const allDemands = await db.getAllDemands();
@@ -385,17 +388,129 @@ async function computeMatchingWorkers(demandId: number) {
   if (!demand) throw new Error("需求單不存在");
 
   const demandDate = new Date(demand.date);
+  const demandDateTs = demandDate.getTime();
 
-  // 複用現有完整可行性計算
-  const feasibility = await logic.calculateDemandFeasibilityWithAll(
-    demandId,
-    demandDate,
-    demand.startTime,
-    demand.endTime,
-    demand.requiredWorkers
+  // ── 方案二：主執行緒負責全部 DB 查詢 ──────────────────────────────────
+
+  // 1. 取得全部活躍員工
+  const allWorkers = await db.getAllWorkers({ status: "active" });
+  const workerIds = allWorkers.map((w) => w.id);
+
+  // 2. 批次查詢所有員工當天的 assignments
+  const dayStart = new Date(demandDateTs);
+  dayStart.setUTCHours(0, 0, 0, 0);
+  const dayEnd = new Date(demandDateTs);
+  dayEnd.setUTCHours(23, 59, 59, 999);
+  const dayAssignmentsMap = await db.getAssignmentsByWorkerIds(workerIds, dayStart, dayEnd);
+
+  // 3. 批次查詢所有員工的 availability
+  const weekStartDate = logic.getWeekStart(demandDate);
+  const availabilityMap = await db.getAvailabilityByWorkerIds(workerIds, weekStartDate);
+
+  // 4. 批次查詢本週工時與近 7 天排班次數（用於可用員工排序）
+  const weekEnd = new Date(weekStartDate);
+  weekEnd.setUTCDate(weekEnd.getUTCDate() + 6);
+  weekEnd.setUTCHours(23, 59, 59, 999);
+  const last7DaysStart = new Date(demandDateTs);
+  last7DaysStart.setUTCDate(last7DaysStart.getUTCDate() - 7);
+
+  const [weekAssignmentsMap, last7DaysMap] = await Promise.all([
+    db.getAssignmentsByWorkerIds(workerIds, weekStartDate, weekEnd),
+    db.getAssignmentsByWorkerIds(workerIds, last7DaysStart, demandDate),
+  ]);
+
+  // 5. 預先查詢所有相關需求單的 demand + client 資訊（用於衝突訊息顯示）
+  const uniqueDemandIds = new Set<number>();
+  for (const assignments of Array.from(dayAssignmentsMap.values())) {
+    for (const a of assignments) {
+      if (a.status !== "cancelled" && a.demandId !== demandId) {
+        uniqueDemandIds.add(a.demandId);
+      }
+    }
+  }
+  const demandsInfo: Record<number, DemandRow> = {};
+  await Promise.all(
+    Array.from(uniqueDemandIds).map(async (id) => {
+      const d = await db.getDemandById(id);
+      if (d) {
+        const client = await db.getClientById(d.clientId);
+        demandsInfo[id] = {
+          id: d.id,
+          status: d.status,
+          clientId: d.clientId,
+          clientName: client?.name ?? "未知客戶",
+        };
+      }
+    })
   );
 
-  // 工作種類比對：取得所有員工的工作種類 Map
+  // ── 將 DB 資料序列化為可傳遞給 Worker Thread 的格式 ──────────────────
+
+  const workerRows: WorkerRow[] = allWorkers.map((w) => {
+    // 計算本週工時
+    const weekAssignments = weekAssignmentsMap.get(w.id) ?? [];
+    const weekMinutes = weekAssignments
+      .filter((a) => a.status !== "cancelled")
+      .reduce((sum, a) => sum + (a.scheduledHours ?? 0), 0);
+    const weekHours = weekMinutes / 60;
+
+    // 計算近 7 天排班次數
+    const last7DaysAssignments = last7DaysMap.get(w.id) ?? [];
+    const last7DaysCount = last7DaysAssignments.filter((a) => a.status !== "cancelled").length;
+
+    return {
+      id: w.id,
+      name: w.name,
+      status: w.status,
+      hasWorkPermit: w.hasWorkPermit === 1,
+      workPermitExpiryDate: w.workPermitExpiryDate ? new Date(w.workPermitExpiryDate).getTime() : null,
+      weekHours,
+      last7DaysCount,
+    };
+  });
+
+  const dayAssignmentsByWorker: Record<number, AssignmentRow[]> = {};
+  for (const [workerId, assignments] of Array.from(dayAssignmentsMap.entries())) {
+    dayAssignmentsByWorker[workerId] = assignments.map((a: { id: number; demandId: number; workerId: number; scheduledStart: Date; scheduledEnd: Date; status: string; scheduledHours: number | null }) => ({
+      id: a.id,
+      demandId: a.demandId,
+      workerId: a.workerId,
+      scheduledStart: new Date(a.scheduledStart).getTime(),
+      scheduledEnd: new Date(a.scheduledEnd).getTime(),
+      status: a.status,
+      scheduledHours: a.scheduledHours ?? null,
+    }));
+  }
+
+  const availabilityByWorker: Record<number, AvailabilityRow | null> = {};
+  for (const w of allWorkers) {
+    const avail = availabilityMap.get(w.id) ?? null;
+    availabilityByWorker[w.id] = avail
+      ? {
+          workerId: avail.workerId,
+          confirmedAt: avail.confirmedAt ? new Date(avail.confirmedAt).getTime() : null,
+          timeBlocks: avail.timeBlocks,
+        }
+      : null;
+  }
+
+  // ── 方案二：將 CPU 密集計算卸載給 Worker Thread ──────────────────────────
+
+  const workerInput: FeasibilityInput = {
+    demandId,
+    demandDate: demandDateTs,
+    startTime: demand.startTime,
+    endTime: demand.endTime,
+    requiredWorkers: demand.requiredWorkers,
+    workers: workerRows,
+    dayAssignmentsByWorker,
+    availabilityByWorker,
+    demandsInfo,
+  };
+
+  const feasibility = await runFeasibilityWorker(workerInput);
+
+  // ── 工作種類比對：取得所有員工的工作種類 Map ──────────────────────────────
   let workerCategoryMap: Record<number, number[]> = {};
   let demandCategory = null;
   if (demand.jobCategoryId) {
@@ -405,7 +520,7 @@ async function computeMatchingWorkers(demandId: number) {
   }
 
   // 為每個員工附加工作種類比對結果
-  const enrichWorker = (worker: { id: number; [key: string]: unknown }) => {
+  const enrichWorker = (worker: WorkerRow & Record<string, unknown>) => {
     const categoryIds = workerCategoryMap[worker.id] ?? [];
     const categoryMatch = demand.jobCategoryId
       ? categoryIds.includes(demand.jobCategoryId) ? "matched" : "mismatch"
@@ -415,19 +530,18 @@ async function computeMatchingWorkers(demandId: number) {
 
   return {
     demand: { ...demand, jobCategory: demandCategory },
-    availableWorkers: feasibility.availableWorkers.map(enrichWorker),
-    schedulableWorkers: feasibility.schedulableWorkers.map((w: { worker: { id: number; [key: string]: unknown }; [key: string]: unknown }) => ({
+    availableWorkers: feasibility.availableWorkers.map((w) => enrichWorker(w as WorkerRow & Record<string, unknown>)),
+    schedulableWorkers: feasibility.schedulableWorkers.map((w) => ({
       ...w,
-      worker: enrichWorker(w.worker),
+      worker: enrichWorker(w.worker as WorkerRow & Record<string, unknown>),
     })),
-    conflictWorkers: feasibility.conflictWorkers.map((w: { worker: { id: number; [key: string]: unknown }; [key: string]: unknown }) => ({
+    conflictWorkers: feasibility.conflictWorkers.map((w) => ({
       ...w,
-      worker: enrichWorker(w.worker),
+      worker: enrichWorker(w.worker as WorkerRow & Record<string, unknown>),
     })),
     shortage: feasibility.shortage,
     assignedCount: (demand.requiredWorkers - feasibility.shortage),
   };
 }
-
 // Re-export for use in routers.ts (assignments.create invalidation)
 export { invalidateDispatchCache };
