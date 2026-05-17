@@ -733,11 +733,31 @@ export default function Demands() {
                     onClick={() => setLocation(`/demands/${demand.id}`)}
                   >
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1.5">
+                      <div className="flex items-center gap-2 mb-1.5 flex-wrap">
                         <span className="font-medium text-sm">{demand.client?.name || "未知客戶"}</span>
                         <Badge variant="outline" className={`text-xs ${sc.className}`}>
                           {sc.label}
                         </Badge>
+                        {demand.jobCategoryId && (() => {
+                          const jc = (allJobCategories as any[]).find((c: any) => c.id === demand.jobCategoryId);
+                          if (!jc) return null;
+                          return (
+                            <span
+                              className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full font-medium border"
+                              style={{
+                                backgroundColor: `${jc.color}15`,
+                                borderColor: `${jc.color}40`,
+                                color: jc.color,
+                              }}
+                            >
+                              <span
+                                className="inline-block w-2 h-2 rounded-full flex-shrink-0"
+                                style={{ backgroundColor: jc.color }}
+                              />
+                              {jc.name}
+                            </span>
+                          );
+                        })()}
                       </div>
                       <div className="flex items-center gap-3 text-xs text-muted-foreground flex-wrap">
                         <span className="flex items-center gap-1">
@@ -759,23 +779,7 @@ export default function Demands() {
                             建立於 {new Date(demand.createdAt).toLocaleString("zh-TW", { month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit" })}
                           </span>
                         )}
-                        {/* 工作種類 Badge */}
-                        {demand.jobCategoryId && (() => {
-                          const jc = (allJobCategories as any[]).find((c: any) => c.id === demand.jobCategoryId);
-                          if (!jc) return null;
-                          return (
-                            <span
-                              className="text-[10px] px-1.5 py-0.5 rounded border font-medium"
-                              style={{
-                                backgroundColor: `${jc.color}18`,
-                                borderColor: `${jc.color}50`,
-                                color: jc.color,
-                              }}
-                            >
-                              {jc.name}
-                            </span>
-                          );
-                        })()}
+
                         {(demand.createdByRole === "admin" || demand.createdByRole === "user") && demand.createdByName && (
                           <span className="flex items-center gap-1 text-[10px] font-medium text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 rounded px-1.5 py-0.5">
                             <UserCog className="h-3 w-3" />
