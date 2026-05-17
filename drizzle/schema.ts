@@ -113,7 +113,8 @@ export const demands = mysqlTable("demands", {
   endTime: varchar("endTime", { length: 5 }).notNull(), // HH:mm
   requiredWorkers: int("requiredWorkers").notNull(),
   breakHours: int("breakHours").default(0).notNull(), // 休息時間（以分鐘為單位，預設 0）
-  demandTypeId: int("demandTypeId").references(() => demandTypes.id), // 需求類型 ID（可為 null）
+  demandTypeId: int("demandTypeId").references(() => demandTypes.id), // 需求類型 ID（保留相容，已廢棄）
+  jobCategoryId: int("jobCategoryId").references(() => jobCategories.id), // 工作種類 ID（新欄位）
   selectedOptions: text("selectedOptions"), // 已勾選的選項 ID（JSON 陣列，例如："[1,3,5]"）
   location: varchar("location", { length: 200 }),
   note: text("note"),
@@ -252,3 +253,19 @@ export const workerJobCategories = mysqlTable("workerJobCategories", {
 
 export type WorkerJobCategory = typeof workerJobCategories.$inferSelect;
 export type InsertWorkerJobCategory = typeof workerJobCategories.$inferInsert;
+
+/**
+ * JobCategoryOptions (工作種類選項) - 每個工作種類的可選項目清單
+ * 例如：「房務」種類下可有「整理床鋪」「清潔浴室」「補充備品」等選項
+ */
+export const jobCategoryOptions = mysqlTable("jobCategoryOptions", {
+  id: int("id").autoincrement().primaryKey(),
+  jobCategoryId: int("jobCategoryId").notNull().references(() => jobCategories.id),
+  content: text("content").notNull(), // 選項內容
+  sortOrder: int("sortOrder").default(0).notNull(), // 排序順序
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type JobCategoryOption = typeof jobCategoryOptions.$inferSelect;
+export type InsertJobCategoryOption = typeof jobCategoryOptions.$inferInsert;

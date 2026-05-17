@@ -40,7 +40,7 @@ export function CreateDemand() {
   const isStaffRole = user?.role === "admin" || user?.role === "user";
 
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [selectedDemandTypeId, setSelectedDemandTypeId] = useState<number | null>(null);
+  const [selectedJobCategoryId, setSelectedJobCategoryId] = useState<number | null>(null);
   const [selectedOptionIds, setSelectedOptionIds] = useState<number[]>([]);
   
   // Admin 代建：選擇的客戶 ID
@@ -52,8 +52,8 @@ export function CreateDemand() {
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [pendingFormData, setPendingFormData] = useState<any>(null);
 
-  // 取得需求類型列表
-  const { data: demandTypes } = trpc.demandTypes.list.useQuery();
+  // 取得工作種類列表
+  const { data: jobCategories = [] } = trpc.jobCategories.list.useQuery();
 
   // Admin / User 都需要取得客戶列表
   const { data: clients } = trpc.clients.list.useQuery(
@@ -141,7 +141,7 @@ export function CreateDemand() {
         endTime,
         requiredWorkers,
         location: location || undefined,
-        demandTypeId: selectedDemandTypeId || undefined,
+        jobCategoryId: selectedJobCategoryId || undefined,
         selectedOptions: selectedOptionsJson,
         note: note || undefined,
         ...(isStaffRole && selectedClientId ? { clientId: selectedClientId } : {}),
@@ -165,7 +165,7 @@ export function CreateDemand() {
         endTime,
         requiredWorkers,
         location: location || undefined,
-        demandTypeId: selectedDemandTypeId || undefined,
+        jobCategoryId: selectedJobCategoryId || undefined,
         selectedOptions: selectedOptionsJson,
         note: note || undefined,
         ...(isStaffRole && selectedClientId ? { clientId: selectedClientId } : {}),
@@ -344,41 +344,41 @@ export function CreateDemand() {
                 />
               </div>
 
-              {/* 需求類型 */}
+              {/* 工作種類 */}
               <div className="space-y-2">
-                <Label htmlFor="demandTypeId">需求類型</Label>
+                <Label htmlFor="jobCategoryId">工作種類</Label>
                 <Select 
-                  name="demandTypeId"
+                  name="jobCategoryId"
                   onValueChange={(value) => {
-                    const typeId = parseInt(value);
-                    setSelectedDemandTypeId(typeId);
+                    const catId = parseInt(value);
+                    setSelectedJobCategoryId(catId);
                     setSelectedOptionIds([]); // 清空已選取的選項
                   }}
                 >
                   <SelectTrigger className="w-full">
-                    <SelectValue placeholder="請選擇需求類型" />
+                    <SelectValue placeholder="請選擇工作種類（可選）" />
                   </SelectTrigger>
                   <SelectContent>
-                    {demandTypes?.map((type) => (
-                      <SelectItem key={type.id} value={type.id.toString()}>
-                        {type.name}
+                    {(jobCategories as any[]).map((cat: any) => (
+                      <SelectItem key={cat.id} value={cat.id.toString()}>
+                        {cat.name}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
 
-              {/* 需求類型選項 */}
-              {selectedDemandTypeId && (() => {
-                const selectedType = demandTypes?.find(t => t.id === selectedDemandTypeId);
-                if (!selectedType || !selectedType.options || selectedType.options.length === 0) {
+              {/* 工作種類選項 */}
+              {selectedJobCategoryId && (() => {
+                const selectedCat = (jobCategories as any[]).find((c: any) => c.id === selectedJobCategoryId);
+                if (!selectedCat || !selectedCat.options || selectedCat.options.length === 0) {
                   return null;
                 }
                 return (
                   <div className="space-y-3">
                     <Label>選項清單</Label>
                     <div className="space-y-2 rounded-lg border p-4">
-                      {selectedType.options.map((option) => (
+                      {selectedCat.options.map((option: any) => (
                         <div key={option.id} className="flex items-start gap-3">
                           <Checkbox
                             id={`option-${option.id}`}

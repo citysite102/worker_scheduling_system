@@ -29,7 +29,7 @@ export default function ClientDetail() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isDemandListDialogOpen, setIsDemandListDialogOpen] = useState(false);
   const [selectedDateDemands, setSelectedDateDemands] = useState<any[]>([]);
-  const [selectedDemandTypeId, setSelectedDemandTypeId] = useState<number | undefined>(undefined);
+  const [selectedJobCategoryId, setSelectedJobCategoryId] = useState<number | undefined>(undefined);
   const [selectedOptions, setSelectedOptions] = useState<number[]>([]);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editBillingType, setEditBillingType] = useState<string>("hourly");
@@ -44,7 +44,7 @@ export default function ClientDetail() {
   const [deletingUserId, setDeletingUserId] = useState<number | null>(null);
 
   const { data: clientDetail, isLoading: isLoadingClient } = trpc.clients.getDetailById.useQuery({ id: clientId });
-  const { data: demandTypes = [] } = trpc.demandTypes.list.useQuery();
+  const { data: jobCategories = [] } = trpc.jobCategories.list.useQuery();
   const { data: users = [], isLoading: isLoadingUsers, refetch: refetchUsers } = trpc.clients.listUsers.useQuery({ clientId });
   
   const { data: monthDemands, isLoading: isLoadingDemands, refetch } = trpc.demands.listByClientAndMonth.useQuery({
@@ -57,7 +57,7 @@ export default function ClientDetail() {
     onSuccess: () => {
       toast.success("需求單已建立");
       setIsCreateDialogOpen(false);
-      setSelectedDemandTypeId(undefined);
+      setSelectedJobCategoryId(undefined);
       setSelectedOptions([]);
       refetch();
     },
@@ -245,7 +245,7 @@ export default function ClientDetail() {
       endTime,
       requiredWorkers,
       breakHours,
-      demandTypeId: selectedDemandTypeId || undefined,
+      jobCategoryId: selectedJobCategoryId || undefined,
       selectedOptions: selectedOptions.length > 0 ? JSON.stringify(selectedOptions) : undefined,
       location: location || undefined,
       note: note || undefined,
@@ -346,7 +346,7 @@ export default function ClientDetail() {
   const cooperationDays = Math.floor((Date.now() - new Date(clientDetail.createdAt).getTime()) / (1000 * 60 * 60 * 24));
 
   // 找出選中的需求類型與選項
-  const selectedDemandType = demandTypes.find(t => t.id === selectedDemandTypeId);
+  const selectedJobCategory = (jobCategories as any[]).find((c: any) => c.id === selectedJobCategoryId);
 
   return (
     <div className="container mx-auto py-6 space-y-6">
@@ -719,32 +719,32 @@ export default function ClientDetail() {
                 </Select>
               </div>
               <div className="col-span-2 space-y-2">
-              <Label htmlFor="demandTypeId">需求類別</Label>
+              <Label htmlFor="jobCategoryId">工作種類</Label>
               <Select 
-                value={selectedDemandTypeId?.toString() || "none"} 
+                value={selectedJobCategoryId?.toString() || "none"} 
                 onValueChange={(value) => {
-                  setSelectedDemandTypeId(value === "none" ? undefined : parseInt(value));
+                  setSelectedJobCategoryId(value === "none" ? undefined : parseInt(value));
                   setSelectedOptions([]);
                 }}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="選擇需求類別（可選）" />
+                  <SelectValue placeholder="選擇工作種類（可選）" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="none">無（不選擇）</SelectItem>
-                  {demandTypes.map((type) => (
-                    <SelectItem key={type.id} value={type.id.toString()}>
-                      {type.name}
+                  {(jobCategories as any[]).map((cat: any) => (
+                    <SelectItem key={cat.id} value={cat.id.toString()}>
+                      {cat.name}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
               </div>
-              {selectedDemandType && selectedDemandType.options && selectedDemandType.options.length > 0 && (
+              {selectedJobCategory && selectedJobCategory.options && selectedJobCategory.options.length > 0 && (
                 <div className="col-span-2 p-4 bg-muted/30 rounded-lg space-y-2">
               <Label>選擇需求項目</Label>
                 <div className="space-y-2">
-                  {selectedDemandType.options.map((option: any) => (
+                  {selectedJobCategory.options.map((option: any) => (
                     <div key={option.id} className="flex items-start gap-2">
                       <Checkbox
                         id={`option-${option.id}`}
@@ -783,7 +783,7 @@ export default function ClientDetail() {
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => {
                 setIsCreateDialogOpen(false);
-                setSelectedDemandTypeId(undefined);
+                setSelectedJobCategoryId(undefined);
                 setSelectedOptions([]);
               }}>
                 取消

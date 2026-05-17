@@ -1,0 +1,26 @@
+{
+  "query": "SELECT id, name, contactName, contactEmail, clientCode, status FROM clients ORDER BY id;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2iEKifVQ9gKtEas.9cbf5414b428 --database CMgr35KntT8tLtgpfJPejw --execute SELECT id, name, contactName, contactEmail, clientCode, status FROM clients ORDER BY id;",
+  "rows": [
+    {
+      "id": "630001",
+      "name": "米窩",
+      "contactName": "NULL",
+      "contactEmail": "NULL",
+      "clientCode": "CLI-20260226-001",
+      "status": "active"
+    },
+    {
+      "id": "720001",
+      "name": "良新國際洋酒",
+      "contactName": "NULL",
+      "contactEmail": "NULL",
+      "clientCode": "CLI-20260307-001",
+      "status": "active"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\tcontactName\tcontactEmail\tclientCode\tstatus\n630001\t米窩\tNULL\tNULL\tCLI-20260226-001\tactive\n720001\t良新國際洋酒\tNULL\tNULL\tCLI-20260307-001\tactive\n",
+  "stderr": "",
+  "execution_time_ms": 1956
+}

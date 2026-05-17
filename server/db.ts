@@ -394,6 +394,7 @@ export async function getAllDemands(statusFilter?: string, dateFilter?: Date, cl
       status: demands.status,
       note: demands.note,
       demandTypeId: demands.demandTypeId,
+      jobCategoryId: demands.jobCategoryId,
       selectedOptions: demands.selectedOptions,
       createdAt: demands.createdAt,
       updatedAt: demands.updatedAt,
@@ -464,6 +465,7 @@ export async function getAllDemands(statusFilter?: string, dateFilter?: Date, cl
     status: row.status,
     note: row.note,
     demandTypeId: row.demandTypeId,
+    jobCategoryId: row.jobCategoryId,
     selectedOptions: row.selectedOptions,
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
@@ -984,7 +986,7 @@ export async function deletePayrollSettlement(workerId: number, year: number, mo
 
 
 // ─── Job Categories (工作種類) ────────────────────────────────────────────────
-import { jobCategories, workerJobCategories, InsertJobCategory } from "../drizzle/schema";
+import { jobCategories, workerJobCategories, jobCategoryOptions, InsertJobCategory, InsertJobCategoryOption } from "../drizzle/schema";
 
 /**
  * 取得所有工作種類
@@ -1097,4 +1099,74 @@ export async function getWorkerCategoryMap(): Promise<Record<number, number[]>> 
     map[row.workerId].push(row.jobCategoryId);
   }
   return map;
+}
+
+// ─── Job Category Options (工作種類選項) ──────────────────────────────────────
+
+/**
+ * 取得指定工作種類的所有選項（含排序）
+ */
+export async function getJobCategoryOptions(jobCategoryId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return await db
+    .select()
+    .from(jobCategoryOptions)
+    .where(eq(jobCategoryOptions.jobCategoryId, jobCategoryId))
+    .orderBy(jobCategoryOptions.sortOrder);
+}
+
+/**
+ * 取得所有工作種類（含選項清單）
+ */
+export async function getAllJobCategoriesWithOptions() {
+  const db = await getDb();
+  if (!db) return [];
+  const cats = await db.select().from(jobCategories).orderBy(jobCategories.id);
+  const opts = await db.select().from(jobCategoryOptions).orderBy(jobCategoryOptions.sortOrder);
+  return cats.map(cat => ({
+    ...cat,
+    options: opts.filter(o => o.jobCategoryId === cat.id),
+  }));
+}
+
+/**
+ * 建立工作種類選項
+ */
+export async function createJobCategoryOption(data: InsertJobCategoryOption) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const [result] = await db.insert(jobCategoryOptions).values(data);
+  return result.insertId as number;
+}
+
+/**
+ * 更新工作種類選項
+ */
+export async function updateJobCategoryOption(id: number, data: Partial<InsertJobCategoryOption>) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.update(jobCategoryOptions).set(data).where(eq(jobCategoryOptions.id, id));
+}
+
+/**
+ * 刪除工作種類選項
+ */
+export async function deleteJobCategoryOption(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.delete(jobCategoryOptions).where(eq(jobCategoryOptions.id, id));
+}
+
+/**
+ * 批次更新工作種類選項排序
+ */
+export async function updateJobCategoryOptionsOrder(updates: { id: number; sortOrder: number }[]) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  for (const update of updates) {
+    await db.update(jobCategoryOptions)
+      .set({ sortOrder: update.sortOrder })
+      .where(eq(jobCategoryOptions.id, update.id));
+  }
 }

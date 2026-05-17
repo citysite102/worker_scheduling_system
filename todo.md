@@ -2147,3 +2147,21 @@
 - [x] DemandDetail 員工列表加入工作種類符合標示 Badge
 - [x] 新增 jobCategories.test.ts（15 個測試，全數通過）
 - [x] 全部 238 個測試通過，TypeScript 零錯誤
+
+## 使用者新增需求（2026/05/17 - 需求類型管理合併至工作種類管理）
+
+### 需求類型管理合併
+- [x] 分析影響範圍（demandTypes、jobCategories、demands 表及相關頁面）
+- [x] Schema 遷移：在 jobCategories 加入 options 關聯表（jobCategoryOptions）
+- [x] Schema 遷移：在 demands 表新增 jobCategoryId 欄位（外鍵）
+- [x] 後端 jobCategories API 加入選項管理（新增/編輯/刪除/排序選項）
+- [x] 後端 demands API 支援 jobCategoryId 和 selectedOptions
+- [x] 更新 JobCategories.tsx：加入選項清單管理 UI（可展開/收合）
+- [x] 更新 ClientDetail.tsx：demandTypeId → jobCategoryId
+- [x] 更新 Demands.tsx：demandType → jobCategory
+- [x] 更新 DemandDetail.tsx（後台）：demandType → jobCategory
+- [x] 更新 client-portal/CreateDemand.tsx：demandType → jobCategory
+- [x] 更新 client-portal/DemandDetail.tsx：demandType → jobCategory
+- [x] 移除側邊欄「需求類型管理」入口
+- [x] 移除 App.tsx 中 /demand-types 路由與 DemandTypes import
+- [x] TypeScript 全程無錯誤，所有 238 個測試通過

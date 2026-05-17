@@ -18,7 +18,6 @@ import DashboardLayout from "./components/DashboardLayout";
 import AdminSettings from "./pages/AdminSettings";
 import WorkerDetail from "./pages/WorkerDetail";
 import ClientDetail from "./pages/ClientDetail";
-import DemandTypes from "./pages/DemandTypes";
 import JobCategories from "./pages/JobCategories";
 import { ClientDashboard } from "./pages/client-portal/ClientDashboard";
 import { ClientDemands } from "./pages/client-portal/ClientDemands";
@@ -45,7 +44,6 @@ function Router() {
       <Route path="/demands/:id" component={() => <DashboardLayout><DemandDetail /></DashboardLayout>} />
       <Route path="/actual-time" component={() => <DashboardLayout><ActualTime /></DashboardLayout>} />
       <Route path="/reports" component={() => <DashboardLayout><Reports /></DashboardLayout>} />
-      <Route path="/demand-types" component={() => <DashboardLayout><DemandTypes /></DashboardLayout>} />
       <Route path="/job-categories" component={() => <DashboardLayout><JobCategories /></DashboardLayout>} />
       <Route path="/admin" component={() => <DashboardLayout><AdminSettings /></DashboardLayout>} />
       

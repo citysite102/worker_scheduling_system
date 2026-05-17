@@ -1222,7 +1222,8 @@ export const appRouter = router({
         endTime: z.string().regex(/^\d{2}:\d{2}$/, "時間格式應為 HH:mm"),
         requiredWorkers: z.number().min(1, "需求人數至少為 1"),
         breakHours: z.number().min(0, "休息時間不可為負數").optional(), // 以小時為單位，如 0.5, 1, 1.5
-        demandTypeId: z.number().optional(), // 需求類型 ID
+        demandTypeId: z.number().optional(), // 需求類型 ID（舊欄位，保留相容）
+        jobCategoryId: z.number().optional(), // 工作種類 ID（新欄位）
         selectedOptions: z.string().optional(), // 已勾選的選項 ID（JSON 格式）
         location: z.string().optional(),
         note: z.string().optional(),
@@ -1267,6 +1268,7 @@ export const appRouter = router({
         requiredWorkers: z.number().min(1, "需求人數至少為 1"),
         breakHours: z.number().min(0, "休息時間不可為負數").optional(),
         demandTypeId: z.number().optional(),
+        jobCategoryId: z.number().optional(), // 工作種類 ID（新欄位）
         selectedOptions: z.string().optional(),
         location: z.string().optional(),
         note: z.string().optional(),
@@ -1328,7 +1330,8 @@ export const appRouter = router({
         endTime: z.string().regex(/^\d{2}:\d{2}$/, "時間格式應為 HH:mm").optional(),
         requiredWorkers: z.number().min(1, "需求人數至少為 1").optional(),
         breakHours: z.number().min(0, "休息時間不可為負數").optional(), // 以小時為單位
-        demandTypeId: z.number().optional(), // 需求類型 ID
+        demandTypeId: z.number().optional(), // 需求類型 ID（舊欄位，保留相容）
+        jobCategoryId: z.number().optional(), // 工作種類 ID（新欄位）
         selectedOptions: z.string().optional(), // 已勾選的選項 ID（JSON 格式）
         location: z.string().optional(),
         note: z.string().optional(),
@@ -2765,8 +2768,13 @@ export const appRouter = router({
 
   // ─── 工作種類管理 ──────────────────────────────────────────────────────────
   jobCategories: router({
-    // 取得所有工作種類
+    // 取得所有工作種類（含選項清單）
     list: publicProcedure.query(async () => {
+      return db.getAllJobCategoriesWithOptions();
+    }),
+
+    // 取得所有工作種類（不含選項，輕量版，用於下拉選單）
+    listSimple: publicProcedure.query(async () => {
       return db.getAllJobCategories();
     }),
 
@@ -2837,6 +2845,64 @@ export const appRouter = router({
     getWorkerCategoryMap: publicProcedure
       .query(async () => {
         return db.getWorkerCategoryMap();
+      }),
+
+    // ── 工作種類選項管理 ──
+    // 取得指定工作種類的選項清單
+    getOptions: publicProcedure
+      .input(z.object({ jobCategoryId: z.number() }))
+      .query(async ({ input }) => {
+        return db.getJobCategoryOptions(input.jobCategoryId);
+      }),
+
+    // 新增選項
+    createOption: publicProcedure
+      .input(z.object({
+        jobCategoryId: z.number(),
+        content: z.string().min(1, "選項內容不可為空"),
+        sortOrder: z.number().default(0),
+      }))
+      .mutation(async ({ input }) => {
+        const id = await db.createJobCategoryOption({
+          jobCategoryId: input.jobCategoryId,
+          content: input.content,
+          sortOrder: input.sortOrder,
+        });
+        return { id };
+      }),
+
+    // 更新選項
+    updateOption: publicProcedure
+      .input(z.object({
+        id: z.number(),
+        content: z.string().min(1).optional(),
+        sortOrder: z.number().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const { id, ...data } = input;
+        await db.updateJobCategoryOption(id, data);
+        return { success: true };
+      }),
+
+    // 刪除選項
+    deleteOption: publicProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input }) => {
+        await db.deleteJobCategoryOption(input.id);
+        return { success: true };
+      }),
+
+    // 批次更新選項排序
+    updateOptionsOrder: publicProcedure
+      .input(z.object({
+        updates: z.array(z.object({
+          id: z.number(),
+          sortOrder: z.number(),
+        })),
+      }))
+      .mutation(async ({ input }) => {
+        await db.updateJobCategoryOptionsOrder(input.updates);
+        return { success: true };
       }),
   }),
 });

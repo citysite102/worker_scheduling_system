@@ -47,7 +47,7 @@ export default function Demands() {
   const pageSize = 20;
   const [selectedClientId, setSelectedClientId] = useState<number | undefined>(undefined);
   const [clientComboboxOpen, setClientComboboxOpen] = useState(false);
-  const [selectedDemandTypeId, setSelectedDemandTypeId] = useState<number | undefined>(undefined);
+  const [selectedJobCategoryId, setSelectedJobCategoryId] = useState<number | undefined>(undefined);
   const [selectedOptions, setSelectedOptions] = useState<number[]>([]);
   
   // 複製週排班狀態
@@ -118,7 +118,6 @@ export default function Demands() {
   const pagination = demandsData?.pagination;
 
   const { data: clients } = trpc.clients.list.useQuery({});
-  const { data: demandTypes = [] } = trpc.demandTypes.list.useQuery();
   const { data: allJobCategories = [] } = trpc.jobCategories.list.useQuery();
 
   const createMutation = trpc.demands.create.useMutation({
@@ -229,7 +228,7 @@ export default function Demands() {
       endTime,
       requiredWorkers: parseInt(formData.get("requiredWorkers") as string),
       breakHours: parseFloat(formData.get("breakHours") as string) || 0,
-      demandTypeId: selectedDemandTypeId || undefined,
+      jobCategoryId: selectedJobCategoryId || undefined,
       selectedOptions: selectedOptions.length > 0 ? JSON.stringify(selectedOptions) : undefined,
       location: (formData.get("location") as string) || undefined,
       note: (formData.get("note") as string) || undefined,
@@ -308,7 +307,7 @@ export default function Demands() {
           if (!open) {
             setEditingDemand(null);
             setSelectedClientId(undefined);
-            setSelectedDemandTypeId(undefined);
+            setSelectedJobCategoryId(undefined);
             setSelectedOptions([]);
           }
         }}>
@@ -329,7 +328,7 @@ export default function Demands() {
             <Button onClick={() => {
               setEditingDemand(null);
               setSelectedClientId(undefined);
-              setSelectedDemandTypeId(undefined);
+              setSelectedJobCategoryId(undefined);
               setSelectedOptions([]);
               setIsDialogOpen(true);
             }} size="sm">
@@ -484,35 +483,35 @@ export default function Demands() {
                   />
                 </div>
                 <div className="col-span-2 space-y-2">
-              <Label htmlFor="demandTypeId">需求類別</Label>
+              <Label htmlFor="jobCategoryId">工作種類</Label>
                   <Select 
-                    value={selectedDemandTypeId?.toString() || "none"} 
+                    value={selectedJobCategoryId?.toString() || "none"} 
                     onValueChange={(value) => {
-                      setSelectedDemandTypeId(value === "none" ? undefined : parseInt(value));
+                      setSelectedJobCategoryId(value === "none" ? undefined : parseInt(value));
                       setSelectedOptions([]);
                     }}
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="選擇需求類別（可選）" />
+                      <SelectValue placeholder="選擇工作種類（可選）" />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="none">無（不選擇）</SelectItem>
-                      {demandTypes.map((type) => (
-                        <SelectItem key={type.id} value={type.id.toString()}>
-                          {type.name}
+                      {(allJobCategories as any[]).map((cat: any) => (
+                        <SelectItem key={cat.id} value={cat.id.toString()}>
+                          {cat.name}
                         </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                 </div>
-                {selectedDemandTypeId && (() => {
-                  const selectedType = demandTypes.find(t => t.id === selectedDemandTypeId);
-                  if (selectedType && selectedType.options && selectedType.options.length > 0) {
+                {selectedJobCategoryId && (() => {
+                  const selectedCat = (allJobCategories as any[]).find((c: any) => c.id === selectedJobCategoryId);
+                  if (selectedCat && selectedCat.options && selectedCat.options.length > 0) {
                     return (
                       <div className="col-span-2 p-4 bg-muted/30 rounded-lg space-y-2">
               <Label className="text-sm font-medium">選擇需要的項目</Label>
                         <div className="space-y-2">
-                          {selectedType.options.map((option) => (
+                          {selectedCat.options.map((option: any) => (
                             <label key={option.id} className="flex items-start gap-2 cursor-pointer">
                               <input
                                 type="checkbox"
@@ -711,12 +710,10 @@ export default function Demands() {
               filteredDemands = filteredDemands.filter((demand: any) => demand.clientId === clientFilter);
             }
 
-            // 根據工作種類篩選（透過需求類型的 requiredJobCategoryId）
+            // 根據工作種類篩選（直接比對 demand.jobCategoryId）
             if (filterJobCategoryId) {
               filteredDemands = filteredDemands.filter((demand: any) => {
-                if (!demand.demandTypeId) return false;
-                const dt = demandTypes.find((d: any) => d.id === demand.demandTypeId);
-                return dt?.requiredJobCategoryId === filterJobCategoryId;
+                return demand.jobCategoryId === filterJobCategoryId;
               });
             }
 
@@ -762,30 +759,20 @@ export default function Demands() {
                             建立於 {new Date(demand.createdAt).toLocaleString("zh-TW", { month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit" })}
                           </span>
                         )}
-                        {/* 需求類型 + 工作種類 Badge */}
-                        {demand.demandTypeId && (() => {
-                          const dt = demandTypes.find((d: any) => d.id === demand.demandTypeId);
-                          if (!dt) return null;
-                          const jc = dt.requiredJobCategoryId
-                            ? allJobCategories.find((c: any) => c.id === dt.requiredJobCategoryId)
-                            : null;
+                        {/* 工作種類 Badge */}
+                        {demand.jobCategoryId && (() => {
+                          const jc = (allJobCategories as any[]).find((c: any) => c.id === demand.jobCategoryId);
+                          if (!jc) return null;
                           return (
-                            <span className="flex items-center gap-1">
-                              <span className="text-[10px] bg-muted px-1.5 py-0.5 rounded border border-border/50 text-muted-foreground">
-                                {dt.name}
-                              </span>
-                              {jc && (
-                                <span
-                                  className="text-[10px] px-1.5 py-0.5 rounded border font-medium"
-                                  style={{
-                                    backgroundColor: `${jc.color}18`,
-                                    borderColor: `${jc.color}50`,
-                                    color: jc.color,
-                                  }}
-                                >
-                                  {jc.name}
-                                </span>
-                              )}
+                            <span
+                              className="text-[10px] px-1.5 py-0.5 rounded border font-medium"
+                              style={{
+                                backgroundColor: `${jc.color}18`,
+                                borderColor: `${jc.color}50`,
+                                color: jc.color,
+                              }}
+                            >
+                              {jc.name}
                             </span>
                           );
                         })()}
@@ -817,7 +804,7 @@ export default function Demands() {
                           setEditingDemand(demand);
                           // 確保 clientId 為 number | undefined（不傳入 null）
                           setSelectedClientId(demand.clientId != null ? demand.clientId : undefined);
-                          setSelectedDemandTypeId(demand.demandTypeId || undefined);
+                          setSelectedJobCategoryId(demand.jobCategoryId || undefined);
                           setSelectedOptions(demand.selectedOptions ? JSON.parse(demand.selectedOptions) : []);
                           setIsDialogOpen(true);
                         }}

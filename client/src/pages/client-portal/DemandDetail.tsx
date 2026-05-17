@@ -26,7 +26,7 @@ export function DemandDetail() {
   const demandId = params?.id ? parseInt(params.id) : null;
 
   const [isEditing, setIsEditing] = useState(false);
-  const [selectedDemandTypeId, setSelectedDemandTypeId] = useState<number | null>(null);
+  const [selectedJobCategoryId, setSelectedJobCategoryId] = useState<number | null>(null);
   const [selectedOptionIds, setSelectedOptionIds] = useState<number[]>([]);
 
   // 查詢需求單資料
@@ -35,8 +35,8 @@ export function DemandDetail() {
     { enabled: !!demandId }
   );
 
-  // 取得需求類型列表
-  const { data: demandTypes } = trpc.demandTypes.list.useQuery();
+  // 取得工作種類列表
+  const { data: jobCategories = [] } = trpc.jobCategories.list.useQuery();
 
   // 更新需求單
   const updateMutation = trpc.demands.update.useMutation({
@@ -53,7 +53,7 @@ export function DemandDetail() {
   // 初始化選取的需求類型和選項
   useEffect(() => {
     if (demand) {
-      setSelectedDemandTypeId(demand.demandTypeId || null);
+      setSelectedJobCategoryId(demand.jobCategoryId || null);
       if (demand.selectedOptions) {
         try {
           const options = JSON.parse(demand.selectedOptions as unknown as string) as any;
@@ -100,7 +100,7 @@ export function DemandDetail() {
         endTime,
         requiredWorkers,
         location: location || undefined,
-        demandTypeId: selectedDemandTypeId || undefined,
+        jobCategoryId: selectedJobCategoryId || undefined,
         selectedOptions: selectedOptionsJson,
         note: note || undefined,
       });
@@ -242,42 +242,42 @@ export function DemandDetail() {
                   />
                 </div>
 
-                {/* 需求類型 */}
+                {/* 工作種類 */}
                 <div className="space-y-2">
-                  <Label htmlFor="demandTypeId">需求類型</Label>
+                  <Label htmlFor="jobCategoryId">工作種類</Label>
                   <Select 
-                    name="demandTypeId"
-                    value={selectedDemandTypeId?.toString() || ""}
+                    name="jobCategoryId"
+                    value={selectedJobCategoryId?.toString() || ""}
                     onValueChange={(value) => {
-                      const typeId = value ? parseInt(value) : null;
-                      setSelectedDemandTypeId(typeId);
+                      const catId = value ? parseInt(value) : null;
+                      setSelectedJobCategoryId(catId);
                       setSelectedOptionIds([]); // 清空已選取的選項
                     }}
                   >
                     <SelectTrigger className="w-full">
-                      <SelectValue placeholder="請選擇需求類型" />
+                      <SelectValue placeholder="請選擇工作種類（可選）" />
                     </SelectTrigger>
                     <SelectContent>
-                      {demandTypes?.map((type) => (
-                        <SelectItem key={type.id} value={type.id.toString()}>
-                          {type.name}
+                      {(jobCategories as any[]).map((cat: any) => (
+                        <SelectItem key={cat.id} value={cat.id.toString()}>
+                          {cat.name}
                         </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                 </div>
 
-                {/* 需求類型選項 */}
-                {selectedDemandTypeId && (() => {
-                  const selectedType = demandTypes?.find(t => t.id === selectedDemandTypeId);
-                  if (!selectedType || !selectedType.options || selectedType.options.length === 0) {
+                {/* 工作種類選項 */}
+                {selectedJobCategoryId && (() => {
+                  const selectedCat = (jobCategories as any[]).find((c: any) => c.id === selectedJobCategoryId);
+                  if (!selectedCat || !selectedCat.options || selectedCat.options.length === 0) {
                     return null;
                   }
                   return (
                     <div className="space-y-3">
                       <Label>選項清單</Label>
                       <div className="space-y-2 rounded-lg border p-4">
-                        {selectedType.options.map((option) => (
+                        {selectedCat.options.map((option: any) => (
                           <div key={option.id} className="flex items-start gap-3">
                             <Checkbox
                               id={`option-${option.id}`}
@@ -374,21 +374,25 @@ export function DemandDetail() {
                   </div>
                 )}
 
-                {/* 需求類型 */}
-                {demand.demandType && (
+                {/* 工作種類 */}
+                {demand.jobCategoryId && (() => {
+                  const jc = (jobCategories as any[]).find((c: any) => c.id === demand.jobCategoryId);
+                  return jc ? (
                   <div className="space-y-2">
-              <Label className="text-muted-foreground">需求類型</Label>
-                    <p className="mt-1 font-medium">{demand.demandType.name}</p>
+              <Label className="text-muted-foreground">工作種類</Label>
+                    <p className="mt-1 font-medium" style={{ color: jc.color }}>{jc.name}</p>
                   </div>
-                )}
+                  ) : null;
+                })()}
 
                 {/* 已選取的選項 */}
                 {demand.selectedOptions && (() => {
                   try {
                     const optionIds = JSON.parse(demand.selectedOptions as unknown as string) as any;
-                    if (Array.isArray(optionIds) && optionIds.length > 0 && demand.demandType?.options) {
+                    const jc = (jobCategories as any[]).find((c: any) => c.id === demand.jobCategoryId);
+                    if (Array.isArray(optionIds) && optionIds.length > 0 && jc?.options) {
                       const numericIds: number[] = optionIds.map((o: any) => Number(o));
-                      const selectedOptions = demand.demandType.options.filter((opt: any) => 
+                      const selectedOptions = jc.options.filter((opt: any) => 
                         numericIds.includes(opt.id)
                       );
                       if (selectedOptions.length > 0) {

@@ -44,7 +44,7 @@ export default function DemandDetail() {
   const [assignmentToCancel, setAssignmentToCancel] = useState<number | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editClientId, setEditClientId] = useState<string>("");
-  const [selectedDemandTypeId, setSelectedDemandTypeId] = useState<number | undefined>(undefined);
+  const [selectedJobCategoryId, setSelectedJobCategoryId] = useState<number | undefined>(undefined);
   const [selectedOptions, setSelectedOptions] = useState<number[]>([]);
 
   // 篩選狀態
@@ -66,17 +66,11 @@ export default function DemandDetail() {
   // 查詢客戶列表
   const { data: clients } = trpc.clients.list.useQuery({});
 
-  // 查詢需求類型列表
-  const { data: demandTypes = [] } = trpc.demandTypes.list.useQuery();
-
   // 查詢工作種類列表
   const { data: jobCategories = [] } = trpc.jobCategories.list.useQuery();
 
   // 查詢員工工作種類對應（批次取得）
   const { data: workerCategoryMap = {} } = trpc.jobCategories.getWorkerCategoryMap.useQuery();
-
-  // 當前選擇的需求類型
-  const selectedDemandType = demandTypes.find(t => t.id === selectedDemandTypeId);
 
   // 更新需求單
   const updateMutation = trpc.demands.update.useMutation({
@@ -137,8 +131,7 @@ export default function DemandDetail() {
   // demand 載入後自動套用工作種類篩選
   useEffect(() => {
     if (!demand || autoAppliedRef.current) return;
-    const requiredCatId = (demand?.demandType as any)?.requiredJobCategoryId;
-    if (requiredCatId) {
+    if (demand?.jobCategoryId) {
       setFilterJobCategory("match");
       autoAppliedRef.current = true;
     }
@@ -266,7 +259,7 @@ export default function DemandDetail() {
       if (filterHealthCheck === "no" && worker.hasHealthCheck) return false;
       // 工作種類篩選
       if (filterJobCategory === "match") {
-        const requiredCatId = (demand?.demandType as any)?.requiredJobCategoryId;
+        const requiredCatId = demand?.jobCategoryId;
         if (requiredCatId) {
           const workerCats: number[] = (workerCategoryMap as any)[worker.id] || [];
           if (!workerCats.includes(requiredCatId)) return false;
@@ -523,7 +516,7 @@ export default function DemandDetail() {
             onClick={() => {
               // 在開啟 Dialog 前同步初始化表單狀態，避免非同步狀態更新導致 Select 空白
               setEditClientId(demand.clientId != null ? demand.clientId.toString() : "");
-              setSelectedDemandTypeId(demand.demandTypeId || undefined);
+              setSelectedJobCategoryId(demand.jobCategoryId || undefined);
               setSelectedOptions(demand.selectedOptions || []);
               setIsEditDialogOpen(true);
             }}
@@ -615,17 +608,16 @@ export default function DemandDetail() {
                     <span className="font-medium">{demand.location}</span>
                   </div>
                 )}
-                {demand.demandType && (
+                {demand.jobCategoryId && (() => {
+                  const jc = (jobCategories as any[]).find((c: any) => c.id === demand.jobCategoryId);
+                  return jc ? (
                   <div className="mt-4 pt-4 border-t">
                     <div className="space-y-2">
                       <div className="flex items-start gap-2">
                         <FileCheck className="h-3.5 w-3.5 text-muted-foreground mt-0.5" />
                         <div className="flex-1">
-                          <div className="text-muted-foreground mb-1">需求類別：</div>
-                          <div className="font-medium">{demand.demandType.name}</div>
-                          {demand.demandType.description && (
-                            <div className="text-xs text-muted-foreground mt-1">{demand.demandType.description}</div>
-                          )}
+                          <div className="text-muted-foreground mb-1">工作種類：</div>
+                          <div className="font-medium" style={{ color: jc.color }}>{jc.name}</div>
                         </div>
                       </div>
                       {demand.selectedOptions && demand.selectedOptions.length > 0 && (
@@ -643,7 +635,8 @@ export default function DemandDetail() {
                       )}
                     </div>
                   </div>
-                )}
+                  ) : null;
+                })()}
               </div>
             </CardContent>
           </Card>
@@ -742,11 +735,11 @@ export default function DemandDetail() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">不限</SelectItem>
-                      {(demand?.demandType as any)?.requiredJobCategoryId && (
+                      {demand?.jobCategoryId && (
                         <SelectItem value="match">
                           <div className="flex items-center gap-1.5">
                             <span className="text-emerald-600">✓</span>
-                            符合需求類型要求
+                            符合工作種類要求
                           </div>
                         </SelectItem>
                       )}
@@ -1062,10 +1055,10 @@ export default function DemandDetail() {
                         ) : null}
                         {/* 工作種類符合標示 */}
                         {(() => {
-                          const requiredCatId = (demand?.demandType as any)?.requiredJobCategoryId;
+                          const requiredCatId = demand?.jobCategoryId;
                           if (!requiredCatId) return null;
                           const workerCats: number[] = (workerCategoryMap as any)[worker.id] || [];
-                          const cat = jobCategories.find(c => c.id === requiredCatId);
+                          const cat = (jobCategories as any[]).find((c: any) => c.id === requiredCatId);
                           if (!cat) return null;
                           if (workerCats.includes(requiredCatId)) {
                             return (
@@ -1345,11 +1338,11 @@ export default function DemandDetail() {
         if (open && demand) {
           // 當對話框開啟時，初始化需求類型與選項
           setEditClientId(demand.clientId != null ? demand.clientId.toString() : "");
-          setSelectedDemandTypeId(demand.demandTypeId || undefined);
+          setSelectedJobCategoryId(demand.jobCategoryId || undefined);
           setSelectedOptions(demand.selectedOptions || []);
         } else if (!open) {
           // 當對話框關閉時，清空狀態
-          setSelectedDemandTypeId(undefined);
+          setSelectedJobCategoryId(undefined);
           setSelectedOptions([]);
         }
       }}>
@@ -1378,7 +1371,7 @@ export default function DemandDetail() {
               breakHours,
               location: (formData.get("location") as string) || undefined,
               note: (formData.get("note") as string) || undefined,
-              demandTypeId: selectedDemandTypeId,
+              jobCategoryId: selectedJobCategoryId,
               selectedOptions: selectedOptions.length > 0 ? JSON.stringify(selectedOptions) : undefined,
             };
 
@@ -1445,51 +1438,57 @@ export default function DemandDetail() {
                 />
               </div>
               <div className="col-span-2 space-y-2">
-              <Label htmlFor="demandTypeId">需求類別</Label>
+              <Label htmlFor="jobCategoryId">工作種類</Label>
                 <Select 
-                  value={selectedDemandTypeId?.toString() || "none"} 
+                  value={selectedJobCategoryId?.toString() || "none"} 
                   onValueChange={(value) => {
-                    setSelectedDemandTypeId(value === "none" ? undefined : parseInt(value));
+                    setSelectedJobCategoryId(value === "none" ? undefined : parseInt(value));
                     setSelectedOptions([]);
                   }}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="選擇需求類別（可選）" />
+                    <SelectValue placeholder="選擇工作種類（可選）" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="none">無（不選擇）</SelectItem>
-                    {demandTypes.map((type) => (
-                      <SelectItem key={type.id} value={type.id.toString()}>
-                        {type.name}
+                    {(jobCategories as any[]).map((cat: any) => (
+                      <SelectItem key={cat.id} value={cat.id.toString()}>
+                        {cat.name}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
-              {selectedDemandType && selectedDemandType.options && selectedDemandType.options.length > 0 && (
-                <div className="col-span-2 p-4 bg-muted/30 rounded-lg space-y-2">
+              {selectedJobCategoryId && (() => {
+                const selectedCat = (jobCategories as any[]).find((c: any) => c.id === selectedJobCategoryId);
+                if (selectedCat && selectedCat.options && selectedCat.options.length > 0) {
+                  return (
+                    <div className="col-span-2 p-4 bg-muted/30 rounded-lg space-y-2">
               <Label className="text-sm font-medium">選擇需要的項目</Label>
-                  <div className="space-y-2">
-                    {selectedDemandType.options.map((option) => (
-                      <label key={option.id} className="flex items-start gap-2 cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={selectedOptions.includes(option.id)}
-                          onChange={(e) => {
-                            if (e.target.checked) {
-                              setSelectedOptions([...selectedOptions, option.id]);
-                            } else {
-                              setSelectedOptions(selectedOptions.filter(id => id !== option.id));
-                            }
-                          }}
-                          className="mt-1"
-                        />
-                        <span className="text-sm">{option.content}</span>
-                      </label>
-                    ))}
-                  </div>
-                </div>
-              )}
+                      <div className="space-y-2">
+                        {selectedCat.options.map((option: any) => (
+                          <label key={option.id} className="flex items-start gap-2 cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={selectedOptions.includes(option.id)}
+                              onChange={(e) => {
+                                if (e.target.checked) {
+                                  setSelectedOptions([...selectedOptions, option.id]);
+                                } else {
+                                  setSelectedOptions(selectedOptions.filter(id => id !== option.id));
+                                }
+                              }}
+                              className="mt-1"
+                            />
+                            <span className="text-sm">{option.content}</span>
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                }
+                return null;
+              })()}
               <div className="space-y-2">
               <Label htmlFor="location">地點</Label>
                 <Input id="location" name="location" placeholder="工作地點" defaultValue={demand?.location || ''} />
