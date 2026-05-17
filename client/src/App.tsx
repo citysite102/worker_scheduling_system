@@ -19,6 +19,7 @@ import AdminSettings from "./pages/AdminSettings";
 import WorkerDetail from "./pages/WorkerDetail";
 import ClientDetail from "./pages/ClientDetail";
 import JobCategories from "./pages/JobCategories";
+import QuickMatch from "./pages/QuickMatch";
 import { ClientDashboard } from "./pages/client-portal/ClientDashboard";
 import { ClientDemands } from "./pages/client-portal/ClientDemands";
 import { CreateDemand } from "@/pages/client-portal/CreateDemand";
@@ -44,6 +45,7 @@ function Router() {
       <Route path="/demands/:id" component={() => <DashboardLayout><DemandDetail /></DashboardLayout>} />
       <Route path="/actual-time" component={() => <DashboardLayout><ActualTime /></DashboardLayout>} />
       <Route path="/reports" component={() => <DashboardLayout><Reports /></DashboardLayout>} />
+      <Route path="/quick-match" component={() => <DashboardLayout><QuickMatch /></DashboardLayout>} />
       <Route path="/job-categories" component={() => <DashboardLayout><JobCategories /></DashboardLayout>} />
       <Route path="/admin" component={() => <DashboardLayout><AdminSettings /></DashboardLayout>} />
       

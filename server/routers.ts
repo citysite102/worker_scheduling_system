@@ -15,9 +15,11 @@ import { storagePut } from "./storage";
 import { hashPassword, generateRandomPassword, verifyPassword, generateResetToken } from "./password";
 import { sendEmail, createNewAccountEmail, createResetPasswordEmail } from "./email";
 import { getTaiwanTodayStr, getTaiwanDateStrDaysAgo, utcToTaiwanDateStr, generateDateRange } from "./dateUtils";
+import { dispatchRouter } from "./routers/dispatch";
 
 export const appRouter = router({
   system: systemRouter,
+  dispatch: dispatchRouter,
   auth: router({
     me: publicProcedure.query(opts => opts.ctx.user),
     logout: publicProcedure.mutation(({ ctx }) => {

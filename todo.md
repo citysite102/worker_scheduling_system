@@ -2170,3 +2170,29 @@
 - [x] 移除側邊欄「需求類型管理」入口
 - [x] 移除 App.tsx 中 /demand-types 路由與 DemandTypes import
 - [x] TypeScript 全程無錯誤，所有 238 個測試通過
+
+## 使用者新增需求（2026/05/17 - 快速配對功能）
+
+- [ ] 後端：新增 dispatch router（getMatchingDemands + getMatchingWorkers）
+- [ ] 前端：實作 QuickMatch.tsx 頁面（雙欄佈局、模式切換、左側列表、右側配對結果）
+- [ ] 側邊欄加入「快速配對」入口，App.tsx 加入路由
+- [ ] 快速指派：右側配對卡片支援直接執行指派（漸進式確認）
+- [ ] 員工視角：左側員工列表 + 右側可配對需求單
+- [ ] 需求視角：左側未滿員需求列表 + 右側可配對員工
+- [ ] 工作種類色標同步顯示於配對結果卡片
+
+## 使用者新增需求（2026/05/17 - 快速配對功能）
+
+- [x] 後端新增 dispatch router（server/routers/dispatch.ts）
+  - [x] getMatchingDemands — 員工視角：查詢員工在指定日期範圍內可配對的需求單
+  - [x] getMatchingWorkers — 需求視角：查詢需求單可配對的員工（複用 feasibilityWithAll）
+  - [x] listOpenDemands — 需求視角左側：列出未滿員需求單
+- [x] 前端實作 QuickMatch.tsx 頁面
+  - [x] 雙欄 Split Panel 佈局
+  - [x] 需求視角 / 員工視角 模式切換 Toggle
+  - [x] 左側可搜尋/篩選列表（員工 or 需求單）
+  - [x] 右側配對結果卡片（含配對狀態、工作種類色標、快速指派按鈕）
+  - [x] 確認指派 Modal（漸進式確認，避免誤操作）
+  - [x] 指派後自動刷新列表
+- [x] 側邊欄加入「快速配對」入口（需求管理下方）
+- [x] App.tsx 加入 /quick-match 路由

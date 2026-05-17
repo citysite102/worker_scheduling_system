@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/sidebar";
 import { getLoginUrl } from "@/const";
 import { useIsMobile } from "@/hooks/useMobile";
-import { LayoutDashboard, LogOut, PanelLeft, Users, Building2, Calendar, ClipboardList, Clock, FileText, ShieldCheck, Briefcase } from "lucide-react";
+import { LayoutDashboard, LogOut, PanelLeft, Users, Building2, Calendar, ClipboardList, Clock, FileText, ShieldCheck, Briefcase, ArrowLeftRight } from "lucide-react";
 import { CSSProperties, useEffect, useRef, useState } from "react";
 import { useLocation } from "wouter";
 import { DashboardLayoutSkeleton } from './DashboardLayoutSkeleton';
@@ -35,6 +35,7 @@ const menuItems = [
   { icon: Building2, label: "客戶管理", path: "/clients" },
   { icon: Calendar, label: "排班時間設置", path: "/availability" },
   { icon: ClipboardList, label: "需求管理", path: "/demands" },
+  { icon: ArrowLeftRight, label: "快速配對", path: "/quick-match" },
   { icon: Briefcase, label: "工作種類管理", path: "/job-categories" },
   { icon: Clock, label: "實際工時回填", path: "/actual-time" },
   { icon: FileText, label: "報表輸出", path: "/reports" },
