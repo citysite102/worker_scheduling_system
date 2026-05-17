@@ -1,4 +1,5 @@
-import { getAssignmentsByWorker, getAvailabilityByWorkerAndWeek, getAllWorkers, getAssignmentsByDemand, getClientById, getWorkerById } from "./db";
+import { getAssignmentsByWorker, getAvailabilityByWorkerAndWeek, getAvailabilityByWorkerIds, getAllWorkers, getAssignmentsByDemand, getClientById, getWorkerById } from "./db";
+import type { Availability } from "../drizzle/schema";
 
 /**
  * 時段重疊檢查
@@ -424,14 +425,18 @@ export async function calculateWorkerFitScore(
   demandDate: Date,
   startTime: string,
   endTime: string,
-  hasConflict: boolean
+  hasConflict: boolean,
+  preloadedAvailability?: Availability | null // 方案A：傳入預載入的排班資料，避免重複查詢
 ): Promise<{ score: number; fitLabel: string; fitDetail?: string }> {
   if (hasConflict) {
     return { score: 0, fitLabel: "排班衝突", fitDetail: "該時段已有其他指派" };
   }
 
+  // 方案A：優先使用傳入的預載入資料，否則才查 DB
   const weekStartDate = getWeekStart(demandDate);
-  const availability = await getAvailabilityByWorkerAndWeek(workerId, weekStartDate);
+  const availability = preloadedAvailability !== undefined
+    ? preloadedAvailability
+    : await getAvailabilityByWorkerAndWeek(workerId, weekStartDate);
 
   if (!availability || !availability.confirmedAt) {
     return { score: 0, fitLabel: "無排班設定", fitDetail: "本週排班時間未設定或未確認" };
@@ -517,16 +522,23 @@ export async function calculateDemandFeasibilityWithAll(
   // 複用現有的 feasibility 計算
   const base = await calculateDemandFeasibility(demandId, demandDate, startTime, endTime, requiredWorkers);
 
-  // 對 unavailableWorkers 計算吻合度分數
+  // 方案A：批次預載入所有 unavailableWorkers 的 availability（一次 DB 查詢）
+  const unavailableWorkerIds = base.unavailableWorkers.map((w) => w.worker.id);
+  const weekStartDate = getWeekStart(demandDate);
+  const availabilityMap = await getAvailabilityByWorkerIds(unavailableWorkerIds, weekStartDate);
+
+  // 對 unavailableWorkers 計算吻合度分數（使用預載入資料，不再各自查 DB）
   const unavailableWithScore = await Promise.all(
     base.unavailableWorkers.map(async (item) => {
       const hasConflict = item.reasons.some((r) => r.startsWith("排班衝突"));
+      const preloadedAvail = availabilityMap.get(item.worker.id) ?? null;
       const fit = await calculateWorkerFitScore(
         item.worker.id,
         demandDate,
         startTime,
         endTime,
-        hasConflict
+        hasConflict,
+        preloadedAvail // 傳入預載入資料
       );
       return {
         ...item,

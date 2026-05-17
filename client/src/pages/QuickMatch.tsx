@@ -6,7 +6,7 @@
  *   需求視角 — 左側未滿員需求列表，右側顯示可配對的員工
  */
 
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -700,10 +700,27 @@ export default function QuickMatch() {
   const [viewMode, setViewMode] = useState<ViewMode>("demand");
   const [selectedWorkerId, setSelectedWorkerId] = useState<number | null>(null);
   const [selectedDemandId, setSelectedDemandId] = useState<number | null>(null);
+  // 方案C：防抖 state，選取後 300ms 才觸發查詢，避免快速滾動列表時連續觸發多次 API
+  const [debouncedWorkerId, setDebouncedWorkerId] = useState<number | null>(null);
+  const [debouncedDemandId, setDebouncedDemandId] = useState<number | null>(null);
   const [workerSearch, setWorkerSearch] = useState("");
   const [dateRange, setDateRange] = useState<DateRange>("week");
   const [filterJobCategoryId, setFilterJobCategoryId] = useState<number | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
+
+  // 防抖：選取哪個員工後 300ms 才更新 debouncedWorkerId
+  useEffect(() => {
+    if (selectedWorkerId === null) { setDebouncedWorkerId(null); return; }
+    const t = setTimeout(() => setDebouncedWorkerId(selectedWorkerId), 300);
+    return () => clearTimeout(t);
+  }, [selectedWorkerId]);
+
+  // 防抖：選取哪張需求單後 300ms 才更新 debouncedDemandId
+  useEffect(() => {
+    if (selectedDemandId === null) { setDebouncedDemandId(null); return; }
+    const t = setTimeout(() => setDebouncedDemandId(selectedDemandId), 300);
+    return () => clearTimeout(t);
+  }, [selectedDemandId]);
 
   const { dateFrom, dateTo } = useMemo(() => getDateRange(dateRange), [dateRange]);
 
@@ -934,19 +951,34 @@ export default function QuickMatch() {
               </div>
             </div>
           )}
-          {viewMode === "worker" && selectedWorkerId && (
+          {/* 方案C：防抖過渡期顯示 Loading skeleton（已選取但防抖尚未觸發查詢） */}
+          {viewMode === "worker" && selectedWorkerId && !debouncedWorkerId && (
+            <div className="flex-1 p-4 space-y-3">
+              {[...Array(4)].map((_, i) => (
+                <Skeleton key={i} className="h-20 w-full rounded-lg" />
+              ))}
+            </div>
+          )}
+          {viewMode === "demand" && selectedDemandId && !debouncedDemandId && (
+            <div className="flex-1 p-4 space-y-3">
+              {[...Array(4)].map((_, i) => (
+                <Skeleton key={i} className="h-16 w-full rounded-lg" />
+              ))}
+            </div>
+          )}
+          {viewMode === "worker" && debouncedWorkerId && (
             <WorkerRightPanel
-              key={`worker-${selectedWorkerId}-${dateFrom}-${dateTo}-${refreshKey}`}
-              workerId={selectedWorkerId}
+              key={`worker-${debouncedWorkerId}-${dateFrom}-${dateTo}-${refreshKey}`}
+              workerId={debouncedWorkerId}
               dateFrom={dateFrom}
               dateTo={dateTo}
               onAssigned={handleAssigned}
             />
           )}
-          {viewMode === "demand" && selectedDemandId && (
+          {viewMode === "demand" && debouncedDemandId && (
             <DemandRightPanel
-              key={`demand-${selectedDemandId}-${refreshKey}`}
-              demandId={selectedDemandId}
+              key={`demand-${debouncedDemandId}-${refreshKey}`}
+              demandId={debouncedDemandId}
               onAssigned={handleAssigned}
             />
           )}

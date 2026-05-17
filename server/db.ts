@@ -1,4 +1,4 @@
-import { eq, and, gte, lte, lt, or, sql, desc } from "drizzle-orm";
+import { eq, and, gte, lte, lt, or, sql, desc, inArray } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
 import mysql from "mysql2";
 import { InsertUser, users, payrollSettlements } from "../drizzle/schema";
@@ -372,7 +372,7 @@ export async function upsertAvailability(data: { workerId: number; weekStartDate
 }
 
 // ============ Demands ============
-export async function getAllDemands(statusFilter?: string, dateFilter?: Date, clientIdFilter?: number) {
+export async function getAllDemands(statusFilter?: string, dateFilter?: Date, clientIdFilter?: number, dateFrom?: Date, dateTo?: Date) {
   const db = await getDb();
   if (!db) return [];
 
@@ -444,6 +444,14 @@ export async function getAllDemands(statusFilter?: string, dateFilter?: Date, cl
     const endOfDay = new Date(dateFilter);
     endOfDay.setUTCHours(23, 59, 59, 999); // 使用 UTC 避免伺服器本地時區影響
     conditions.push(and(gte(demands.date, startOfDay), lte(demands.date, endOfDay)));
+  }
+
+  // 方案B：日期範圍過濾（SQL 層，避免全表載入後再在 JS 層過濾）
+  if (dateFrom) {
+    conditions.push(gte(demands.date, dateFrom));
+  }
+  if (dateTo) {
+    conditions.push(lte(demands.date, dateTo));
   }
 
   if (conditions.length > 0) {
@@ -1169,4 +1177,74 @@ export async function updateJobCategoryOptionsOrder(updates: { id: number; sortO
       .set({ sortOrder: update.sortOrder })
       .where(eq(jobCategoryOptions.id, update.id));
   }
+}
+
+// ─── 批次查詢函式（方案A：消除 N+1）────────────────────────────────────────────
+
+/**
+ * 批次查詢多位員工在指定週次的排班設置
+ * 一次 DB 查詢取代 N 次 getAvailabilityByWorkerAndWeek
+ * @returns Map<workerId, Availability>
+ */
+export async function getAvailabilityByWorkerIds(
+  workerIds: number[],
+  weekStartDate: Date
+): Promise<Map<number, typeof availability.$inferSelect>> {
+  const db = await getDb();
+  const resultMap = new Map<number, typeof availability.$inferSelect>();
+  if (!db || workerIds.length === 0) return resultMap;
+
+  const dayStart = new Date(Date.UTC(
+    weekStartDate.getUTCFullYear(),
+    weekStartDate.getUTCMonth(),
+    weekStartDate.getUTCDate(),
+    0, 0, 0, 0
+  ));
+  const dayEnd = new Date(dayStart);
+  dayEnd.setUTCDate(dayEnd.getUTCDate() + 1);
+
+  const rows = await db.select().from(availability).where(
+    and(
+      inArray(availability.workerId, workerIds),
+      gte(availability.weekStartDate, dayStart),
+      lt(availability.weekStartDate, dayEnd)
+    )
+  );
+
+  for (const row of rows) {
+    resultMap.set(row.workerId, row);
+  }
+  return resultMap;
+}
+
+/**
+ * 批次查詢多位員工在指定日期範圍內的指派記錄
+ * 一次 DB 查詢取代 N 次 getAssignmentsByWorker
+ * @returns Map<workerId, assignment[]>
+ */
+export async function getAssignmentsByWorkerIds(
+  workerIds: number[],
+  startDate: Date,
+  endDate: Date
+): Promise<Map<number, (typeof assignments.$inferSelect)[]>> {
+  const db = await getDb();
+  const resultMap = new Map<number, (typeof assignments.$inferSelect)[]>();
+  if (!db || workerIds.length === 0) return resultMap;
+
+  // 初始化空陣列
+  for (const id of workerIds) resultMap.set(id, []);
+
+  const rows = await db.select().from(assignments).where(
+    and(
+      inArray(assignments.workerId, workerIds),
+      gte(assignments.scheduledStart, startDate),
+      lte(assignments.scheduledStart, endDate)
+    )
+  );
+
+  for (const row of rows) {
+    const list = resultMap.get(row.workerId);
+    if (list) list.push(row);
+  }
+  return resultMap;
 }

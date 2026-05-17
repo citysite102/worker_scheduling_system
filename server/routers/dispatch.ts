@@ -1,10 +1,14 @@
 /**
  * server/routers/dispatch.ts — 快速配對 Router
  *
- * 提供兩個核心 procedure：
+ * 提供三個核心 procedure：
  *   dispatch.getMatchingDemands  — 員工視角：查詢某員工在指定日期範圍內可配對的需求單
  *   dispatch.getMatchingWorkers  — 需求視角：查詢某需求單可配對的員工（複用 feasibilityWithAll 邏輯）
  *   dispatch.listOpenDemands     — 需求視角左側：列出指定日期範圍內未滿員的需求單
+ *
+ * 效能優化（方案A + 方案B）：
+ *   - 方案B：getAllDemands 加入 dateFrom/dateTo SQL 層過濾，不再全表載入後 JS 過濾
+ *   - 方案A：getMatchingDemands 批次預載入 availability 和 assignments，消除 N+1 查詢
  */
 
 import { z } from "zod";
@@ -39,23 +43,28 @@ function addDays(dateStr: string, n: number): string {
   return d.toISOString().split("T")[0];
 }
 
+/** 將時間字串轉換為分鐘數 */
+function timeToMinutes(time: string): number {
+  const [h, m] = time.split(":").map(Number);
+  return h * 60 + m;
+}
+
 // ─── Router ──────────────────────────────────────────────────────────────────
 
 export const dispatchRouter = router({
   /**
    * 員工視角：查詢某員工在指定日期範圍內可配對的需求單
-   * 配對條件：
-   *   1. 需求單狀態不為 cancelled / closed
-   *   2. 需求單尚未滿員（assignedCount < requiredWorkers）
-   *   3. 員工在該日期的可排班時段涵蓋需求時段（checkWorkerAvailability）
-   *   4. 員工在該時段無指派衝突（checkWorkerConflicts）
-   *   5. 工作種類軟性比對（需求有設定種類時，員工需有對應種類）
+   *
+   * 效能優化（方案A）：
+   *   - 一次查出員工在整個日期範圍的所有 assignments（1 次 DB）
+   *   - 一次查出員工在所有相關週次的 availability（1 次 DB per week，最多 2 次）
+   *   - 在記憶體中做時段比對，不再對每張需求單各自查 DB
    */
   getMatchingDemands: publicProcedure
     .input(z.object({
       workerId: z.number(),
-      dateFrom: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(), // YYYY-MM-DD
-      dateTo: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),   // YYYY-MM-DD
+      dateFrom: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+      dateTo: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
     }))
     .query(async ({ input }) => {
       const worker = await db.getWorkerById(input.workerId);
@@ -66,107 +75,169 @@ export const dispatchRouter = router({
       const dateFrom = input.dateFrom ?? weekStart;
       const dateTo = input.dateTo ?? addDays(weekStart, 6);
 
-      // 取得日期範圍內所有非取消/結案的需求單
-      const allDemands = await db.getAllDemands();
       const fromDate = dateStrToUtc(dateFrom);
       const toDate = new Date(dateTo + "T23:59:59Z");
 
-      const rangedDemands = allDemands.filter((d) => {
-        if (!d.date) return false;
-        const demandDate = new Date(d.date);
-        if (demandDate < fromDate || demandDate > toDate) return false;
-        if (d.status === "cancelled" || d.status === "closed") return false;
-        return true;
-      });
+      // ── 方案B：SQL 層日期過濾，只取指定範圍內的需求單 ──
+      const rangedDemands = (await db.getAllDemands(
+        undefined, undefined, undefined, fromDate, toDate
+      )).filter((d) => d.status !== "cancelled" && d.status !== "closed");
 
-      // 取得員工的工作種類
-      const workerCategories = await db.getWorkerJobCategories(input.workerId);
-      const workerCategoryIds = new Set(workerCategories.map((c) => c.id));
+      // ── 方案A：批次預載入 1 — 員工在整個日期範圍的所有 assignments ──
+      const workerAssignments = await db.getAssignmentsByWorker(
+        input.workerId,
+        fromDate,
+        toDate
+      );
+      const activeAssignmentsByDate = new Map<string, typeof workerAssignments>();
+      for (const a of workerAssignments) {
+        if (a.status === "cancelled") continue;
+        const dateKey = new Date(a.scheduledStart).toISOString().split("T")[0];
+        if (!activeAssignmentsByDate.has(dateKey)) activeAssignmentsByDate.set(dateKey, []);
+        activeAssignmentsByDate.get(dateKey)!.push(a);
+      }
 
-      // 取得員工在該需求單的現有指派（避免重複指派）
-      const existingAssignments = await db.getAssignmentsByWorker(input.workerId);
+      // 已指派的需求單 ID（避免重複指派）
       const alreadyAssignedDemandIds = new Set(
-        existingAssignments
-          .filter((a) => a.status !== "cancelled")
-          .map((a) => a.demandId)
+        workerAssignments.filter((a) => a.status !== "cancelled").map((a) => a.demandId)
       );
 
-      // 取得所有工作種類（用於顯示）
+      // ── 方案A：批次預載入 2 — 員工在所有相關週次的 availability ──
+      // 收集日期範圍內所有不重複的週一
+      const weekStartDates = new Map<string, Date>();
+      for (const demand of rangedDemands) {
+        const demandDate = new Date(demand.date);
+        const ws = logic.getWeekStart(demandDate);
+        const key = ws.toISOString();
+        if (!weekStartDates.has(key)) weekStartDates.set(key, ws);
+      }
+
+      // 每個週次一次查詢（通常只有 1-2 週）
+      const availabilityByWeek = new Map<string, ReturnType<typeof db.getAvailabilityByWorkerAndWeek> extends Promise<infer T> ? T : never>();
+      await Promise.all(
+        Array.from(weekStartDates.entries()).map(async ([key, ws]) => {
+          const avail = await db.getAvailabilityByWorkerAndWeek(input.workerId, ws);
+          availabilityByWeek.set(key, avail);
+        })
+      );
+
+      // 工作種類資料
+      const workerCategories = await db.getWorkerJobCategories(input.workerId);
+      const workerCategoryIds = new Set(workerCategories.map((c) => c.id));
       const allCategories = await db.getAllJobCategories();
       const categoryMap = new Map(allCategories.map((c) => [c.id, c]));
 
-      // 對每張需求單做配對評估
-      const results = await Promise.all(
-        rangedDemands.map(async (demand) => {
-          const demandDate = new Date(demand.date);
-          const assignedCount = demand.assignedCount ?? 0;
-          const shortage = demand.requiredWorkers - assignedCount;
+      // ── 在記憶體中做配對評估（不再觸發 DB 查詢）──
+      const results = rangedDemands.map((demand) => {
+        const demandDate = new Date(demand.date);
+        const assignedCount = demand.assignedCount ?? 0;
+        const shortage = demand.requiredWorkers - assignedCount;
 
-          // 工作種類軟性比對
-          let categoryMatch: "matched" | "unset" | "mismatch" = "unset";
-          const category = demand.jobCategoryId ? categoryMap.get(demand.jobCategoryId) : null;
-          if (demand.jobCategoryId) {
-            categoryMatch = workerCategoryIds.has(demand.jobCategoryId) ? "matched" : "mismatch";
-          }
+        // 工作種類軟性比對
+        const category = demand.jobCategoryId ? categoryMap.get(demand.jobCategoryId) : null;
+        let categoryMatch: "matched" | "unset" | "mismatch" = "unset";
+        if (demand.jobCategoryId) {
+          categoryMatch = workerCategoryIds.has(demand.jobCategoryId) ? "matched" : "mismatch";
+        }
 
-          // 已指派此需求單
-          const alreadyAssigned = alreadyAssignedDemandIds.has(demand.id);
+        // 已指派此需求單
+        const alreadyAssigned = alreadyAssignedDemandIds.has(demand.id);
 
-          // 可排班時段檢查
-          const availabilityCheck = await logic.checkWorkerAvailability(
-            input.workerId,
-            demandDate,
-            demand.startTime,
-            demand.endTime
-          );
+        // ── 從預載入的 availability Map 中取得排班資料 ──
+        const ws = logic.getWeekStart(demandDate);
+        const avail = availabilityByWeek.get(ws.toISOString());
 
-          // 時段衝突檢查
-          const scheduledStart = logic.combineDateAndTime(demandDate, demand.startTime);
-          const scheduledEnd = logic.combineDateAndTime(demandDate, demand.endTime);
-          const conflicts = await logic.checkWorkerConflicts(
-            input.workerId,
-            scheduledStart,
-            scheduledEnd
-          );
-          const hasConflict = conflicts.length > 0;
+        let availabilityOk = false;
+        let availabilityReason = "本週排班時間設置未設定";
 
-          // 判斷配對狀態
-          let matchStatus: "available" | "assigned" | "conflict" | "unavailable" | "mismatch";
-          let matchReason = "";
+        if (avail && avail.confirmedAt) {
+          let timeBlocks: Array<{
+            dayOfWeek: number;
+            startTime?: string;
+            endTime?: string;
+            timeSlots?: Array<{ startTime: string; endTime: string }>;
+          }> = [];
+          try { timeBlocks = JSON.parse(avail.timeBlocks); } catch { /* ignore */ }
 
-          if (alreadyAssigned) {
-            matchStatus = "assigned";
-            matchReason = "已指派此需求單";
-          } else if (hasConflict) {
-            matchStatus = "conflict";
-            matchReason = "時段衝突：已有其他指派";
-          } else if (!availabilityCheck.available) {
-            matchStatus = "unavailable";
-            matchReason = availabilityCheck.reason ?? "不在可排班時段";
-          } else if (categoryMatch === "mismatch") {
-            matchStatus = "mismatch";
-            matchReason = `工作種類不符（需求：${category?.name ?? "未知"}）`;
-          } else if (shortage <= 0) {
-            matchStatus = "unavailable";
-            matchReason = "需求已滿員";
+          const dayOfWeek = demandDate.getUTCDay() === 0 ? 7 : demandDate.getUTCDay();
+          const dayBlocks = timeBlocks.filter((b) => b.dayOfWeek === dayOfWeek);
+
+          if (dayBlocks.length === 0) {
+            availabilityReason = "該日無可排班時段";
           } else {
-            matchStatus = "available";
+            const demandStartMin = timeToMinutes(demand.startTime);
+            const demandEndMin = timeToMinutes(demand.endTime);
+            const covered = dayBlocks.some((block) => {
+              const slots = block.timeSlots && Array.isArray(block.timeSlots)
+                ? block.timeSlots
+                : block.startTime && block.endTime
+                  ? [{ startTime: block.startTime, endTime: block.endTime }]
+                  : [];
+              return slots.some(
+                (s) =>
+                  timeToMinutes(s.startTime) <= demandStartMin &&
+                  timeToMinutes(s.endTime) >= demandEndMin
+              );
+            });
+            if (covered) {
+              availabilityOk = true;
+            } else {
+              availabilityReason = "不在可排班時段";
+            }
           }
+        } else if (avail && !avail.confirmedAt) {
+          availabilityReason = "本週排班時間設置未確認";
+        }
 
-          return {
-            demand: {
-              ...demand,
-              jobCategory: category ?? null,
-            },
-            matchStatus,
-            matchReason,
-            shortage,
-            categoryMatch,
-            scheduledStart,
-            scheduledEnd,
-          };
-        })
-      );
+        // ── 從預載入的 assignments Map 中做衝突檢查 ──
+        const dateKey = demandDate.toISOString().split("T")[0];
+        const dayAssignments = activeAssignmentsByDate.get(dateKey) ?? [];
+        const scheduledStart = logic.combineDateAndTime(demandDate, demand.startTime);
+        const scheduledEnd = logic.combineDateAndTime(demandDate, demand.endTime);
+        const hasConflict = dayAssignments.some(
+          (a) =>
+            a.demandId !== demand.id &&
+            logic.isTimeOverlap(
+              new Date(a.scheduledStart),
+              new Date(a.scheduledEnd),
+              scheduledStart,
+              scheduledEnd
+            )
+        );
+
+        // 判斷配對狀態
+        let matchStatus: "available" | "assigned" | "conflict" | "unavailable" | "mismatch";
+        let matchReason = "";
+
+        if (alreadyAssigned) {
+          matchStatus = "assigned";
+          matchReason = "已指派此需求單";
+        } else if (hasConflict) {
+          matchStatus = "conflict";
+          matchReason = "時段衝突：已有其他指派";
+        } else if (!availabilityOk) {
+          matchStatus = "unavailable";
+          matchReason = availabilityReason;
+        } else if (categoryMatch === "mismatch") {
+          matchStatus = "mismatch";
+          matchReason = `工作種類不符（需求：${category?.name ?? "未知"}）`;
+        } else if (shortage <= 0) {
+          matchStatus = "unavailable";
+          matchReason = "需求已滿員";
+        } else {
+          matchStatus = "available";
+        }
+
+        return {
+          demand: { ...demand, jobCategory: category ?? null },
+          matchStatus,
+          matchReason,
+          shortage,
+          categoryMatch,
+          scheduledStart,
+          scheduledEnd,
+        };
+      });
 
       // 排序：可配對 → 種類不符 → 時段不符 → 衝突 → 已指派；同組內按日期升序
       const order: Record<string, number> = {
@@ -183,13 +254,7 @@ export const dispatchRouter = router({
         return new Date(a.demand.date).getTime() - new Date(b.demand.date).getTime();
       });
 
-      return {
-        worker,
-        workerCategories,
-        results,
-        dateFrom,
-        dateTo,
-      };
+      return { worker, workerCategories, results, dateFrom, dateTo };
     }),
 
   /**
@@ -237,10 +302,7 @@ export const dispatchRouter = router({
       };
 
       return {
-        demand: {
-          ...demand,
-          jobCategory: demandCategory,
-        },
+        demand: { ...demand, jobCategory: demandCategory },
         availableWorkers: feasibility.availableWorkers.map(enrichWorker),
         schedulableWorkers: feasibility.schedulableWorkers.map((w: any) => ({
           ...w,
@@ -257,12 +319,13 @@ export const dispatchRouter = router({
 
   /**
    * 需求視角左側：列出指定日期範圍內未滿員（或全部）的需求單
+   * 方案B：使用 SQL 層日期過濾
    */
   listOpenDemands: publicProcedure
     .input(z.object({
       dateFrom: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
       dateTo: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
-      onlyShortage: z.boolean().default(true), // 預設只顯示缺員需求
+      onlyShortage: z.boolean().default(true),
       jobCategoryId: z.number().optional(),
     }))
     .query(async ({ input }) => {
@@ -270,9 +333,11 @@ export const dispatchRouter = router({
       const dateFrom = input.dateFrom ?? weekStart;
       const dateTo = input.dateTo ?? addDays(weekStart, 6);
 
-      const allDemands = await db.getAllDemands();
       const fromDate = dateStrToUtc(dateFrom);
       const toDate = new Date(dateTo + "T23:59:59Z");
+
+      // 方案B：SQL 層日期過濾
+      const allDemands = await db.getAllDemands(undefined, undefined, undefined, fromDate, toDate);
 
       // 取得所有工作種類
       const allCategories = await db.getAllJobCategories();
@@ -280,9 +345,6 @@ export const dispatchRouter = router({
 
       const filtered = allDemands
         .filter((d) => {
-          if (!d.date) return false;
-          const demandDate = new Date(d.date);
-          if (demandDate < fromDate || demandDate > toDate) return false;
           if (d.status === "cancelled" || d.status === "closed") return false;
           if (input.onlyShortage) {
             const shortage = d.requiredWorkers - (d.assignedCount ?? 0);

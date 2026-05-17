@@ -2196,3 +2196,11 @@
   - [x] 指派後自動刷新列表
 - [x] 側邊欄加入「快速配對」入口（需求管理下方）
 - [x] App.tsx 加入 /quick-match 路由
+
+## 使用者新增需求（2026/05/17 - 快速配對效能優化）
+
+- [x] 方案B：getAllDemands 加入 dateFrom/dateTo SQL 層日期範圍過濾，不再全表載入後 JS 過濾
+- [x] 方案A：新增 getAvailabilityByWorkerIds / getAssignmentsByWorkerIds 批次查詢函式（消除 N+1）
+- [x] 方案A：重構 dispatch.ts getMatchingDemands，批次預載入 availability 和 assignments（40 次 DB → 2-3 次）
+- [x] 方案A：calculateWorkerFitScore 加入 preloadedAvailability 參數，calculateDemandFeasibilityWithAll 批次預載入後傳入（N 次 DB → 1 次）
+- [x] 方案C：QuickMatch.tsx 加入 300ms 選取防抖 + Loading skeleton，避免快速滾動連續觸發 API
