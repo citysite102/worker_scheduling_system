@@ -1,0 +1,8 @@
+{
+  "query": "\nINSERT INTO jobCategories (name, color, description, createdAt, updatedAt) VALUES\n('餐飲服務', '#f59e0b', '餐廳、宴會、外燴服務', NOW(), NOW()),\n('清潔維護', '#10b981', '辦公室、廠房、飯店清潔', NOW(), NOW()),\n('倉儲物流', '#3b82f6', '倉庫揀貨、包裝、出貨', NOW(), NOW()),\n('活動展場', '#8b5cf6', '展覽、活動佈置與接待', NOW(), NOW());\n\nINSERT INTO clients (name, contactName, contactPhone, address, status, createdAt, updatedAt) VALUES\n('台北晶華酒店', '陳經理', '02-2523-8000', '台北市中山區中山北路二段41號', 'active', NOW(), NOW()),\n('大潤發忠孝店', '林主任', '02-2785-6789', '台北市信義區忠孝東路五段296號', 'active', NOW(), NOW()),\n('統一超商物流中心', '王組長', '03-3568-1234', '桃園市龜山區文化二路', 'active', NOW(), NOW());\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2iEKifVQ9gKtEas.9cbf5414b428 --database CMgr35KntT8tLtgpfJPejw --execute \nINSERT INTO jobCategories (name, color, description, createdAt, updatedAt) VALUES\n('餐飲服務', '#f59e0b', '餐廳、宴會、外燴服務', NOW(), NOW()),\n('清潔維護', '#10b981', '辦公室、廠房、飯店清潔', NOW(), NOW()),\n('倉儲物流', '#3b82f6', '倉庫揀貨、包裝、出貨', NOW(), NOW()),\n('活動展場', '#8b5cf6', '展覽、活動佈置與接待', NOW(), NOW());\n\nINSERT INTO clients (name, contactName, contactPhone, address, status, createdAt, updatedAt) VALUES\n('台北晶華酒店', '陳經理', '02-2523-8000', '台北市中山區中山北路二段41號', 'active', NOW(), NOW()),\n('大潤發忠孝店', '林主任', '02-2785-6789', '台北市信義區忠孝東路五段296號', 'active', NOW(), NOW()),\n('統一超商物流中心', '王組長', '03-3568-1234', '桃園市龜山區文化二路', 'active', NOW(), NOW());\n",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1364 (HY000) at line 8: Field 'clientCode' doesn't have a default value"
+  ]
+}

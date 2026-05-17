@@ -1,0 +1,9 @@
+{
+  "query": "\n-- 刪除重複記錄，保留每組 (workerId, jobCategoryId) 中 id 最小的那筆\nDELETE FROM workerJobCategories\nWHERE id NOT IN (\n  SELECT min_id FROM (\n    SELECT MIN(id) AS min_id\n    FROM workerJobCategories\n    GROUP BY workerId, jobCategoryId\n  ) AS keep\n);\n\n-- 確認結果\nSELECT workerId, jobCategoryId, COUNT(*) as cnt\nFROM workerJobCategories\nGROUP BY workerId, jobCategoryId\nHAVING cnt > 1;\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2iEKifVQ9gKtEas.9cbf5414b428 --database CMgr35KntT8tLtgpfJPejw --execute \n-- 刪除重複記錄，保留每組 (workerId, jobCategoryId) 中 id 最小的那筆\nDELETE FROM workerJobCategories\nWHERE id NOT IN (\n  SELECT min_id FROM (\n    SELECT MIN(id) AS min_id\n    FROM workerJobCategories\n    GROUP BY workerId, jobCategoryId\n  ) AS keep\n);\n\n-- 確認結果\nSELECT workerId, jobCategoryId, COUNT(*) as cnt\nFROM workerJobCategories\nGROUP BY workerId, jobCategoryId\nHAVING cnt > 1;\n",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 1968
+}

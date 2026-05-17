@@ -1,0 +1,70 @@
+{
+  "query": "\nSELECT id, name FROM clients ORDER BY id DESC LIMIT 10;\nSELECT id, name FROM jobCategories ORDER BY id;\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2iEKifVQ9gKtEas.9cbf5414b428 --database CMgr35KntT8tLtgpfJPejw --execute \nSELECT id, name FROM clients ORDER BY id DESC LIMIT 10;\nSELECT id, name FROM jobCategories ORDER BY id;\n",
+  "rows": [
+    {
+      "id": "750003",
+      "name": "統一超商物流中心"
+    },
+    {
+      "id": "750002",
+      "name": "大潤發忠孝店"
+    },
+    {
+      "id": "750001",
+      "name": "台北晶華酒店"
+    },
+    {
+      "id": "720001",
+      "name": "良新國際洋酒"
+    },
+    {
+      "id": "630001",
+      "name": "米窩"
+    },
+    {
+      "id": "id",
+      "name": "name"
+    },
+    {
+      "id": "1",
+      "name": "房務"
+    },
+    {
+      "id": "30001",
+      "name": "餐飲服務"
+    },
+    {
+      "id": "30002",
+      "name": "清潔維護"
+    },
+    {
+      "id": "30003",
+      "name": "倉儲物流"
+    },
+    {
+      "id": "30004",
+      "name": "活動展場"
+    },
+    {
+      "id": "30005",
+      "name": "餐飲服務"
+    },
+    {
+      "id": "30006",
+      "name": "清潔維護"
+    },
+    {
+      "id": "30007",
+      "name": "倉儲物流"
+    },
+    {
+      "id": "30008",
+      "name": "活動展場"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\n750003\t統一超商物流中心\n750002\t大潤發忠孝店\n750001\t台北晶華酒店\n720001\t良新國際洋酒\n630001\t米窩\nid\tname\n1\t房務\n30001\t餐飲服務\n30002\t清潔維護\n30003\t倉儲物流\n30004\t活動展場\n30005\t餐飲服務\n30006\t清潔維護\n30007\t倉儲物流\n30008\t活動展場\n",
+  "stderr": "",
+  "execution_time_ms": 2023
+}

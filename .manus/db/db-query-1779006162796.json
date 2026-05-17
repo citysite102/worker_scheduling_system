@@ -1,0 +1,18 @@
+{
+  "query": "SELECT id, name FROM workers WHERE status = 'active' LIMIT 15;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2iEKifVQ9gKtEas.9cbf5414b428 --database CMgr35KntT8tLtgpfJPejw --execute SELECT id, name FROM workers WHERE status = 'active' LIMIT 15;",
+  "rows": [
+    {
+      "id": "780001",
+      "name": "孔仁琳 KAMASANI REDDAPPA REDDY"
+    },
+    {
+      "id": "810001",
+      "name": "NOFIKA PUSPITA AYUNI"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\n780001\t孔仁琳 KAMASANI REDDAPPA REDDY\n810001\tNOFIKA PUSPITA AYUNI\n",
+  "stderr": "",
+  "execution_time_ms": 1734
+}

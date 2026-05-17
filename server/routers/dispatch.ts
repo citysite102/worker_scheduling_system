@@ -121,9 +121,15 @@ export const dispatchRouter = router({
         })
       );
 
-      // 工作種類資料
-      const workerCategories = await db.getWorkerJobCategories(input.workerId);
-      const workerCategoryIds = new Set(workerCategories.map((c) => c.id));
+      // 工作種類資料（dedup：防禦 DB 中可能存在的重複關聯記錄）
+      const rawWorkerCategories = await db.getWorkerJobCategories(input.workerId);
+      const seenCatIds = new Set<number>();
+      const workerCategories = rawWorkerCategories.filter((c) => {
+        if (seenCatIds.has(c.id)) return false;
+        seenCatIds.add(c.id);
+        return true;
+      });
+      const workerCategoryIds = seenCatIds;
       const allCategories = await db.getAllJobCategories();
       const categoryMap = new Map(allCategories.map((c) => [c.id, c]));
 

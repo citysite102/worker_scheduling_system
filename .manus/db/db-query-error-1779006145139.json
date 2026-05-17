@@ -1,0 +1,11 @@
+{
+  "query": "\nSELECT id, name FROM clients WHERE status = 'active' LIMIT 10;\nSELECT id, name, color FROM job_categories LIMIT 10;\nSELECT id, name FROM workers WHERE status = 'active' LIMIT 10;\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2iEKifVQ9gKtEas.9cbf5414b428 --database CMgr35KntT8tLtgpfJPejw --execute \nSELECT id, name FROM clients WHERE status = 'active' LIMIT 10;\nSELECT id, name, color FROM job_categories LIMIT 10;\nSELECT id, name FROM workers WHERE status = 'active' LIMIT 10;\n",
+  "returncode": 1,
+  "logs": [
+    "id\tname",
+    "630001\t米窩",
+    "720001\t良新國際洋酒",
+    "ERROR 1146 (42S02) at line 3: Table 'cmgr35kntt8tltgpfjpejw.job_categories' doesn't exist"
+  ]
+}

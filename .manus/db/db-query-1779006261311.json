@@ -1,0 +1,40 @@
+{
+  "query": "\nSELECT \n  c.name AS 客戶,\n  COUNT(*) AS 需求單數,\n  MIN(DATE(d.date)) AS 最早日期,\n  MAX(DATE(d.date)) AS 最晚日期\nFROM demands d\nJOIN clients c ON d.clientId = c.id\nWHERE d.status = 'pending'\n  AND MONTH(d.date) = 5 AND YEAR(d.date) = 2026\nGROUP BY c.id, c.name\nORDER BY c.name;\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2iEKifVQ9gKtEas.9cbf5414b428 --database CMgr35KntT8tLtgpfJPejw --execute \nSELECT \n  c.name AS 客戶,\n  COUNT(*) AS 需求單數,\n  MIN(DATE(d.date)) AS 最早日期,\n  MAX(DATE(d.date)) AS 最晚日期\nFROM demands d\nJOIN clients c ON d.clientId = c.id\nWHERE d.status = 'pending'\n  AND MONTH(d.date) = 5 AND YEAR(d.date) = 2026\nGROUP BY c.id, c.name\nORDER BY c.name;\n",
+  "rows": [
+    {
+      "客戶": "台北晶華酒店",
+      "需求單數": "6",
+      "最早日期": "2026-05-19",
+      "最晚日期": "2026-05-24"
+    },
+    {
+      "客戶": "大潤發忠孝店",
+      "需求單數": "5",
+      "最早日期": "2026-05-19",
+      "最晚日期": "2026-05-25"
+    },
+    {
+      "客戶": "米窩",
+      "需求單數": "4",
+      "最早日期": "2026-05-20",
+      "最晚日期": "2026-05-29"
+    },
+    {
+      "客戶": "統一超商物流中心",
+      "需求單數": "5",
+      "最早日期": "2026-05-19",
+      "最晚日期": "2026-05-28"
+    },
+    {
+      "客戶": "良新國際洋酒",
+      "需求單數": "3",
+      "最早日期": "2026-05-24",
+      "最晚日期": "2026-05-31"
+    }
+  ],
+  "messages": [],
+  "stdout": "客戶\t需求單數\t最早日期\t最晚日期\n台北晶華酒店\t6\t2026-05-19\t2026-05-24\n大潤發忠孝店\t5\t2026-05-19\t2026-05-25\n米窩\t4\t2026-05-20\t2026-05-29\n統一超商物流中心\t5\t2026-05-19\t2026-05-28\n良新國際洋酒\t3\t2026-05-24\t2026-05-31\n",
+  "stderr": "",
+  "execution_time_ms": 1738
+}

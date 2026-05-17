@@ -246,7 +246,7 @@ function WorkerRightPanel({ workerId, dateFrom, dateTo, onAssigned }: {
             <div className="flex gap-1 flex-wrap justify-end">
               {workerCategories.slice(0, 2).map((cat: any) => (
                 <span
-                  key={cat.id}
+                  key={`wcat-${cat.id}`}
                   className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded-full border font-medium"
                   style={{ backgroundColor: `${cat.color}15`, borderColor: `${cat.color}40`, color: cat.color }}
                 >
@@ -536,7 +536,7 @@ function DemandRightPanel({ demandId, onAssigned }: { demandId: number; onAssign
               </p>
               {availableWorkers.map((worker: any) => (
                 <WorkerMatchCard
-                  key={worker.id}
+                  key={`available-${worker.id}`}
                   worker={worker}
                   matchType="available"
                   demandJobCategoryId={demand.jobCategoryId}
@@ -556,7 +556,7 @@ function DemandRightPanel({ demandId, onAssigned }: { demandId: number; onAssign
               </p>
               {schedulableWorkers.map((item: any) => (
                 <WorkerMatchCard
-                  key={item.worker.id}
+                  key={`schedulable-${item.worker.id}`}
                   worker={item.worker}
                   matchType="schedulable"
                   fitLabel={item.fitLabel}
@@ -578,7 +578,7 @@ function DemandRightPanel({ demandId, onAssigned }: { demandId: number; onAssign
               </p>
               {conflictWorkers.map((item: any) => (
                 <WorkerMatchCard
-                  key={item.worker.id}
+                  key={`conflict-${item.worker.id}`}
                   worker={item.worker}
                   matchType="conflict"
                   reasons={item.reasons}
@@ -822,7 +822,7 @@ export default function QuickMatch() {
                   <SelectContent>
                     <SelectItem value="all" className="text-xs">所有工作種類</SelectItem>
                     {(allJobCategories as any[]).map((cat) => (
-                      <SelectItem key={cat.id} value={cat.id.toString()} className="text-xs">
+                      <SelectItem key={`filter-cat-${cat.id}`} value={cat.id.toString()} className="text-xs">
                         <span className="flex items-center gap-1.5">
                           <span className="w-2 h-2 rounded-full inline-block" style={{ backgroundColor: cat.color }} />
                           {cat.name}
@@ -859,7 +859,7 @@ export default function QuickMatch() {
                 ) : (
                   filteredWorkers.map((worker: any) => (
                     <button
-                      key={worker.id}
+                      key={`left-worker-${worker.id}`}
                       className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-colors ${
                         selectedWorkerId === worker.id
                           ? "bg-primary/10 border border-primary/30"
@@ -894,7 +894,7 @@ export default function QuickMatch() {
                     const demandDateStr = demand.date ? new Date(demand.date).toISOString().split("T")[0] : "";
                     return (
                       <button
-                        key={demand.id}
+                        key={`left-demand-${demand.id}`}
                         className={`w-full flex flex-col gap-1 px-3 py-2.5 rounded-lg text-left transition-colors ${
                           selectedDemandId === demand.id
                             ? "bg-primary/10 border border-primary/30"

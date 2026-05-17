@@ -1,0 +1,42 @@
+{
+  "query": "SELECT id, name FROM workers WHERE status = 'active' ORDER BY id;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2iEKifVQ9gKtEas.9cbf5414b428 --database CMgr35KntT8tLtgpfJPejw --execute SELECT id, name FROM workers WHERE status = 'active' ORDER BY id;",
+  "rows": [
+    {
+      "id": "780001",
+      "name": "孔仁琳 KAMASANI REDDAPPA REDDY"
+    },
+    {
+      "id": "810001",
+      "name": "NOFIKA PUSPITA AYUNI"
+    },
+    {
+      "id": "840001",
+      "name": "阿米拉 AMIRA BINTI HASSAN"
+    },
+    {
+      "id": "840002",
+      "name": "蘇菲亞 SOFIA PUTRI RAHAYU"
+    },
+    {
+      "id": "840003",
+      "name": "瑪麗亞 MARIA SANTOS DELA CRUZ"
+    },
+    {
+      "id": "840004",
+      "name": "阮氏蓮 NGUYEN THI LIEN"
+    },
+    {
+      "id": "840005",
+      "name": "普里亞 PRIYA KUMARI SHARMA"
+    },
+    {
+      "id": "840006",
+      "name": "拉赫曼 RAHMAN MD MIZANUR"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\n780001\t孔仁琳 KAMASANI REDDAPPA REDDY\n810001\tNOFIKA PUSPITA AYUNI\n840001\t阿米拉 AMIRA BINTI HASSAN\n840002\t蘇菲亞 SOFIA PUTRI RAHAYU\n840003\t瑪麗亞 MARIA SANTOS DELA CRUZ\n840004\t阮氏蓮 NGUYEN THI LIEN\n840005\t普里亞 PRIYA KUMARI SHARMA\n840006\t拉赫曼 RAHMAN MD MIZANUR\n",
+  "stderr": "",
+  "execution_time_ms": 1825
+}
