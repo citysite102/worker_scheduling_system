@@ -2204,3 +2204,9 @@
 - [x] 方案A：重構 dispatch.ts getMatchingDemands，批次預載入 availability 和 assignments（40 次 DB → 2-3 次）
 - [x] 方案A：calculateWorkerFitScore 加入 preloadedAvailability 參數，calculateDemandFeasibilityWithAll 批次預載入後傳入（N 次 DB → 1 次）
 - [x] 方案C：QuickMatch.tsx 加入 300ms 選取防抖 + Loading skeleton，避免快速滾動連續觸發 API
+
+## 使用者新增需求（2026/05/17 - 快速配對效能優化 Phase 2）
+
+- [x] 方案一：LRU Cache 模組（60s TTL），dispatch router 兩支 API 加入快取，指派成功後主動清除
+- [ ] 方案二：Worker Thread 卸載 calculateDemandFeasibilityWithAll CPU 密集計算
+- [ ] TypeScript 驗證 + 對照壓力測試確認效能改善

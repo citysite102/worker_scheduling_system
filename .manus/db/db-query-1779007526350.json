@@ -1,0 +1,9 @@
+{
+  "query": "\n-- 本週週一 = 2026-05-11（台灣時間），週日 = 2026-05-17\n-- 為 8 位員工補上本週排班設置（複製下週的時段設定）\nINSERT INTO availability (workerId, weekStartDate, weekEndDate, timeBlocks, confirmedAt, createdAt, updatedAt)\nSELECT \n  workerId,\n  '2026-05-11 00:00:00' AS weekStartDate,\n  '2026-05-17 23:59:59' AS weekEndDate,\n  timeBlocks,\n  NOW() AS confirmedAt,\n  NOW() AS createdAt,\n  NOW() AS updatedAt\nFROM availability\nWHERE weekStartDate = '2026-05-18 00:00:00';\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2iEKifVQ9gKtEas.9cbf5414b428 --database CMgr35KntT8tLtgpfJPejw --execute \n-- 本週週一 = 2026-05-11（台灣時間），週日 = 2026-05-17\n-- 為 8 位員工補上本週排班設置（複製下週的時段設定）\nINSERT INTO availability (workerId, weekStartDate, weekEndDate, timeBlocks, confirmedAt, createdAt, updatedAt)\nSELECT \n  workerId,\n  '2026-05-11 00:00:00' AS weekStartDate,\n  '2026-05-17 23:59:59' AS weekEndDate,\n  timeBlocks,\n  NOW() AS confirmedAt,\n  NOW() AS createdAt,\n  NOW() AS updatedAt\nFROM availability\nWHERE weekStartDate = '2026-05-18 00:00:00';\n",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 1792
+}

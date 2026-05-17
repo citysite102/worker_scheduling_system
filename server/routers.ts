@@ -15,7 +15,7 @@ import { storagePut } from "./storage";
 import { hashPassword, generateRandomPassword, verifyPassword, generateResetToken } from "./password";
 import { sendEmail, createNewAccountEmail, createResetPasswordEmail } from "./email";
 import { getTaiwanTodayStr, getTaiwanDateStrDaysAgo, utcToTaiwanDateStr, generateDateRange } from "./dateUtils";
-import { dispatchRouter } from "./routers/dispatch";
+import { dispatchRouter, invalidateDispatchCache } from "./routers/dispatch";
 
 export const appRouter = router({
   system: systemRouter,
@@ -1916,6 +1916,9 @@ export const appRouter = router({
           ...input,
           scheduledHours,
         });
+
+        // 方案一：指派成功後清除快速配對快取（確保下次查詢取得最新狀態）
+        invalidateDispatchCache(input.demandId, input.workerId);
         
         return { success: true };
       }),

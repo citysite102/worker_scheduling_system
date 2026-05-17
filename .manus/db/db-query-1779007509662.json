@@ -1,0 +1,95 @@
+{
+  "query": "\n-- 修正第一批：2026-05-19 → 2026-05-18（下週週一），2026-05-25 → 2026-05-24（下週週日）\nUPDATE availability\nSET weekStartDate = '2026-05-18 00:00:00',\n    weekEndDate = '2026-05-24 23:59:59'\nWHERE weekStartDate = '2026-05-19 00:00:00';\n\n-- 修正第二批：2026-05-26 → 2026-05-25（下下週週一），2026-06-01 → 2026-05-31（下下週週日）\nUPDATE availability\nSET weekStartDate = '2026-05-25 00:00:00',\n    weekEndDate = '2026-05-31 23:59:59'\nWHERE weekStartDate = '2026-05-26 00:00:00';\n\n-- 確認結果\nSELECT workerId, weekStartDate, weekEndDate FROM availability ORDER BY workerId, weekStartDate;\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2iEKifVQ9gKtEas.9cbf5414b428 --database CMgr35KntT8tLtgpfJPejw --execute \n-- 修正第一批：2026-05-19 → 2026-05-18（下週週一），2026-05-25 → 2026-05-24（下週週日）\nUPDATE availability\nSET weekStartDate = '2026-05-18 00:00:00',\n    weekEndDate = '2026-05-24 23:59:59'\nWHERE weekStartDate = '2026-05-19 00:00:00';\n\n-- 修正第二批：2026-05-26 → 2026-05-25（下下週週一），2026-06-01 → 2026-05-31（下下週週日）\nUPDATE availability\nSET weekStartDate = '2026-05-25 00:00:00',\n    weekEndDate = '2026-05-31 23:59:59'\nWHERE weekStartDate = '2026-05-26 00:00:00';\n\n-- 確認結果\nSELECT workerId, weekStartDate, weekEndDate FROM availability ORDER BY workerId, weekStartDate;\n",
+  "rows": [
+    {
+      "workerId": "780001",
+      "weekStartDate": "2026-02-09 00:00:00",
+      "weekEndDate": "2026-02-16 00:00:00"
+    },
+    {
+      "workerId": "780001",
+      "weekStartDate": "2026-05-18 00:00:00",
+      "weekEndDate": "2026-05-24 23:59:59"
+    },
+    {
+      "workerId": "780001",
+      "weekStartDate": "2026-05-25 00:00:00",
+      "weekEndDate": "2026-05-31 23:59:59"
+    },
+    {
+      "workerId": "810001",
+      "weekStartDate": "2026-05-18 00:00:00",
+      "weekEndDate": "2026-05-24 23:59:59"
+    },
+    {
+      "workerId": "810001",
+      "weekStartDate": "2026-05-25 00:00:00",
+      "weekEndDate": "2026-05-31 23:59:59"
+    },
+    {
+      "workerId": "840001",
+      "weekStartDate": "2026-05-18 00:00:00",
+      "weekEndDate": "2026-05-24 23:59:59"
+    },
+    {
+      "workerId": "840001",
+      "weekStartDate": "2026-05-25 00:00:00",
+      "weekEndDate": "2026-05-31 23:59:59"
+    },
+    {
+      "workerId": "840002",
+      "weekStartDate": "2026-05-18 00:00:00",
+      "weekEndDate": "2026-05-24 23:59:59"
+    },
+    {
+      "workerId": "840002",
+      "weekStartDate": "2026-05-25 00:00:00",
+      "weekEndDate": "2026-05-31 23:59:59"
+    },
+    {
+      "workerId": "840003",
+      "weekStartDate": "2026-05-18 00:00:00",
+      "weekEndDate": "2026-05-24 23:59:59"
+    },
+    {
+      "workerId": "840003",
+      "weekStartDate": "2026-05-25 00:00:00",
+      "weekEndDate": "2026-05-31 23:59:59"
+    },
+    {
+      "workerId": "840004",
+      "weekStartDate": "2026-05-18 00:00:00",
+      "weekEndDate": "2026-05-24 23:59:59"
+    },
+    {
+      "workerId": "840004",
+      "weekStartDate": "2026-05-25 00:00:00",
+      "weekEndDate": "2026-05-31 23:59:59"
+    },
+    {
+      "workerId": "840005",
+      "weekStartDate": "2026-05-18 00:00:00",
+      "weekEndDate": "2026-05-24 23:59:59"
+    },
+    {
+      "workerId": "840005",
+      "weekStartDate": "2026-05-25 00:00:00",
+      "weekEndDate": "2026-05-31 23:59:59"
+    },
+    {
+      "workerId": "840006",
+      "weekStartDate": "2026-05-18 00:00:00",
+      "weekEndDate": "2026-05-24 23:59:59"
+    },
+    {
+      "workerId": "840006",
+      "weekStartDate": "2026-05-25 00:00:00",
+      "weekEndDate": "2026-05-31 23:59:59"
+    }
+  ],
+  "messages": [],
+  "stdout": "workerId\tweekStartDate\tweekEndDate\n780001\t2026-02-09 00:00:00\t2026-02-16 00:00:00\n780001\t2026-05-18 00:00:00\t2026-05-24 23:59:59\n780001\t2026-05-25 00:00:00\t2026-05-31 23:59:59\n810001\t2026-05-18 00:00:00\t2026-05-24 23:59:59\n810001\t2026-05-25 00:00:00\t2026-05-31 23:59:59\n840001\t2026-05-18 00:00:00\t2026-05-24 23:59:59\n840001\t2026-05-25 00:00:00\t2026-05-31 23:59:59\n840002\t2026-05-18 00:00:00\t2026-05-24 23:59:59\n840002\t2026-05-25 00:00:00\t2026-05-31 23:59:59\n840003\t2026-05-18 00:00:00\t2026-05-24 23:59:59\n840003\t2026-05-25 00:00:00\t2026-05-31 23:59:59\n840004\t2026-05-18 00:00:00\t2026-05-24 23:59:59\n840004\t2026-05-25 00:00:00\t2026-05-31 23:59:59\n840005\t2026-05-18 00:00:00\t2026-05-24 23:59:59\n840005\t2026-05-25 00:00:00\t2026-05-31 23:59:59\n840006\t2026-05-18 00:00:00\t2026-05-24 23:59:59\n840006\t2026-05-25 00:00:00\t2026-05-31 23:59:59\n",
+  "stderr": "",
+  "execution_time_ms": 2211
+}

@@ -1,0 +1,40 @@
+{
+  "query": "\nSELECT COUNT(*) as total FROM availability;\nSELECT workerId, weekStartDate FROM availability WHERE weekStartDate = '2026-05-11 00:00:00';\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2iEKifVQ9gKtEas.9cbf5414b428 --database CMgr35KntT8tLtgpfJPejw --execute \nSELECT COUNT(*) as total FROM availability;\nSELECT workerId, weekStartDate FROM availability WHERE weekStartDate = '2026-05-11 00:00:00';\n",
+  "rows": [
+    {
+      "total": "25"
+    },
+    {
+      "total": "workerId\tweekStartDate"
+    },
+    {
+      "total": "780001\t2026-05-11 00:00:00"
+    },
+    {
+      "total": "810001\t2026-05-11 00:00:00"
+    },
+    {
+      "total": "840001\t2026-05-11 00:00:00"
+    },
+    {
+      "total": "840002\t2026-05-11 00:00:00"
+    },
+    {
+      "total": "840003\t2026-05-11 00:00:00"
+    },
+    {
+      "total": "840004\t2026-05-11 00:00:00"
+    },
+    {
+      "total": "840005\t2026-05-11 00:00:00"
+    },
+    {
+      "total": "840006\t2026-05-11 00:00:00"
+    }
+  ],
+  "messages": [],
+  "stdout": "total\n25\nworkerId\tweekStartDate\n780001\t2026-05-11 00:00:00\n810001\t2026-05-11 00:00:00\n840001\t2026-05-11 00:00:00\n840002\t2026-05-11 00:00:00\n840003\t2026-05-11 00:00:00\n840004\t2026-05-11 00:00:00\n840005\t2026-05-11 00:00:00\n840006\t2026-05-11 00:00:00\n",
+  "stderr": "",
+  "execution_time_ms": 2005
+}

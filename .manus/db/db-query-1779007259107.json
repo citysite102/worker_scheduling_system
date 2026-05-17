@@ -1,0 +1,145 @@
+{
+  "query": "\n-- 查詢本週需求單\nSELECT id, date, startTime, endTime, requiredWorkers, status, jobCategoryId\nFROM demands\nWHERE date >= '2026-05-19' AND date <= '2026-05-25'\n  AND status NOT IN ('cancelled', 'closed')\nORDER BY date, startTime\nLIMIT 15;\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2iEKifVQ9gKtEas.9cbf5414b428 --database CMgr35KntT8tLtgpfJPejw --execute \n-- 查詢本週需求單\nSELECT id, date, startTime, endTime, requiredWorkers, status, jobCategoryId\nFROM demands\nWHERE date >= '2026-05-19' AND date <= '2026-05-25'\n  AND status NOT IN ('cancelled', 'closed')\nORDER BY date, startTime\nLIMIT 15;\n",
+  "rows": [
+    {
+      "id": "960007",
+      "date": "2026-05-19 00:00:00",
+      "startTime": "06:00",
+      "endTime": "14:00",
+      "requiredWorkers": "3",
+      "status": "pending",
+      "jobCategoryId": "30003"
+    },
+    {
+      "id": "960001",
+      "date": "2026-05-19 00:00:00",
+      "startTime": "08:00",
+      "endTime": "16:00",
+      "requiredWorkers": "2",
+      "status": "pending",
+      "jobCategoryId": "1"
+    },
+    {
+      "id": "960012",
+      "date": "2026-05-19 00:00:00",
+      "startTime": "22:00",
+      "endTime": "06:00",
+      "requiredWorkers": "2",
+      "status": "pending",
+      "jobCategoryId": "30003"
+    },
+    {
+      "id": "960002",
+      "date": "2026-05-20 00:00:00",
+      "startTime": "08:00",
+      "endTime": "16:00",
+      "requiredWorkers": "2",
+      "status": "pending",
+      "jobCategoryId": "1"
+    },
+    {
+      "id": "960017",
+      "date": "2026-05-20 00:00:00",
+      "startTime": "09:00",
+      "endTime": "17:00",
+      "requiredWorkers": "1",
+      "status": "pending",
+      "jobCategoryId": "1"
+    },
+    {
+      "id": "960008",
+      "date": "2026-05-20 00:00:00",
+      "startTime": "14:00",
+      "endTime": "22:00",
+      "requiredWorkers": "2",
+      "status": "pending",
+      "jobCategoryId": "30003"
+    },
+    {
+      "id": "960009",
+      "date": "2026-05-21 00:00:00",
+      "startTime": "06:00",
+      "endTime": "14:00",
+      "requiredWorkers": "3",
+      "status": "pending",
+      "jobCategoryId": "30003"
+    },
+    {
+      "id": "960003",
+      "date": "2026-05-21 00:00:00",
+      "startTime": "14:00",
+      "endTime": "22:00",
+      "requiredWorkers": "3",
+      "status": "pending",
+      "jobCategoryId": "30001"
+    },
+    {
+      "id": "960013",
+      "date": "2026-05-21 00:00:00",
+      "startTime": "22:00",
+      "endTime": "06:00",
+      "requiredWorkers": "2",
+      "status": "pending",
+      "jobCategoryId": "30003"
+    },
+    {
+      "id": "960004",
+      "date": "2026-05-22 00:00:00",
+      "startTime": "08:00",
+      "endTime": "16:00",
+      "requiredWorkers": "2",
+      "status": "pending",
+      "jobCategoryId": "1"
+    },
+    {
+      "id": "960018",
+      "date": "2026-05-22 00:00:00",
+      "startTime": "09:00",
+      "endTime": "17:00",
+      "requiredWorkers": "1",
+      "status": "pending",
+      "jobCategoryId": "1"
+    },
+    {
+      "id": "960010",
+      "date": "2026-05-23 00:00:00",
+      "startTime": "06:00",
+      "endTime": "14:00",
+      "requiredWorkers": "4",
+      "status": "pending",
+      "jobCategoryId": "30003"
+    },
+    {
+      "id": "960005",
+      "date": "2026-05-23 00:00:00",
+      "startTime": "14:00",
+      "endTime": "22:00",
+      "requiredWorkers": "4",
+      "status": "pending",
+      "jobCategoryId": "30001"
+    },
+    {
+      "id": "960006",
+      "date": "2026-05-24 00:00:00",
+      "startTime": "08:00",
+      "endTime": "17:00",
+      "requiredWorkers": "3",
+      "status": "pending",
+      "jobCategoryId": "30002"
+    },
+    {
+      "id": "960021",
+      "date": "2026-05-24 00:00:00",
+      "startTime": "10:00",
+      "endTime": "20:00",
+      "requiredWorkers": "3",
+      "status": "pending",
+      "jobCategoryId": "30004"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tdate\tstartTime\tendTime\trequiredWorkers\tstatus\tjobCategoryId\n960007\t2026-05-19 00:00:00\t06:00\t14:00\t3\tpending\t30003\n960001\t2026-05-19 00:00:00\t08:00\t16:00\t2\tpending\t1\n960012\t2026-05-19 00:00:00\t22:00\t06:00\t2\tpending\t30003\n960002\t2026-05-20 00:00:00\t08:00\t16:00\t2\tpending\t1\n960017\t2026-05-20 00:00:00\t09:00\t17:00\t1\tpending\t1\n960008\t2026-05-20 00:00:00\t14:00\t22:00\t2\tpending\t30003\n960009\t2026-05-21 00:00:00\t06:00\t14:00\t3\tpending\t30003\n960003\t2026-05-21 00:00:00\t14:00\t22:00\t3\tpending\t30001\n960013\t2026-05-21 00:00:00\t22:00\t06:00\t2\tpending\t30003\n960004\t2026-05-22 00:00:00\t08:00\t16:00\t2\tpending\t1\n960018\t2026-05-22 00:00:00\t09:00\t17:00\t1\tpending\t1\n960010\t2026-05-23 00:00:00\t06:00\t14:00\t4\tpending\t30003\n960005\t2026-05-23 00:00:00\t14:00\t22:00\t4\tpending\t30001\n960006\t2026-05-24 00:00:00\t08:00\t17:00\t3\tpending\t30002\n960021\t2026-05-24 00:00:00\t10:00\t20:00\t3\tpending\t30004\n",
+  "stderr": "",
+  "execution_time_ms": 1715
+}
